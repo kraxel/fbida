@@ -84,7 +84,10 @@ int lirc = -1;
 
 /* variables for read_image */
 int32_t         lut_red[256], lut_green[256], lut_blue[256];
-int             dither = FALSE, pcd_res = 3, steps = 50;
+int             dither = FALSE, pcd_res = 3;
+int             v_steps = 50;
+int             h_steps = 50;
+int             text_steps;
 int             textreading = 0, redraw = 0, statusline = 1;
 int             new_image;
 int             left, top;
@@ -806,17 +809,17 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 	} else if (0 == strcmp(key, " ")) {
 	    if (textreading && top < (int)(img->i.height - fb_var.yres)) {
 		redraw = 1;
-		top += (fb_var.yres-100);
+		top += text_steps;
 	    } else {
 		return KEY_SPACE;
 	    }
 
 	} else if (0 == strcmp(key, "\x1b[A") && img->i.height > fb_var.yres) {
 	    redraw = 1;
-	    top -= steps;
+	    top -= v_steps;
 	} else if (0 == strcmp(key, "\x1b[B") && img->i.height > fb_var.yres) {
 	    redraw = 1;
-	    top += steps;
+	    top += v_steps;
 	} else if (0 == strcmp(key, "\x1b[1~") && img->i.height > fb_var.yres) {
 	    redraw = 1;
 	    top = 0;
@@ -825,17 +828,17 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 	    top = img->i.height - fb_var.yres;
 	} else if (0 == strcmp(key, "\x1b[D") && img->i.width > fb_var.xres) {
 	    redraw = 1;
-	    left -= steps;
+	    left -= h_steps;
 	} else if (0 == strcmp(key, "\x1b[C") && img->i.width > fb_var.xres) {
 	    redraw = 1;
-	    left += steps;
+	    left += h_steps;
 
 	} else if (0 == strcmp(key, "\x1b[5~") ||
 		   0 == strcmp(key, "j")       ||
 		   0 == strcmp(key, "J")) {
 	    if (textreading && top > 0) {
 		redraw = 1;
-		top -= (fb_var.yres-100);
+		top -= text_steps;
 	    } else {
 		return KEY_PGUP;
 	    }
@@ -847,7 +850,7 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 		   0 == strcmp(key, "N")) {
 	    if (textreading && top < (int)(img->i.height - fb_var.yres)) {
 		redraw = 1;
-		top += (fb_var.yres-100);
+		top += text_steps;
 	    } else {
 		return KEY_PGDN;
 	    }
@@ -1170,13 +1173,12 @@ main(int argc, char *argv[])
     fitwidth    = GET_FIT_WIDTH();
     statusline  = GET_VERBOSE();
     textreading = GET_TEXT_MODE();
-    if (textreading)
-	show_top = 1;
     editable    = GET_EDIT();
     backup      = GET_BACKUP();
     preserve    = GET_PRESERVE();
 
-    steps       = GET_SCROLL();
+    v_steps     = GET_SCROLL();
+    h_steps     = GET_SCROLL();
     timeout     = GET_TIMEOUT();
     pcd_res     = GET_PCD_RES();
 
@@ -1218,6 +1220,11 @@ main(int argc, char *argv[])
     shadow_set_palette(fd);
     signal(SIGTSTP,SIG_IGN);
     
+    if (textreading) {
+	show_top = 1;
+	text_steps = fb_var.yres - 100;
+    }
+
     /* svga main loop */
     tty_raw();
     desc = NULL;
@@ -1260,8 +1267,11 @@ main(int argc, char *argv[])
 		status_error(linebuffer);
 	    }
 	}
-	if (img)
+	if (img) {
+	    int pages = ceil((float)img->i.height / fb_var.yres);
+	    text_steps = ceil((float)img->i.height / pages);
 	    info = make_info(fimg,scale);
+	}
 	switch (key = svga_show(img, timeout, desc, info, &arg)) {
 	case KEY_DELETE:
 	    if (editable) {
