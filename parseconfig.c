@@ -373,7 +373,8 @@ cfg_parse_cmdline(int *argc, char **argv, struct cfg_cmdline *opt)
 			     1);
 		shift = 1;
 
-	    } else if (opt[o].needsarg && sopt && sopt == opt[o].letter) {
+	    } else if (opt[o].needsarg && sopt && sopt == opt[o].letter &&
+		       i+1 < *argc) {
 		/* arg: -f bar */
 		cfg_set_str(opt[o].option.domain,
 			    opt[o].option.section,

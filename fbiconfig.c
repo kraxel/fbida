@@ -36,7 +36,7 @@ struct cfg_cmdline fbi_cmd[] = {
 	.letter   = 'P',
 	.cmdline  = "text",
 	.option   = { O_TEXT_MODE },
-	.needsarg = 1,
+	.value    = "1",
 	.desc     = "switch into text reading mode",
     },{
 	.letter   = 'a',
