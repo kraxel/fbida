@@ -9,6 +9,7 @@ trap "rm -rf $DIR" EXIT
 fbiopts=""
 gsopts=""
 passwd=""
+device="tiffpack"
 opt=1
 while test "$opt" = "1"; do
 	case "$1" in
@@ -21,7 +22,7 @@ while test "$opt" = "1"; do
 		-xxl)	gsopts="$gsopts -r150x150"
 			shift
 			;;
-		-q | -a)
+		-q | -a | --fitwidth)
 			fbiopts="$fbiopts $1"
 			shift
 			;;
@@ -34,6 +35,9 @@ while test "$opt" = "1"; do
 			;;
 		-h)	echo fixme: help text
 			exit 1
+			;;
+		-c)	device="png16m"
+			shift
 			;;
 		-*)	echo "unknown option: $1"
 			exit 1
@@ -49,7 +53,7 @@ echo "### rendering pages, please wait ... ###"
 echo
 gs	-dSAVER -dNOPAUSE -dBATCH			\
 	-sPDFPassword="$password"			\
-	-sDEVICE=tiffpack -sOutputFile=$DIR/ps%03d.tiff	\
+	-sDEVICE=${device} -sOutputFile=$DIR/ps%03d.tiff \
 	$gsopts						\
 	"$1"
 

@@ -431,6 +431,8 @@ fb_init(char *device, char *mode, int vt)
 	perror("mmap");
 	goto err;
     }
+//    fprintf(stderr,"fb_mem = %p\n",fb_mem);
+
     /* move viewport to upper left corner */
     if (fb_var.xoffset != 0 || fb_var.yoffset != 0) {
 	fb_var.xoffset = 0;
