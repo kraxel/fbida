@@ -32,6 +32,7 @@ LIB		:= $(LIB)
 RESDIR		:= $(call ac_resdir)
 HAVE_ENDIAN_H	:= $(call ac_header,endian.h)
 HAVE_LINUX_FB_H	:= $(call ac_header,linux/fb.h)
+HAVE_NEW_EXIF	:= $(call ac_header,libexif/exif-log.h)
 HAVE_GLIBC	:= $(call ac_func,fopencookie)
 HAVE_STRCASESTR	:= $(call ac_func,strcasestr)
 HAVE_LIBPCD	:= $(call ac_lib,pcd_open,pcd)
@@ -60,7 +61,7 @@ endif
 ########################################################################
 # conditional stuff
 
-includes        = ENDIAN_H STRCASESTR
+includes        = ENDIAN_H STRCASESTR NEW_EXIF
 libraries       = PCD UNGIF PNG TIFF CURL SANE LIRC
 ida_libs	= PCD UNGIF PNG TIFF CURL SANE
 fbi_libs	= PCD UNGIF PNG TIFF CURL LIRC
