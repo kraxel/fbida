@@ -1167,7 +1167,13 @@ main(int argc, char *argv[])
     need_read = 1;
 
     font_init();
-    face = font_open(fontname ? fontname : "monospace:size=16");
+    if (NULL == fontname)
+	fontname = "monospace:size=16";
+    face = font_open(fontname);
+    if (NULL == face) {
+	fprintf(stderr,"can't open font: %s\n",fontname);
+	exit(1);
+    }
     fd = fb_init(cfg_get_str(O_DEVICE),
 		 cfg_get_str(O_VIDEO_MODE),
 		 GET_VT());
