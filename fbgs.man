@@ -14,6 +14,7 @@ fbps understands all fbi options (they are passed throuth).
 Additionally you can specify -l, -xl or -xxl to get the pages
 rendered with 100, 120 or 150 dpi (default is 75). You can
 use option -p <password> if your PDF file requires password.
+With -c you can ask fbgs to render the pages in color.
 .SH SEE ALSO
 fbi(1), gs(1)
 .SH AUTHOR
