@@ -1232,6 +1232,11 @@ main(int argc, char *argv[])
     char             *line, *info, *desc;
     char             linebuffer[128];
 
+#if 0 /* debug aid */ 
+    fprintf(stderr,"pid %d\n",getpid());
+    sleep(30);
+#endif
+
     if (NULL != (line = getenv("FRAMEBUFFER")))
 	fbdev = line;
     if (NULL != (line = getenv("FBGAMMA")))
@@ -1349,6 +1354,7 @@ main(int argc, char *argv[])
 	svga_dither_palette(8, 8, 4);
 	dither = TRUE;
 	init_dither(8, 8, 4, 2);
+	dither_line = dither_line_color;
 	break;
     case 15:
     case 16:
@@ -1541,6 +1547,13 @@ main(int argc, char *argv[])
 	    }
 	    break;
 	case KEY_VERBOSE:
+#if 0 /* fbdev testing/debugging hack */
+	    {
+		ioctl(fd,FBIOBLANK,1);
+		sleep(1);
+		ioctl(fd,FBIOBLANK,0);
+	    }
+#endif
 	    statusline = !statusline;
 	    need_refresh = 1;
 	    break;
