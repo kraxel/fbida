@@ -19,7 +19,7 @@ framebuffer device to use.  Default is the one your vc is
 mapped to.
 .TP
 .B -m mode
-name of the video mode to use video mode (must be listed in
+name of the video mode to use (video mode must be listed in
 /etc/fb.modes).  Default is not to change the video mode.
 .TP
 .B -v
@@ -35,7 +35,7 @@ of text is to press space...
 .TP
 .B -t sec
 timeout: load next image after >sec< seconds without any
-keypress
+keypress (i.e. slideshow)
 .TP
 .B -g gamma
 gamma correction.  Can also be put into the FBGAMMA environment
@@ -54,6 +54,7 @@ list of known fonts on your system.  The fontconfig config file is
 evaluated as well, so any generic stuff defined there (such as mono,
 sans) will work as well.  It is recommended to use monospaced fonts,
 the textboxes (help text, exif info) look better then.
+.TP
 .B -a
 Enable autozoom.  fbi will automagically pick a reasonable zoom factor
 when loading a new image.
@@ -127,7 +128,7 @@ special files to that group and put the users which are allowed to use
 the framebuffer device into the group.  You can also make the special
 files world writable, but be aware of the security implications this
 has.  On a private box it might be fine to handle it this way
-througth.
+though.
 .P
 .B fbi
 also needs access to the linux console (i.e. /dev/ttyN) for sane
@@ -140,7 +141,7 @@ fbset(1), convert(1)
 .SH AUTHOR
 Gerd Knorr <kraxel@bytesex.org>
 .SH COPYRIGHT
-Copyright (C) 1999-2000 Gerd Knorr <kraxel@bytesex.org>
+Copyright (C) 1999-2004 Gerd Knorr <kraxel@bytesex.org>
 .P
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

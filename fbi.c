@@ -69,6 +69,7 @@
 /* with arg */
 #define KEY_GOTO     -100
 #define KEY_SCALE    -101
+#define KEY_DELAY    -102
 
 /* edit */
 #define KEY_DELETE   -200
@@ -236,6 +237,11 @@ static struct flist* flist_first(void)
     return list_entry(flist.next, struct flist, list);
 }
 
+static struct flist* flist_last(void)
+{
+    return list_entry(flist.prev, struct flist, list);
+}
+
 static struct flist* flist_next(struct flist *f, int eof, int loop)
 {
     if (flist_islast(f)) {
@@ -248,10 +254,13 @@ static struct flist* flist_next(struct flist *f, int eof, int loop)
     return list_entry(f->list.next, struct flist, list);
 }
 
-static struct flist* flist_prev(struct flist *f)
+static struct flist* flist_prev(struct flist *f, int loop)
 {
-    if (flist_isfirst(f))
+    if (flist_isfirst(f)) {
+	if (loop)
+	    return flist_last();
 	return f;
+    }
     return list_entry(f->list.prev, struct flist, list);
 }
 
@@ -913,6 +922,8 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 	    return KEY_GOTO;
 	} else if (rc == 1 && (*key == 's' || *key == 'S')) {
 	    return KEY_SCALE;
+	} else if (rc == 1 && (*key == 'x' || *key == 'X')) {
+	    return KEY_DELAY;
 	} else if (rc == 1 && *key >= '0' && *key <= '9') {
 	    *nr = *nr * 10 + (*key - '0');
 	    snprintf(linebuffer, sizeof(linebuffer), "> %d",*nr);
@@ -1277,9 +1288,9 @@ main(int argc, char *argv[])
 	    if (editable) {
 		struct flist *fdel = fcurrent;
 		if (flist_islast(fcurrent))
-			fcurrent = flist_prev(fcurrent);
+		    fcurrent = flist_prev(fcurrent,0);
 		else
-			fcurrent = flist_next(fcurrent,0,0);
+		    fcurrent = flist_next(fcurrent,0,0);
 		unlink(fdel->name);
 		flist_del(fdel);
 		flist_renumber();
@@ -1333,13 +1344,13 @@ main(int argc, char *argv[])
 	    break;
 	case KEY_PGDN:
 	    need_read = 1;
-	    fcurrent = flist_next(fcurrent,0,0);
+	    fcurrent = flist_next(fcurrent,0,1);
 	    if (textreading)
 		show_top = 1;
 	    break;
 	case KEY_PGUP:
 	    need_read = 1;
-	    fcurrent = flist_prev(fcurrent);
+	    fcurrent = flist_prev(fcurrent,1);
 	    if (textreading)
 		show_bottom = 1;
 	    break;
@@ -1362,7 +1373,7 @@ main(int argc, char *argv[])
 	    } else if (key == KEY_ASCALE) {
 		newscale = auto_scale(fimg);
 	    } else {
-		newscale = arg / 100;
+		newscale = arg / 100.0;
 	    }
 	    if (newscale < 0.1)
 		newscale = 0.1;
@@ -1383,6 +1394,9 @@ main(int argc, char *argv[])
 		need_read = 1;
 		fcurrent = flist_goto(arg);
 	    }
+	    break;
+	case KEY_DELAY:
+	    timeout = arg;
 	    break;
 	case KEY_VERBOSE:
 #if 0 /* fbdev testing/debugging hack */
