@@ -40,12 +40,21 @@ static unsigned short calc_gamma(int n, int max)
 }
 
 static void
-linear_palette(int bit)
+linear_palette(int r, int g, int b)
 {
-    int i, size = 256 >> (8 - bit);
+    int i, size;
     
+    size = 256 >> (8 - r);
     for (i = 0; i < size; i++)
-        p_red[i] = p_green[i] = p_blue[i] = calc_gamma(i,size);
+        p_red[i] = calc_gamma(i,size);
+
+    size = 256 >> (8 - g);
+    for (i = 0; i < size; i++)
+        p_green[i] = calc_gamma(i,size);
+
+    size = 256 >> (8 - b);
+    for (i = 0; i < size; i++)
+	p_blue[i] = calc_gamma(i,size);
 }
 
 static void
@@ -222,21 +231,23 @@ void shadow_init(void)
 	break;
     case 15:
     case 16:
-        if (fb_fix.visual == FB_VISUAL_DIRECTCOLOR)
-            linear_palette(5);
 	if (fb_var.green.length == 5) {
 	    shadow_lut_init(15);
+	    if (fb_fix.visual == FB_VISUAL_DIRECTCOLOR)
+		linear_palette(5,5,5);
 	} else {
 	    shadow_lut_init(16);
+	    if (fb_fix.visual == FB_VISUAL_DIRECTCOLOR)
+		linear_palette(5,6,5);
 	}
 	break;
     case 24:
         if (fb_fix.visual == FB_VISUAL_DIRECTCOLOR)
-            linear_palette(8);
+            linear_palette(8,8,8);
 	break;
     case 32:
         if (fb_fix.visual == FB_VISUAL_DIRECTCOLOR)
-            linear_palette(8);
+            linear_palette(8,8,8);
 	shadow_lut_init(24);
 	break;
     default:
