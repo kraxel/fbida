@@ -40,6 +40,8 @@
 #include "filter.h"
 #include "desktop.h"
 #include "list.h"
+#include "parseconfig.h"
+#include "fbiconfig.h"
 
 #include "jpeg/transupp.h"		/* Support routines for jpegtran */
 #include "jpegtools.h"
@@ -1240,6 +1242,7 @@ main(int argc, char *argv[])
 #ifdef HAVE_LIBLIRC
     lirc = lirc_fbi_init();
 #endif
+    fbi_read_config();
 
     setlocale(LC_ALL,"");
     for (;;) {
