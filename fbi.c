@@ -784,6 +784,7 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 	    console_switch(0);
 	    continue;
 	}
+	FD_ZERO(&set);
 	FD_SET(0, &set);
 	fdmax = 1;
 #ifdef HAVE_LIBLIRC
