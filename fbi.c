@@ -1,7 +1,7 @@
 /*
  * image viewer, for framebuffer devices
  *
- *   (c) 1998-2002 Gerd Knorr <kraxel@bytesex.org>
+ *   (c) 1998-2004 Gerd Knorr <kraxel@bytesex.org>
  *
  */
 
@@ -41,7 +41,6 @@
 #include "filter.h"
 #include "desktop.h"
 #include "list.h"
-#include "parseconfig.h"
 #include "fbiconfig.h"
 
 #include "jpeg/transupp.h"		/* Support routines for jpegtran */
@@ -112,39 +111,10 @@ struct fb_cmap cmap  = { 0, 256, red,  green,  blue };
 static float fbgamma = 1;
 
 /* Command line options. */
-
-int autodown     = 0;
-int autoup       = 0;
-int comments     = 0;
-int transparency = 30;
-
-struct option fbi_options[] = {
-    {"version",    no_argument,       NULL, 'V'},  /* version */
-    {"help",       no_argument,       NULL, 'h'},  /* help */
-    {"device",     required_argument, NULL, 'd'},  /* device */
-    {"mode",       required_argument, NULL, 'm'},  /* video mode */
-    {"gamma",      required_argument, NULL, 'g'},  /* set gamma */
-    {"quiet",      no_argument,       NULL, 'q'},  /* quiet */
-    {"verbose",    no_argument,       NULL, 'v'},  /* verbose */
-    {"scroll",     required_argument, NULL, 's'},  /* set scrool */
-    {"timeout",    required_argument, NULL, 't'},  /* timeout value */
-    {"once",       no_argument,       NULL, '1'},  /* loop only once */
-    {"resolution", required_argument, NULL, 'r'},  /* select resolution */
-    {"random",     no_argument,       NULL, 'u'},  /* randomize images */
-    {"font",       required_argument, NULL, 'f'},  /* font */
-    {"autozoom",   no_argument,       NULL, 'a'},
-    {"edit",       no_argument,       NULL, 'e'},  /* enable editing */
-    {"list",       required_argument, NULL, 'l'},
-    {"vt",         required_argument, NULL, 'T'},
-    {"backup",     no_argument,       NULL, 'b'},
-    {"preserve",   no_argument,       NULL, 'p'},
-
-    /* long-only options */
-    {"autoup",     no_argument,       &autoup,   1 },
-    {"autodown",   no_argument,       &autodown, 1 },
-    {"comments",   no_argument,       &comments, 1 },
-    {0,0,0,0}
-};
+int autodown;
+int autoup;
+int comments;
+int transparency = 40;
 
 /* font handling */
 static char *fontname = NULL;
@@ -155,8 +125,10 @@ static FT_Face face;
 static void
 version(void)
 {
-    fprintf(stderr, "fbi version " VERSION
-	    " (c) 1999-2003 Gerd Knorr; compiled on %s.\n", __DATE__ );
+    fprintf(stderr,
+	    "fbi version " VERSION ", compiled on %s\n"
+	    "(c) 1999-2004 Gerd Knorr <kraxel@bytesex.org> [SUSE Labs]\n",
+	    __DATE__ );
 }
 
 static void
@@ -172,40 +144,21 @@ usage(char *name)
 	    "Supported formats: PhotoCD, jpeg, ppm, gif, tiff, xwd, bmp, png.\n"
 	    "It tries to use ImageMagick's convert for unknown file formats.\n"
 	    "\n"
-	    "  Usage: %s [ options ] file1 file2 ... fileN\n"
-	    "\n"
-	    "    --help       [-h]      Print this text\n"
-	    "    --version    [-V]      Show the fbi version number\n"
-	    "    --device     [-d] dev  Framebuffer device [%s]\n"
-	    "    --mode       [-m] mode Video mode (must be listed in /etc/fb.modes)\n"
-	    "                           - Default is current mode.\n"
-	    "    --gamma      [-g] f    Set gamma\n"
-	    "    --scroll     [-s] n    Set scroll steps in pixels (default: 50)\n"
-	    "    --quiet      [-q]      don't print anything at all\n"
-	    "    --verbose    [-v]      show print filenames all the time\n"
-	    "    --timeout    [-t] n    Load next image after N sec without any keypress\n"
-	    "    --once       [-1]      Don't loop (for use with -t).\n"
-	    "    --resolution [-r] n    Select resolution [1..5] (PhotoCD)\n"
-	    "    --random     [-u]      Show file1 .. fileN in a random order\n"
-	    "    --font       [-f] fn   Use font fn (either console psf file or\n"
-	    "                           X11 font spec if a font server is available\n"
-	    "    --autozoom   [-a]      Automagically pick useful zoom factor.\n"
-	    "      --autoup             Like the above, but upscale only.\n"
-	    "      --autodown           Like the above, but downscale only.\n"
-	    "    --edit       [-e]      enable editing commands (see man page).\n"
-	    "      --backup   [-b]      create backup files when editing.\n"
-	    "      --preserve [-p]      preserve timestamps when editing.\n"
-	    "    --list       [-l] file read list of images from file\n"
-	    "    --comments             display image comments\n"
-	    "    --vt         [-T] vt   start on console #vt\n"
+	    "usage: %s [ options ] file1 file2 ... fileN\n"
+	    "\n",
+	    name);
+
+    cfg_help_cmdline(fbi_cmd,4,20,0);
+    cfg_help_cmdline(fbi_cfg,4,20,40);
+
+    fprintf(stderr,
 	    "\n"
 	    "Large images can be scrolled using the cursor keys.  Zoom in/out\n"
 	    "works with '+' and '-'.  Use ESC or 'q' to quit.  Space and PgDn\n"
 	    "show the next, PgUp shows the previous image. Jumping to a image\n"
 	    "works with <number>g.  Return acts like Space but additionally\n"
 	    "prints the filename of the currently displayed image to stdout.\n"
-	    "\n",
-	    name, fbdev ? fbdev : "/dev/fb0");
+	    "\n");
 }
 
 /* ---------------------------------------------------------------------- */
@@ -585,7 +538,7 @@ static void debug_key(char *key)
 }
 
 static void
-console_switch(int is_busy)
+console_switch(void)
 {
     switch (fb_switch_state) {
     case FB_REL_REQ:
@@ -597,11 +550,10 @@ console_switch(int is_busy)
 	fb_switch_acquire();
     case FB_ACTIVE:
 	visible = 1;
-	redraw = 1;
 	ioctl(fd,FBIOPAN_DISPLAY,&fb_var);
-	shadow_clear();
-	if (is_busy)
-	    status_update(NULL, "busy, please wait ...", NULL);
+	shadow_set_palette(fd);
+	shadow_set_dirty();
+	shadow_render();
 	break;
     default:
 	break;
@@ -673,7 +625,7 @@ read_image(char *filename)
     img->data = malloc(img->i.width * img->i.height * 3);
     for (y = 0; y < img->i.height; y++) {
         if (switch_last != fb_switch_state)
-	    console_switch(1);
+	    console_switch();
 	loader->read(img->data + img->i.width * 3 * y, y, data);
     }
     loader->done(data);
@@ -706,7 +658,7 @@ scale_image(struct ida_image *src, float scale)
     dest->data = malloc(dest->i.width * dest->i.height * 3);
     for (y = 0; y < dest->i.height; y++) {
 	if (switch_last != fb_switch_state)
-	    console_switch(1);
+	    console_switch();
 	desc_resize.work(src,&rect,
 			 dest->data + 3 * dest->i.width * y,
 			 y, data);
@@ -781,7 +733,7 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 	    shadow_render();
 	}
         if (switch_last != fb_switch_state) {
-	    console_switch(0);
+	    console_switch();
 	    continue;
 	}
 	FD_ZERO(&set);
@@ -796,9 +748,9 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 	limit.tv_sec = timeout;
 	limit.tv_usec = 0;
 	rc = select(fdmax, &set, NULL, NULL,
-		    (-1 != timeout && !paused) ? &limit : NULL);
+		    (0 != timeout && !paused) ? &limit : NULL);
         if (switch_last != fb_switch_state) {
-	    console_switch(0);
+	    console_switch();
 	    continue;
 	}
 	if (0 == rc)
@@ -878,7 +830,7 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 	    
 	} else if (0 == strcmp(key, "p") ||
 		   0 == strcmp(key, "P")) {
-	    if (-1 != timeout) {
+	    if (0 != timeout) {
 		paused = !paused;
 		status_update(img, paused ? "pause on " : "pause off", NULL);
 	    }
@@ -1028,16 +980,12 @@ static char edit_line(struct ida_image *img, char *line, int max)
     fd_set  set;
 
     do {
-#if 0
-	fb_edit_line(line,pos);
-#else
 	status_edit(img,line,pos);
-#endif
-
+	
 	FD_SET(0, &set);
 	rc = select(1, &set, NULL, NULL, NULL);
         if (switch_last != fb_switch_state) {
-	    console_switch(0);
+	    console_switch();
 	    continue;
 	}
 	rc = read(0, key, sizeof(key)-1);
@@ -1137,10 +1085,7 @@ static void cleanup_and_exit(int code)
 int
 main(int argc, char *argv[])
 {
-    int              timeout = -1;
-    int              randomize = -1;
-    int              opt_index = 0;
-    int              vt = 0;
+    int              timeout = 0;
     int              backup = 0;
     int              preserve = 0;
 
@@ -1150,109 +1095,65 @@ main(int argc, char *argv[])
     float            scale    = 1;
     float            newscale = 1;
 
-    int              c, editable = 0, once = 0;
+    int              editable = 0, once = 0;
     int              need_read;
     int              i, arg, key;
 
-    char             *line, *info, *desc;
+    char             *info, *desc, *filelist;
     char             linebuffer[128];
 
-#if 0 /* debug aid */ 
+#if 0
+    /* debug aid, to attach gdb ... */ 
     fprintf(stderr,"pid %d\n",getpid());
-    sleep(30);
+    sleep(10);
 #endif
 
-    if (NULL != (line = getenv("FRAMEBUFFER")))
-	fbdev = line;
-    if (NULL != (line = getenv("FBGAMMA")))
-        fbgamma = atof(line);
-    if (NULL != (line = getenv("FBFONT")))
-	fontname = line;
-
+    setlocale(LC_ALL,"");
 #ifdef HAVE_LIBLIRC
     lirc = lirc_fbi_init();
 #endif
     fbi_read_config();
+    cfg_parse_cmdline(&argc,argv,fbi_cmd);
+    cfg_parse_cmdline(&argc,argv,fbi_cfg);
 
-    setlocale(LC_ALL,"");
-    for (;;) {
-	c = getopt_long(argc, argv, "u1evahPqVbpr:t:m:d:g:s:f:l:T:",
-			fbi_options, &opt_index);
-	if (c == -1)
-	    break;
-	switch (c) {
-	case 0:
-	    /* long option, nothing to do */
-	    break;
-	case '1':
-	    once = 1;
-	    break;
-	case 'a':
-	    autoup   = 1;
-	    autodown = 1;
-	    break;
-	case 'q':
-	    statusline = 0;
-	    break;
-	case 'v':
-	    statusline = 1;
-	    break;
-	case 'P':
-	    textreading = 1;
-	    break;
-	case 'g':
-	    fbgamma = atof(optarg);
-	    break;
-	case 'r':
-	    pcd_res = atoi(optarg);
-	    break;
-	case 's':
-	    steps = atoi(optarg);
-	    break;
-	case 't':
-	    timeout = atoi(optarg);
-	    break;
-	case 'u':
-	    randomize = 1;
-	    break;
-	case 'd':
-	    fbdev = optarg;
-	    break;
-	case 'm':
-	    fbmode = optarg;
-	    break;
-	case 'f':
-	    fontname = optarg;
-	    break;
-	case 'e':
-	    editable = 1;
-	    break;
-	case 'b':
-	    backup = 1;
-	    break;
-	case 'p':
-	    preserve = 1;
-	    break;
-	case 'l':
-	    flist_add_list(optarg);
-	    break;
-	case 'T':
-	    vt = atoi(optarg);
-	    break;
-	case 'V':
-	    version();
-	    exit(0);
-	    break;
-	default:
-	case 'h':
-	    usage(argv[0]);
-	    exit(1);
-	}
+    if (GET_AUTO_ZOOM()) {
+	cfg_set_bool(O_AUTO_UP,   1);
+	cfg_set_bool(O_AUTO_DOWN, 1);
     }
 
-    for (i = optind; i < argc; i++) {
+    if (GET_HELP()) {
+	usage(argv[0]);
+	exit(0);
+    }
+    if (GET_VERSION()) {
+	version();
+	exit(0);
+    }
+    if (GET_WRITECONF())
+	fbi_write_config();
+
+    once        = GET_ONCE();
+    autoup      = GET_AUTO_UP();
+    autodown    = GET_AUTO_DOWN();
+    statusline  = GET_VERBOSE();
+    textreading = GET_TEXT_MODE();
+    editable    = GET_EDIT();
+    backup      = GET_BACKUP();
+    preserve    = GET_PRESERVE();
+
+    steps       = GET_SCROLL();
+    timeout     = GET_TIMEOUT();
+    pcd_res     = GET_PCD_RES();
+
+    fbgamma     = GET_GAMMA();
+
+    fontname    = cfg_get_str(O_FONT);
+    filelist    = cfg_get_str(O_FILE_LIST);
+    
+    if (filelist)
+	flist_add_list(filelist);
+    for (i = optind; i < argc; i++)
 	flist_add(argv[i]);
-    }
     flist_renumber();
 
     if (0 == fcount) {
@@ -1260,14 +1161,16 @@ main(int argc, char *argv[])
 	exit(1);
     }
 
-    if (randomize != -1)
+    if (GET_RANDOM())
 	flist_randomize();
     fcurrent = flist_first();
     need_read = 1;
 
     font_init();
-    face = font_open("monospace:size=16");
-    fd = fb_init(fbdev, fbmode, vt);
+    face = font_open(fontname ? fontname : "monospace:size=16");
+    fd = fb_init(cfg_get_str(O_DEVICE),
+		 cfg_get_str(O_VIDEO_MODE),
+		 GET_VT());
     fb_catch_exit_signals();
     fb_switch_init();
     shadow_init();

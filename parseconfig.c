@@ -333,18 +333,64 @@ void
 cfg_parse_cmdline(int *argc, char **argv, struct cfg_cmdline *opt)
 {
     int i,j,o,shift,len;
+    char sopt,*lopt;
 
     for (i = 1; i < *argc;) {
 	if (argv[i][0] != '-') {
 	    i++;
 	    continue;
 	}
+	if (argv[i][1] == 0) {
+	    i++;
+	    continue;
+	}
+
+	sopt = 0;
+	lopt = NULL;
+	if (argv[i][1] != '-' &&
+	    argv[i][2] == 0) {
+	    /* short option: -f */
+	    sopt = argv[i][1];
+	}
+	if (argv[i][1] != '-') {
+	    /* long option: -foo */
+	    lopt = argv[i]+1;
+	} else {
+	    /* also accept gnu-style: --foo */
+	    lopt = argv[i]+2;
+	}
 	
 	for (shift = 0, o = 0;
 	     0 == shift && opt[o].cmdline != NULL;
 	     o++) {
 	    len = strlen(opt[o].cmdline);
-	    if (opt[o].yesno && 0 == strcmp(argv[i]+1,opt[o].cmdline)) {
+
+	    if (opt[o].yesno && sopt && sopt == opt[o].letter) {
+		/* yesno: -f */
+		cfg_set_bool(opt[o].option.domain,
+			     opt[o].option.section,
+			     opt[o].option.entry,
+			     1);
+		shift = 1;
+
+	    } else if (opt[o].needsarg && sopt && sopt == opt[o].letter) {
+		/* arg: -f bar */
+		cfg_set_str(opt[o].option.domain,
+			    opt[o].option.section,
+			    opt[o].option.entry,
+			    argv[i+1]);
+		shift = 2;
+		
+	    } else if (opt[o].value && sopt && sopt == opt[o].letter) {
+		/* -f sets fixed value */
+		cfg_set_str(opt[o].option.domain,
+			    opt[o].option.section,
+			    opt[o].option.entry,
+			    opt[o].value);
+		shift = 1;
+
+	    } else if (opt[o].yesno && lopt && 
+		       0 == strcmp(lopt,opt[o].cmdline)) {
 		/* yesno: -foo */
 		cfg_set_bool(opt[o].option.domain,
 			     opt[o].option.section,
@@ -352,9 +398,9 @@ cfg_parse_cmdline(int *argc, char **argv, struct cfg_cmdline *opt)
 			     1);
 		shift = 1;
 
-	    } else if (opt[o].yesno &&
-		       0 == strncmp(argv[i]+1,"no",2) &&
-		       0 == strcmp(argv[i]+3,opt[o].cmdline)) {
+	    } else if (opt[o].yesno && lopt && 
+		       0 == strncmp(lopt,"no",2) &&
+		       0 == strcmp(lopt+2,opt[o].cmdline)) {
 		/* yesno: -nofoo */
 		cfg_set_bool(opt[o].option.domain,
 			     opt[o].option.section,
@@ -362,8 +408,8 @@ cfg_parse_cmdline(int *argc, char **argv, struct cfg_cmdline *opt)
 			     0);
 		shift = 1;
 
-	    } else if (opt[o].needsarg &&
-		       0 == strcmp(argv[i]+1,opt[o].cmdline) &&
+	    } else if (opt[o].needsarg && lopt && 
+		       0 == strcmp(lopt,opt[o].cmdline) &&
 		       i+1 < *argc) {
 		/* arg: -foo bar */
 		cfg_set_str(opt[o].option.domain,
@@ -372,9 +418,9 @@ cfg_parse_cmdline(int *argc, char **argv, struct cfg_cmdline *opt)
 			    argv[i+1]);
 		shift = 2;
 
-	    } else if (opt[o].needsarg &&
-		       0 == strncmp(argv[i]+1,opt[o].cmdline,len) &&
-		       0 == strncmp(argv[i]+1+len,"=",1)) {
+	    } else if (opt[o].needsarg && lopt && 
+		       0 == strncmp(lopt,opt[o].cmdline,len) &&
+		       0 == strncmp(lopt+len,"=",1)) {
 		/* arg: -foo=bar */
 		cfg_set_str(opt[o].option.domain,
 			    opt[o].option.section,
@@ -382,8 +428,8 @@ cfg_parse_cmdline(int *argc, char **argv, struct cfg_cmdline *opt)
 			    argv[i]+2+len);
 		shift = 1;
 
-	    } else if (opt[o].value &&
-		       0 == strcmp(argv[i]+1,opt[o].cmdline)) {
+	    } else if (opt[o].value && lopt &&
+		       0 == strcmp(lopt,opt[o].cmdline)) {
 		/* -foo sets some fixed value */
 		cfg_set_str(opt[o].option.domain,
 			    opt[o].option.section,
@@ -411,6 +457,12 @@ cfg_help_cmdline(struct cfg_cmdline *opt, int w1, int w2, int w3)
     
     for (o = 0; opt[o].cmdline != NULL; o++) {
 	fprintf(stderr,"%*s",w1,"");
+	if (opt[o].letter) {
+	    fprintf(stderr,"-%c  ",opt[o].letter);
+	} else {
+	    fprintf(stderr,"    ");
+	}
+
 	if (opt[o].yesno) {
 	    len = fprintf(stderr,"-(no)%s ",opt[o].cmdline);
 	} else if (opt[o].needsarg) {
@@ -422,14 +474,16 @@ cfg_help_cmdline(struct cfg_cmdline *opt, int w1, int w2, int w3)
 	    fprintf(stderr,"%*s",w2-len,"");
 
 	len = fprintf(stderr,"%s ",opt[o].desc);
-	if (len < w3)
-	    fprintf(stderr,"%*s",w3-len,"");
 
-	val = cfg_get_str(opt[o].option.domain,
-			  opt[o].option.section,
-			  opt[o].option.entry);
-	if (val)
-	    fprintf(stderr,"[%s]",val);
+	if (w3) {
+	    if (len < w3)
+		fprintf(stderr,"%*s",w3-len,"");
+	    val = cfg_get_str(opt[o].option.domain,
+			      opt[o].option.section,
+			      opt[o].option.entry);
+	    if (val)
+		fprintf(stderr,"[%s]",val);
+	}
  	fprintf(stderr,"\n");
     }
 }
@@ -780,13 +834,13 @@ cfg_get_signed_int(char *dname, char *sname, char *ename, unsigned int def)
 }
 
 float
-cfg_get_float(char *dname, char *sname, char *ename)
+cfg_get_float(char *dname, char *sname, char *ename, float def)
 {
     char *val;
 
     val = cfg_get_str(dname,sname,ename);
     if (NULL == val)
-	return -1;
+	return def;
     return atof(val);
 }
 

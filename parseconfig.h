@@ -9,6 +9,7 @@ struct cfg_option {
     char *entry;
 };    
 struct cfg_cmdline {
+    char               letter;
     char               *cmdline;
     struct cfg_option  option;
     char               *value;
@@ -56,7 +57,8 @@ int    cfg_get_int(char *dname, char *sname, char *ename,
 		   int def);
 int    cfg_get_signed_int(char *dname, char *sname, char *ename,
 			  unsigned int def);
-float  cfg_get_float(char *dname, char *sname, char *ename);
+float  cfg_get_float(char *dname, char *sname, char *ename,
+		     float def);
 int    cfg_get_bool(char *dname, char *sname, char *ename,
 		    int def);
 

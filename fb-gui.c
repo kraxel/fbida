@@ -182,6 +182,14 @@ void shadow_clear(void)
     shadow_clear_lines(0, sheight-1);
 }
 
+void shadow_set_dirty(void)
+{
+    int i;
+
+    for (i = 0; i < sheight; i++)
+	sdirty[i]++;
+}
+
 void shadow_set_palette(int fd)
 {
     if (fb_fix.visual != FB_VISUAL_DIRECTCOLOR && fb_var.bits_per_pixel != 8)
@@ -433,13 +441,15 @@ int shadow_draw_string(FT_Face face, int x, int y, wchar_t *str, int align)
     FT_Glyph       image;
     FT_BitmapGlyph bit;
     size_t         len;
-    int            i,ng,pos,kerning;
+    int            i,ng,pos;
+    int            kerning,scalable;
 
     len = wcslen(str);
     glyphs = malloc(sizeof(*glyphs) * len);
     memset(glyphs,0,sizeof(*glyphs) * len);
 
-    kerning = FT_HAS_KERNING(face);
+    kerning  = FT_HAS_KERNING(face);
+    scalable = FT_IS_SCALABLE(face);
     pgi = 0;
     
     for (ng = 0, pos = 0, i = 0; str[i] != 0; i++) {
@@ -458,30 +468,32 @@ int shadow_draw_string(FT_Face face, int x, int y, wchar_t *str, int align)
 	ng++;
     }
 
+    switch(align) {
+    case -1: /* left */
+	break;
+    case 0: /* center */
+	x -= pos >> 7;
+	break;
+    case 1: /* right */
+	x -= pos >> 6;
+	break;
+    }
+    pen.x = 0;
+    pen.y = 0;
     for (i = 0; i < ng; i++) {
-	pen.x = (x << 6) + glyphs[i].pos;
-	pen.y = (sheight - y) << 6;
-	switch(align) {
-	case -1: /* left */
-	    break;
-	case 0: /* center */
-	    pen.x -= pos/2;
-	    break;
-	case 1: /* right */
-	    pen.x -= pos;
-	    break;
-	}
 	image = glyphs[i].glyph;
 	if (0 != FT_Glyph_To_Bitmap(&image,FT_RENDER_MODE_NORMAL,&pen,0))
 	    continue;
 	bit = (FT_BitmapGlyph)image;
-	shadow_draw_glyph(&bit->bitmap, bit->left, sheight - bit->top);
-	FT_Done_Glyph(image);
+	shadow_draw_glyph(&bit->bitmap,
+			  x + bit->left + (glyphs[i].pos >> 6),
+			  y - bit->top);
+	if (image != glyphs[i].glyph)
+	    FT_Done_Glyph(image);
     }
 
-    for (i = 0; i < ng; i++) {
+    for (i = 0; i < ng; i++)
 	FT_Done_Glyph(glyphs[i].glyph);
-    }
     free(glyphs);
 
     return pos >> 6;
@@ -529,7 +541,7 @@ void shadow_draw_text_box(FT_Face face, int x, int y, int percent, wchar_t *line
 	    max = len;
     }
 
-    FT_Load_Glyph(face, FT_Get_Char_Index(face, 'm'), FT_LOAD_DEFAULT);
+    FT_Load_Glyph(face, FT_Get_Char_Index(face, 'x'), FT_LOAD_DEFAULT);
     x1 = x;
     x2 = x + max * (face->glyph->advance.x >> 6);
     y1 = y;

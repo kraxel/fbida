@@ -1,4 +1,4 @@
-.TH fbi 1 "(c) 1999-2002 Gerd Knorr"
+.TH fbi 1 "(c) 1999-2004 Gerd Knorr"
 .SH NAME
 fbi - linux \fBf\fPrame\fBb\fPuffer \fBi\fPmageviewer
 .SH SYNOPSIS
@@ -22,11 +22,8 @@ mapped to.
 name of the video mode to use video mode (must be listed in
 /etc/fb.modes).  Default is not to change the video mode.
 .TP
-.B -q
-be quiet: don't print anything.
-.TP
 .B -v
-be verbose: allways print filenames.
+be verbose: enable status line on the bottom of the screen.
 .TP
 .B -P
 Enable textreading mode.  This has the effect that fbi will display
@@ -52,12 +49,11 @@ select resolution.  PhotoCD only, n = 1..5.
 set scroll steps in pixels (default is 50).
 .TP
 .B -f font
-Set font.  This can be either a pcf console font file or a X11 font
-spec.  Using X11 fonts requires a font server (The one specified in
-the environment variable FONTSERVER or on localhost).  The FBFONT
-environment variable is used as default.  If unset, fbi will
-fallback to 10x20 (X11) / lat1u-16.psf (console).
-.TP
+Set font.  This can be anything fontconfig accepts.  Try fc-list for a
+list of known fonts on your system.  The fontconfig config file is
+evaluated as well, so any generic stuff defined there (such as mono,
+sans) will work as well.  It is recommended to use monospaced fonts,
+the textboxes (help text, exif info) look better then.
 .B -a
 Enable autozoom.  fbi will automagically pick a reasonable zoom factor
 when loading a new image.
@@ -95,6 +91,9 @@ PgDn, Space     next image
 Return          next image, write the filename of the current
                 image to stdout.
 P               pause the slideshow (if started with -t, toggle)
+V               enable/disable status line
+H               display textbox with brief help
+I               display textbox with some EXIF info
 <number>g       jump to image #<number>
 .fi
 .P
@@ -115,10 +114,8 @@ to type Shift+D.  This is done to avoid deleting images by mistake
 because there are no safety bells:  If you ask fbi to delete the image,
 it will be deleted without questions asked.
 .P
-The rotate function actually works for JPEG images only because it
-calls the jpegtran command to perform a lossless rotation if the image.
-It is especially useful if you review the images of your digital
-camera.
+The rotate function actually works for JPEG images only.  It does
+a lossless transformation of the image.
 .SH COMMON PROBLEMS
 .B fbi
 needs rw access to the framebuffer devices (/dev/fbN), i.e you (our
@@ -139,7 +136,7 @@ logins, but any kind of a pseudo tty (xterm, ssh, screen, ...) will
 .B not
 work.
 .SH SEE ALSO
-fbset(1), convert(1), jpegtran(1)
+fbset(1), convert(1)
 .SH AUTHOR
 Gerd Knorr <kraxel@bytesex.org>
 .SH COPYRIGHT

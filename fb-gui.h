@@ -7,6 +7,7 @@ extern int visible;
 void shadow_render(void);
 void shadow_clear_lines(int first, int last);
 void shadow_clear(void);
+void shadow_set_dirty(void);
 void shadow_set_palette(int fd);
 void shadow_init(void);
 void shadow_fini(void);
