@@ -329,8 +329,8 @@ static void do_exif(struct jpeg_decompress_struct *src,
 	    mark = src->mem->alloc_large((j_common_ptr)src,JPOOL_IMAGE,sizeof(*mark));
 	    memset(mark,0,sizeof(*mark));
 	    mark->marker = JPEG_APP0 +1;
-	    mark->next   = src->marker_list->next;
-	    src->marker_list->next = mark;
+	    mark->next = src->marker_list;
+	    src->marker_list = mark;
 	}
 	if (ed->data)
 	    free(ed->data);
