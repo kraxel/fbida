@@ -60,6 +60,11 @@ struct cfg_cmdline fbi_cfg[] = {
 	.option   = { O_AUTO_DOWN },
 	.yesno    = 1,
 	.desc     = "  like the above, but downscale only",
+    },{
+	.cmdline  = "fitwidth",
+	.option   = { O_FIT_WIDTH },
+	.yesno    = 1,
+	.desc     = "  use width only for autoscaling",
 
     },{
 	.letter   = 'v',

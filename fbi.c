@@ -88,6 +88,9 @@ int             dither = FALSE, pcd_res = 3, steps = 50;
 int             textreading = 0, redraw = 0, statusline = 1;
 int             new_image;
 int             left, top;
+int             show_top;
+int             show_bottom;
+int             fitwidth;
 
 /* file list */
 struct flist {
@@ -536,9 +539,10 @@ static void debug_key(char *key)
 
     len = sprintf(linebuffer,"key: ");
     for (i = 0; key[i] != '\0'; i++)
-	len += sprintf(linebuffer+len, "%s%c",
-		       key[i] < 0x20 ? "^" : "",
-		       key[i] < 0x20 ? key[i] + 0x40 : key[i]);
+	len += snprintf(linebuffer+len, sizeof(linebuffer)-len,
+			"%s%c",
+			key[i] < 0x20 ? "^" : "",
+			key[i] < 0x20 ? key[i] + 0x40 : key[i]);
     status_update(NULL, linebuffer, NULL);
 }
 
@@ -612,7 +616,8 @@ read_image(char *filename)
     }
     if (NULL == loader) {
 	/* no loader found, try to use ImageMagick's convert */
-	sprintf(command,"convert -depth 8 \"%s\" ppm:-",filename);
+	snprintf(command,sizeof(command),
+		 "convert -depth 8 \"%s\" ppm:-",filename);
 	if (NULL == (fp = popen(command,"r")))
 	    return NULL;
 	loader = &ppm_loader;
@@ -677,6 +682,8 @@ static float auto_scale(struct ida_image *img)
     float xs,ys,scale;
     
     xs = (float)fb_var.xres / img->i.width;
+    if (fitwidth)
+	return xs;
     ys = (float)fb_var.yres / img->i.height;
     scale = (xs < ys) ? xs : ys;
     return scale;
@@ -705,10 +712,15 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 	if (img->i.width > fb_var.xres)
 	    left = (img->i.width - fb_var.xres) / 2;
 	if (img->i.height > fb_var.yres) {
-	    if (textreading)
+	    top = (img->i.height - fb_var.yres) / 2;
+	    if (show_top) {
+		show_top = 0;
 		top = 0;
-	    else
-		top = (img->i.height - fb_var.yres) / 2;
+	    }
+	    if (show_bottom) {
+		show_bottom = 0;
+		top = img->i.height - fb_var.yres;
+	    }
 	}
 	new_image = 0;
     }
@@ -818,12 +830,27 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 	    redraw = 1;
 	    left += steps;
 
-	} else if (0 == strcmp(key, "\x1b[5~")) {
-	    return KEY_PGUP;
+	} else if (0 == strcmp(key, "\x1b[5~") ||
+		   0 == strcmp(key, "j")       ||
+		   0 == strcmp(key, "J")) {
+	    if (textreading && top > 0) {
+		redraw = 1;
+		top -= (fb_var.yres-100);
+	    } else {
+		return KEY_PGUP;
+	    }
+
 	} else if (0 == strcmp(key, "\x1b[6~") ||
+		   0 == strcmp(key, "k")       ||
+		   0 == strcmp(key, "K")       ||
 		   0 == strcmp(key, "n")       ||
 		   0 == strcmp(key, "N")) {
-	    return KEY_PGDN;
+	    if (textreading && top < (int)(img->i.height - fb_var.yres)) {
+		redraw = 1;
+		top += (fb_var.yres-100);
+	    } else {
+		return KEY_PGDN;
+	    }
 	    
 	} else if (0 == strcmp(key, "+")) {
 	    return KEY_PLUS;
@@ -885,7 +912,7 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 	    return KEY_SCALE;
 	} else if (rc == 1 && *key >= '0' && *key <= '9') {
 	    *nr = *nr * 10 + (*key - '0');
-	    sprintf(linebuffer, "> %d",*nr);
+	    snprintf(linebuffer, sizeof(linebuffer), "> %d",*nr);
 	    status_update(img, linebuffer, NULL);
 	} else {
 	    *nr = 0;
@@ -1140,8 +1167,11 @@ main(int argc, char *argv[])
     once        = GET_ONCE();
     autoup      = GET_AUTO_UP();
     autodown    = GET_AUTO_DOWN();
+    fitwidth    = GET_FIT_WIDTH();
     statusline  = GET_VERBOSE();
     textreading = GET_TEXT_MODE();
+    if (textreading)
+	show_top = 1;
     editable    = GET_EDIT();
     backup      = GET_BACKUP();
     preserve    = GET_PRESERVE();
@@ -1200,7 +1230,7 @@ main(int argc, char *argv[])
 	    fimg = NULL;
 	    simg = NULL;
 	    img  = NULL;
-	    sprintf(linebuffer,"loading %s ...",fcurrent->name);
+	    snprintf(linebuffer,sizeof(linebuffer),"loading %s ...",fcurrent->name);
 	    status_update(img,linebuffer, NULL);
 	    fimg = read_image(fcurrent->name);
 	    scale = 1;
@@ -1213,8 +1243,9 @@ main(int argc, char *argv[])
 			scale = 1;
 		}
 		if (scale != 1) {
-		    sprintf(linebuffer,"scaling (%.0f%%) %s ...",
-			    scale*100, fcurrent->name);
+		    snprintf(linebuffer, sizeof(linebuffer),
+			     "scaling (%.0f%%) %s ...",
+			     scale*100, fcurrent->name);
 		    status_update(img,linebuffer, NULL);
 		    simg = scale_image(fimg,scale);
 		    img = simg;
@@ -1224,7 +1255,8 @@ main(int argc, char *argv[])
 		desc = make_desc(&fimg->i,fcurrent->name);
 	    }
 	    if (!img) {
-		sprintf(linebuffer,"%s: FAILED",fcurrent->name);
+		snprintf(linebuffer,sizeof(linebuffer),
+			 "%s: FAILED",fcurrent->name);
 		status_error(linebuffer);
 	    }
 	}
@@ -1254,7 +1286,8 @@ main(int argc, char *argv[])
 	case KEY_ROT_CCW:
 	{
 	    if (editable) {
-		sprintf(linebuffer,"rotating %s ...",fcurrent->name);
+		snprintf(linebuffer,sizeof(linebuffer),
+			 "rotating %s ...",fcurrent->name);
 		status_update(img, linebuffer, NULL);
 		jpeg_transform_inplace
 		    (fcurrent->name,
@@ -1278,6 +1311,8 @@ main(int argc, char *argv[])
 	case KEY_SPACE:
 	    need_read = 1;
 	    fcurrent = flist_next(fcurrent,1,0);
+	    if (textreading)
+		show_top = 1;
 	    if (NULL != fcurrent)
 		break;
 	    /* else fall */
@@ -1289,10 +1324,14 @@ main(int argc, char *argv[])
 	case KEY_PGDN:
 	    need_read = 1;
 	    fcurrent = flist_next(fcurrent,0,0);
+	    if (textreading)
+		show_top = 1;
 	    break;
 	case KEY_PGUP:
 	    need_read = 1;
 	    fcurrent = flist_prev(fcurrent);
+	    if (textreading)
+		show_bottom = 1;
 	    break;
 	case KEY_TIMEOUT:
 	    need_read = 1;
@@ -1321,8 +1360,9 @@ main(int argc, char *argv[])
 		newscale = 10;
 	    scale_fix_top_left(scale, newscale, img);
 	    scale = newscale;
-	    sprintf(linebuffer,"scaling (%.0f%%) %s ...",
-		    scale*100, fcurrent->name);
+	    snprintf(linebuffer,sizeof(linebuffer),
+		     "scaling (%.0f%%) %s ...",
+		     scale*100, fcurrent->name);
 	    status_update(NULL, linebuffer, NULL);
 	    free_image(simg);
 	    simg = scale_image(fimg,scale);
