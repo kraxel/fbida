@@ -1229,6 +1229,7 @@ main(int argc, char *argv[])
     tty_raw();
     desc = NULL;
     info = NULL;
+    scale = 1;
     for (;;) {
 	if (need_read) {
 	    need_read = 0;
@@ -1240,7 +1241,6 @@ main(int argc, char *argv[])
 	    snprintf(linebuffer,sizeof(linebuffer),"loading %s ...",fcurrent->name);
 	    status_update(img,linebuffer, NULL);
 	    fimg = read_image(fcurrent->name);
-	    scale = 1;
 	    if (fimg) {
 		if (autoup || autodown) {
 		    scale = auto_scale(fimg);
