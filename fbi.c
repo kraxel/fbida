@@ -19,6 +19,7 @@
 #include <signal.h>
 #include <ctype.h>
 #include <locale.h>
+#include <wchar.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
@@ -112,9 +113,10 @@ static float fbgamma = 1;
 
 /* Command line options. */
 
-int autodown = 0;
-int autoup   = 0;
-int comments = 0;
+int autodown     = 0;
+int autoup       = 0;
+int comments     = 0;
+int transparency = 30;
 
 struct option fbi_options[] = {
     {"version",    no_argument,       NULL, 'V'},  /* version */
@@ -146,6 +148,7 @@ struct option fbi_options[] = {
 
 /* font handling */
 static char *fontname = NULL;
+static FT_Face face;
 
 /* ---------------------------------------------------------------------- */
 
@@ -335,30 +338,99 @@ static void flist_print_tagged(FILE *fp)
 
 /* ---------------------------------------------------------------------- */
 
-static void status(unsigned char *desc, char *info)
+static void
+shadow_draw_image(struct ida_image *img, int xoff, int yoff,
+		  unsigned int first, unsigned int last)
 {
-    int chars, ilen;
-    char *str;
+    unsigned int     dwidth  = MIN(img->i.width,  fb_var.xres);
+    unsigned int     dheight = MIN(img->i.height, fb_var.yres);
+    unsigned int     data, offset, y, xs, ys;
+
+    shadow_clear_lines(first, last);
+    
+    /* offset for image data (image > screen, select visible area) */
+    offset = (yoff * img->i.width + xoff) * 3;
+
+    /* offset for video memory (image < screen, center image) */
+    xs = 0, ys = 0;
+    if (img->i.width < fb_var.xres)
+	xs += (fb_var.xres - img->i.width) / 2;
+    if (img->i.height < fb_var.yres)
+	ys += (fb_var.yres - img->i.height) / 2;
+
+    /* go ! */
+    for (data = 0, y = 0;
+	 data < img->i.width * img->i.height * 3
+	     && data / img->i.width / 3 < dheight;
+	 data += img->i.width * 3, y++) {
+	if (ys+y < first)
+	    continue;
+	if (ys+y > last)
+	    continue;
+	shadow_draw_rgbdata(xs, ys+y, dwidth, img->data + data + offset);
+    }
+}
+
+static void status_prepare(struct ida_image *img)
+{
+    int y1 = fb_var.yres - (face->size->metrics.height >> 6);
+    int y2 = fb_var.yres - 1;
+
+    if (img) {
+	shadow_draw_image(img, left, top, y1, y2);
+	shadow_darkify(0, fb_var.xres-1, y1, y2, transparency);
+    } else {
+	shadow_clear_lines(y1, y2);
+    }
+    shadow_draw_line(0, fb_var.xres-1, y1-1, y1-1);
+}
+
+static void status_update(struct ida_image *img, unsigned char *desc, char *info)
+{
+    int yt = fb_var.yres + (face->size->metrics.descender >> 6);
+    wchar_t str[128];
     
     if (!statusline)
 	return;
-    chars = fb_var.xres / fb_font_width();
-    str = malloc(chars+1);
+    status_prepare(img);
+
+    swprintf(str,sizeof(str),L"%s",desc);
+    shadow_draw_string(face, 0, yt, str, -1);
     if (info) {
-	ilen = strlen(info);
-	sprintf(str, "%-*.*s [ %s ] H - Help",
-		chars-14-ilen, chars-14-ilen, desc, info);
+	swprintf(str,sizeof(str), L"[ %s ] H - Help", info);
     } else {
-	sprintf(str, "%-*.*s | H - Help", chars-11, chars-11, desc);
+	swprintf(str,sizeof(str), L"| H - Help");
     }
-    fb_status_line(str);
-    free(str);
+    shadow_draw_string(face, fb_var.xres, yt, str, 1);
+
+    shadow_render();
 }
 
-static void show_error(unsigned char *msg)
+static void status_error(unsigned char *msg)
 {
-    fb_status_line(msg);
+    int yt = fb_var.yres + (face->size->metrics.descender >> 6);
+    wchar_t str[128];
+
+    status_prepare(NULL);
+
+    swprintf(str,sizeof(str), L"%s", msg);
+    shadow_draw_string(face, 0, yt, str, -1);
+
+    shadow_render();
     sleep(2);
+}
+
+static void status_edit(struct ida_image *img, unsigned char *msg, int pos)
+{
+    int yt = fb_var.yres + (face->size->metrics.descender >> 6);
+    wchar_t str[128];
+
+    status_prepare(img);
+
+    swprintf(str,sizeof(str), L"%s", msg);
+    shadow_draw_string_cursor(face, 0, yt, str, pos);
+
+    shadow_render();
 }
 
 static void show_exif(struct flist *f)
@@ -383,14 +455,14 @@ static void show_exif(struct flist *f)
     unsigned int tag,l1,l2,len,count,i;
     const char *title[ARRAY_SIZE(tags)];
     char *value[ARRAY_SIZE(tags)];
-    char *linebuffer[ARRAY_SIZE(tags)];
+    wchar_t *linebuffer[ARRAY_SIZE(tags)];
 
     if (!visible)
 	return;
 
     ed = exif_data_new_from_file(f->name);
     if (NULL == ed) {
-	status("image has no EXIF data", NULL);
+	status_error("image has no EXIF data");
 	return;
     }
 
@@ -421,13 +493,16 @@ static void show_exif(struct flist *f)
     for (tag = 0; tag < ARRAY_SIZE(tags); tag++) {
 	if (NULL == title[tag])
 	    continue;
-	linebuffer[count] = malloc(l1+l2+8);
-	sprintf(linebuffer[count],"%-*.*s : %-*.*s",
-		l1, l1, title[tag],
-		l2, l2, value[tag]);
+	linebuffer[count] = malloc(sizeof(wchar_t)*(l1+l2+8));
+	swprintf(linebuffer[count], l1+l2+8,
+		 L"%-*.*s : %-*.*s",
+		 l1, l1, title[tag],
+		 l2, l2, value[tag]);
 	count++;
     }
-    fb_text_box(24,16,linebuffer,count);
+    shadow_draw_text_box(face, 24, 16, transparency,
+			 linebuffer, count);
+    shadow_render();
 
     /* pass three -- free data */
     for (tag = 0; tag < ARRAY_SIZE(tags); tag++)
@@ -440,29 +515,31 @@ static void show_exif(struct flist *f)
 
 static void show_help(void)
 {
-    static char *help[] = {
-	"keyboard commands",
-	"~~~~~~~~~~~~~~~~~",
-	"  ESC, Q      - quit",
-	"  pgdn, space - next image",
-	"  pgup        - previous image",
-	"  +/-         - zoom in/out",
-	"  A           - autozoom image",
-	"  cursor keys - scroll image",
-	"",
-	"  H           - show this help text",
-	"  I           - show EXIF info",
-	"  P           - pause slideshow",
-	"  V           - toggle statusline",
-	"",
-	"available if started with --edit switch,",
-	"rotation works for jpeg images only:",
-	"  shift+D     - delete image",
-	"  R           - rotate clockwise",
-	"  L           - rotate counter-clockwise",
+    static wchar_t *help[] = {
+	L"keyboard commands",
+	L"~~~~~~~~~~~~~~~~~",
+	L"  ESC, Q      - quit",
+	L"  pgdn, space - next image",
+	L"  pgup        - previous image",
+	L"  +/-         - zoom in/out",
+	L"  A           - autozoom image",
+	L"  cursor keys - scroll image",
+	L"",
+	L"  H           - show this help text",
+	L"  I           - show EXIF info",
+	L"  P           - pause slideshow",
+	L"  V           - toggle statusline",
+	L"",
+	L"available if started with --edit switch,",
+	L"rotation works for jpeg images only:",
+	L"  shift+D     - delete image",
+	L"  R           - rotate clockwise",
+	L"  L           - rotate counter-clockwise",
     };
 
-    fb_text_box(24,16,help,ARRAY_SIZE(help));
+    shadow_draw_text_box(face, 24, 16, transparency,
+			 help, ARRAY_SIZE(help));
+    shadow_render();
 }
 
 /* ---------------------------------------------------------------------- */
@@ -504,7 +581,7 @@ static void debug_key(char *key)
 	len += sprintf(linebuffer+len, "%s%c",
 		       key[i] < 0x20 ? "^" : "",
 		       key[i] < 0x20 ? key[i] + 0x40 : key[i]);
-    status(linebuffer, NULL);
+    status_update(NULL, linebuffer, NULL);
 }
 
 static void
@@ -522,9 +599,9 @@ console_switch(int is_busy)
 	visible = 1;
 	redraw = 1;
 	ioctl(fd,FBIOPAN_DISPLAY,&fb_var);
-	fb_clear_screen();
+	shadow_clear();
 	if (is_busy)
-	    status("busy, please wait ...", NULL);		
+	    status_update(NULL, "busy, please wait ...", NULL);
 	break;
     default:
 	break;
@@ -650,167 +727,6 @@ static float auto_scale(struct ida_image *img)
 
 /* ---------------------------------------------------------------------- */
 
-static unsigned char *
-convert_line(int bpp, int line, int owidth,
-	     char unsigned *dest, char unsigned *buffer)
-{
-    unsigned char  *ptr  = (void*)dest;
-    unsigned short *ptr2 = (void*)dest;
-    unsigned long  *ptr4 = (void*)dest;
-    int x;
-
-    switch (fb_var.bits_per_pixel) {
-    case 8:
-	dither_line(buffer, ptr, line, owidth);
-	ptr += owidth;
-	return ptr;
-    case 15:
-    case 16:
-	for (x = 0; x < owidth; x++) {
-	    ptr2[x] = lut_red[buffer[x*3]] |
-		lut_green[buffer[x*3+1]] |
-		lut_blue[buffer[x*3+2]];
-	}
-	ptr2 += owidth;
-	return (char*)ptr2;
-    case 24:
-	for (x = 0; x < owidth; x++) {
-	    ptr[3*x+2] = buffer[3*x+0];
-	    ptr[3*x+1] = buffer[3*x+1];
-	    ptr[3*x+0] = buffer[3*x+2];
-	}
-	ptr += owidth * 3;
-	return ptr;
-    case 32:
-	for (x = 0; x < owidth; x++) {
-	    ptr4[x] = lut_red[buffer[x*3]] |
-		lut_green[buffer[x*3+1]] |
-		lut_blue[buffer[x*3+2]];
-	}
-	ptr4 += owidth;
-	return (char*)ptr4;
-    default:
-	/* keep compiler happy */
-	return NULL;
-    }
-}
-
-/* ---------------------------------------------------------------------- */
-
-static void init_one(int32_t *lut, int bits, int shift)
-{
-    int i;
-    
-    if (bits > 8)
-	for (i = 0; i < 256; i++)
-	    lut[i] = (i << (bits + shift - 8));
-    else
-	for (i = 0; i < 256; i++)
-	    lut[i] = (i >> (8 - bits)) << shift;
-}
-
-static void
-lut_init(int depth)
-{
-    if (fb_var.red.length   &&
-	fb_var.green.length &&
-	fb_var.blue.length) {
-	/* fb_var.{red|green|blue} looks sane, use it */
-	init_one(lut_red,   fb_var.red.length,   fb_var.red.offset);
-	init_one(lut_green, fb_var.green.length, fb_var.green.offset);
-	init_one(lut_blue,  fb_var.blue.length,  fb_var.blue.offset);
-    } else {
-	/* fallback */
-	int i;
-	switch (depth) {
-	case 15:
-	    for (i = 0; i < 256; i++) {
-		lut_red[i]   = (i & 0xf8) << 7;	/* bits -rrrrr-- -------- */
-		lut_green[i] = (i & 0xf8) << 2;	/* bits ------gg ggg----- */
-		lut_blue[i]  = (i & 0xf8) >> 3;	/* bits -------- ---bbbbb */
-	    }
-	    break;
-	case 16:
-	    for (i = 0; i < 256; i++) {
-		lut_red[i]   = (i & 0xf8) << 8;	/* bits rrrrr--- -------- */
-		lut_green[i] = (i & 0xfc) << 3;	/* bits -----ggg ggg----- */
-		lut_blue[i]  = (i & 0xf8) >> 3;	/* bits -------- ---bbbbb */
-	    }
-	    break;
-	case 24:
-	    for (i = 0; i < 256; i++) {
-		lut_red[i]   = i << 16;	/* byte -r-- */
-		lut_green[i] = i << 8;	/* byte --g- */
-		lut_blue[i]  = i;		/* byte ---b */
-	    }
-	    break;
-	}
-    }
-}
-
-static unsigned short calc_gamma(int n, int max)
-{
-    int ret =65535.0 * pow((float)n/(max), 1 / fbgamma); 
-    if (ret > 65535) ret = 65535;
-    if (ret <     0) ret =     0;
-    return ret;
-}
-
-static void
-linear_palette(int bit)
-{
-    int i, size = 256 >> (8 - bit);
-    
-    for (i = 0; i < size; i++)
-        red[i] = green[i] = blue[i] = calc_gamma(i,size);
-}
-
-static void
-svga_dither_palette(int r, int g, int b)
-{
-    int             rs, gs, bs, i;
-
-    rs = 256 / (r - 1);
-    gs = 256 / (g - 1);
-    bs = 256 / (b - 1);
-    for (i = 0; i < 256; i++) {
-	red[i]   = calc_gamma(rs * ((i / (g * b)) % r), 255);
-	green[i] = calc_gamma(gs * ((i / b) % g),       255);
-	blue[i]  = calc_gamma(bs * ((i) % b),           255);
-    }
-}
-
-static void
-svga_display_image(struct ida_image *img, int xoff, int yoff)
-{
-    unsigned int     dwidth  = MIN(img->i.width,  fb_var.xres);
-    unsigned int     dheight = MIN(img->i.height, fb_var.yres);
-    unsigned int     data, video, bank, offset, bytes, y;
-
-    if (!visible)
-	return;
-    bytes = (fb_var.bits_per_pixel+7)/8;
-
-    /* offset for image data (image > screen, select visible area) */
-    offset = (yoff * img->i.width + xoff) * 3;
-
-    /* offset for video memory (image < screen, center image) */
-    video = 0, bank = 0;
-    if (img->i.width < fb_var.xres)
-	video += bytes * ((fb_var.xres - img->i.width) / 2);
-    if (img->i.height < fb_var.yres)
-	video += fb_fix.line_length * ((fb_var.yres - img->i.height) / 2);
-
-    /* go ! */
-    for (data = 0, y = 0;
-	 data < img->i.width * img->i.height * 3
-	     && data / img->i.width / 3 < dheight;
-	 data += img->i.width * 3, video += fb_fix.line_length) {
-	convert_line(fb_var.bits_per_pixel, y++, dwidth,
-		     fb_mem+video, img->data + data + offset);
-    }
-}
-
 static int
 svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 {
@@ -831,8 +747,12 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 	/* start with centered image, if larger than screen */
 	if (img->i.width > fb_var.xres)
 	    left = (img->i.width - fb_var.xres) / 2;
-	if (img->i.height > fb_var.yres && !textreading)
-	    top = (img->i.height - fb_var.yres) / 2;
+	if (img->i.height > fb_var.yres) {
+	    if (textreading)
+		top = 0;
+	    else
+		top = (img->i.height - fb_var.yres) / 2;
+	}
 	new_image = 0;
     }
 
@@ -856,8 +776,9 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 		if (left + fb_var.xres > img->i.width)
 		    left = img->i.width - fb_var.xres;
 	    }
-	    svga_display_image(img, left, top);
-	    status(desc, info);
+	    shadow_draw_image(img, left, top, 0, fb_var.yres-1);
+	    status_update(img, desc, info);
+	    shadow_render();
 	}
         if (switch_last != fb_switch_state) {
 	    console_switch(0);
@@ -958,7 +879,7 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 		   0 == strcmp(key, "P")) {
 	    if (-1 != timeout) {
 		paused = !paused;
-		status(paused ? "pause on " : "pause off", NULL);
+		status_update(img, paused ? "pause on " : "pause off", NULL);
 	    }
 
 	} else if (0 == strcmp(key, "D")) {
@@ -1007,9 +928,8 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 	} else if (rc == 1 && *key >= '0' && *key <= '9') {
 	    *nr = *nr * 10 + (*key - '0');
 	    sprintf(linebuffer, "> %d",*nr);
-	    status(linebuffer, NULL);
+	    status_update(img, linebuffer, NULL);
 	} else {
-
 	    *nr = 0;
 #if 0
 	    debug_key(key);
@@ -1082,7 +1002,6 @@ static char *make_desc(struct ida_image_info *img, char *filename)
 	    snprintf(linebuffer+len,sizeof(linebuffer)-len,
 		     " (%s)", my_basename(filename));
     }
-
     return linebuffer;
 }
 
@@ -1099,7 +1018,7 @@ static char *make_info(struct ida_image *img, float scale)
     return linebuffer;
 }
 
-static char edit_line(char *line, int max)
+static char edit_line(struct ida_image *img, char *line, int max)
 {
     int      len = strlen(line);
     int      pos = len;
@@ -1108,7 +1027,11 @@ static char edit_line(char *line, int max)
     fd_set  set;
 
     do {
+#if 0
 	fb_edit_line(line,pos);
+#else
+	status_edit(img,line,pos);
+#endif
 
 	FD_SET(0, &set);
 	rc = select(1, &set, NULL, NULL, NULL);
@@ -1180,7 +1103,7 @@ static char edit_line(char *line, int max)
     } while (1);
 }
 
-static void edit_desc(char *filename)
+static void edit_desc(struct ida_image *img, char *filename)
 {
     static char linebuffer[128];
     char *desc;
@@ -1192,7 +1115,7 @@ static void edit_desc(char *filename)
 	linebuffer[0] = 0;
 	len = 0;
     }
-    rc = edit_line(linebuffer, sizeof(linebuffer)-1);
+    rc = edit_line(img, linebuffer, sizeof(linebuffer)-1);
     if (0 != rc)
 	return;
     desktop_write_entry(desc, "Directory", "Comment=", linebuffer);
@@ -1202,6 +1125,7 @@ static void edit_desc(char *filename)
 
 static void cleanup_and_exit(int code)
 {
+    shadow_fini();
     fb_clear_mem();
     tty_restore();
     fb_cleanup();
@@ -1226,7 +1150,7 @@ main(int argc, char *argv[])
     float            newscale = 1;
 
     int              c, editable = 0, once = 0;
-    int              need_read, need_refresh;
+    int              need_read;
     int              i, arg, key;
 
     char             *line, *info, *desc;
@@ -1338,56 +1262,17 @@ main(int argc, char *argv[])
     if (randomize != -1)
 	flist_randomize();
     fcurrent = flist_first();
-
     need_read = 1;
-    need_refresh = 1;
 
-    fb_text_init1(fontname);
+    font_init();
+    face = font_open("monospace:size=16");
     fd = fb_init(fbdev, fbmode, vt);
     fb_catch_exit_signals();
     fb_switch_init();
+    shadow_init();
+    shadow_set_palette(fd);
     signal(SIGTSTP,SIG_IGN);
-    fb_text_init2();
     
-    switch (fb_var.bits_per_pixel) {
-    case 8:
-	svga_dither_palette(8, 8, 4);
-	dither = TRUE;
-	init_dither(8, 8, 4, 2);
-	dither_line = dither_line_color;
-	break;
-    case 15:
-    case 16:
-        if (fb_fix.visual == FB_VISUAL_DIRECTCOLOR)
-            linear_palette(5);
-	if (fb_var.green.length == 5) {
-	    lut_init(15);
-	} else {
-	    lut_init(16);
-	}
-	break;
-    case 24:
-        if (fb_fix.visual == FB_VISUAL_DIRECTCOLOR)
-            linear_palette(8);
-	break;
-    case 32:
-        if (fb_fix.visual == FB_VISUAL_DIRECTCOLOR)
-            linear_palette(8);
-	lut_init(24);
-	break;
-    default:
-	fprintf(stderr, "Oops: %i bit/pixel ???\n",
-		fb_var.bits_per_pixel);
-	exit(1);
-    }
-    if (fb_fix.visual == FB_VISUAL_DIRECTCOLOR ||
-	fb_var.bits_per_pixel == 8) {
-	if (-1 == ioctl(fd,FBIOPUTCMAP,&cmap)) {
-	    perror("ioctl FBIOPUTCMAP");
-	    exit(1);
-	}
-    }
-
     /* svga main loop */
     tty_raw();
     desc = NULL;
@@ -1395,14 +1280,14 @@ main(int argc, char *argv[])
     for (;;) {
 	if (need_read) {
 	    need_read = 0;
-	    need_refresh = 1;
-	    sprintf(linebuffer,"loading %s ...",fcurrent->name);
-	    status(linebuffer, NULL);
 	    free_image(fimg);
 	    free_image(simg);
-	    fimg = read_image(fcurrent->name);
+	    fimg = NULL;
 	    simg = NULL;
 	    img  = NULL;
+	    sprintf(linebuffer,"loading %s ...",fcurrent->name);
+	    status_update(img,linebuffer, NULL);
+	    fimg = read_image(fcurrent->name);
 	    scale = 1;
 	    if (fimg) {
 		if (autoup || autodown) {
@@ -1415,7 +1300,7 @@ main(int argc, char *argv[])
 		if (scale != 1) {
 		    sprintf(linebuffer,"scaling (%.0f%%) %s ...",
 			    scale*100, fcurrent->name);
-		    status(linebuffer, NULL);
+		    status_update(img,linebuffer, NULL);
 		    simg = scale_image(fimg,scale);
 		    img = simg;
 		} else {
@@ -1425,17 +1310,11 @@ main(int argc, char *argv[])
 	    }
 	    if (!img) {
 		sprintf(linebuffer,"%s: FAILED",fcurrent->name);
-		show_error(linebuffer);
+		status_error(linebuffer);
 	    }
 	}
-	if (img) {
-	    if (need_refresh) {
-		need_refresh = 0;
-		if (img->i.width < fb_var.xres || img->i.height < fb_var.yres)
-		    fb_clear_screen();
-	    }
+	if (img)
 	    info = make_info(fimg,scale);
-	}
 	switch (key = svga_show(img, timeout, desc, info, &arg)) {
 	case KEY_DELETE:
 	    if (editable) {
@@ -1450,13 +1329,10 @@ main(int argc, char *argv[])
 		need_read = 1;
 		if (list_empty(&flist)) {
 		    /* deleted last one */
-		    fb_clear_mem();
-		    tty_restore();
-		    fb_cleanup();
-		    exit(0);
+		    cleanup_and_exit(0);
 		}
 	    } else {
-		show_error("readonly mode, sorry [start with --edit?]");
+		status_error("readonly mode, sorry [start with --edit?]");
 	    }
 	    break;
 	case KEY_ROT_CW:
@@ -1464,7 +1340,7 @@ main(int argc, char *argv[])
 	{
 	    if (editable) {
 		sprintf(linebuffer,"rotating %s ...",fcurrent->name);
-		status(linebuffer, NULL);
+		status_update(img, linebuffer, NULL);
 		jpeg_transform_inplace
 		    (fcurrent->name,
 		     (key == KEY_ROT_CW) ? JXFORM_ROT_90 : JXFORM_ROT_270,
@@ -1477,7 +1353,7 @@ main(int argc, char *argv[])
 		     JFLAG_UPDATE_ORIENTATION);
 		need_read = 1;
 	    } else {
-		show_error("readonly mode, sorry [start with --edit?]");
+		status_error("readonly mode, sorry [start with --edit?]");
 	    }
 	    break;
 	}
@@ -1507,9 +1383,7 @@ main(int argc, char *argv[])
 	    need_read = 1;
 	    fcurrent = flist_next(fcurrent,once,1);
 	    if (NULL == fcurrent) {
-		fb_clear_mem();
-		tty_restore();
-		fb_cleanup();
+		cleanup_and_exit(0);
 	    }
 	    /* FIXME: wrap around */
 	    break;
@@ -1534,11 +1408,10 @@ main(int argc, char *argv[])
 	    scale = newscale;
 	    sprintf(linebuffer,"scaling (%.0f%%) %s ...",
 		    scale*100, fcurrent->name);
-	    status(linebuffer, NULL);
+	    status_update(NULL, linebuffer, NULL);
 	    free_image(simg);
 	    simg = scale_image(fimg,scale);
 	    img = simg;
-	    need_refresh = 1;
 	    break;
 	case KEY_GOTO:
 	    if (arg > 0 && arg <= fcount) {
@@ -1555,11 +1428,10 @@ main(int argc, char *argv[])
 	    }
 #endif
 	    statusline = !statusline;
-	    need_refresh = 1;
 	    break;
 	case KEY_DESC:
 	    if (!comments) {
-		edit_desc(fcurrent->name);
+		edit_desc(img, fcurrent->name);
 		desc = make_desc(&fimg->i,fcurrent->name);
 	    }
 	    break;
