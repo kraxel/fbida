@@ -20,17 +20,20 @@ pnm_init(FILE *fp, char *filename, unsigned int page,
 {
     struct ppm_state *h;
     char line[1024];
+    char p;
 
     h = malloc(sizeof(*h));
     memset(h,0,sizeof(*h));
 
     h->infile = fp;
-    fgets(line,sizeof(line),fp); /* Px */
+    fgets(line,sizeof(line),fp); /* P[456] */
+    p = line[1];
     fgets(line,sizeof(line),fp); /* width height */
     while ('#' == line[0])
 	fgets(line,sizeof(line),fp); /* skip comments */
     sscanf(line,"%d %d",&h->width,&h->height);
-    fgets(line,sizeof(line),fp); /* ??? */
+    if (p != '4')
+	fgets(line,sizeof(line),fp); /* depth ??? */
     if (0 == h->width || 0 == h->height)
 	goto oops;
     i->width  = h->width;
@@ -73,6 +76,17 @@ pgm_read(unsigned char *dst, unsigned int line, void *data)
 }
 
 static void
+pbm_read(unsigned char *dst, unsigned int line, void *data)
+{
+    struct ppm_state *h = data;
+    int bpl;
+
+    bpl = ((h->width+7) >> 3);
+    fread(h->row,bpl,1,h->infile);
+    load_bits_msb(dst,(unsigned char*)(h->row),h->width,255,0);
+}
+
+static void
 pnm_done(void *data)
 {
     struct ppm_state *h = data;
@@ -102,9 +116,20 @@ static struct ida_loader pgm_loader = {
     done:  pnm_done,
 };
 
+static struct ida_loader pbm_loader = {
+    magic: "P4",
+    moff:  0,
+    mlen:  2,
+    name:  "pbm parser",
+    init:  pnm_init,
+    read:  pbm_read,
+    done:  pnm_done,
+};
+
 static void __init init_rd(void)
 {
     load_register(&ppm_loader);
     load_register(&pgm_loader);
+    load_register(&pbm_loader);
 }
 
