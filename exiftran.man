@@ -1,0 +1,106 @@
+.TH exiftran 1 "(c) 2003,04 Gerd Knorr"
+.SH NAME
+exiftran - transform digital camera jpeg images
+.SH SYNOPSIS
+.B exiftran [ options ] file(s)
+.SH DESCRIPTION
+.B exiftran
+is a command line utility to transform digital image jpeg images.  It
+can do lossless rotations like jpegtran, but unlike jpegtran it cares
+about the EXIF data: It can rotate images automatically by checking
+the exif orientation tag, it updates the exif informaton if needed
+(image dimension, orientation), it also rotates the exif thumbnail.
+It can process multiple images at once.
+.SH TRANSFORM OPTIONS
+.TP
+.B -a
+automatic (using exif orientation tag)
+.TP
+.B -9
+rotate by 90 degrees
+.TP
+.B -1
+rotate by 180 degrees
+.TP
+.B -2
+rotate by 270 degrees
+.TP
+.B -f
+flip vertical
+.TP
+.B -F
+flip horizontal
+.TP
+.B -t
+transpose
+.TP
+.B -T
+transverse
+.TP
+.B -nt
+Don't rotate exif thumbnail.
+.TP
+.B -ni
+Don't rotate jpeg image. You might need this or or the -nt option to
+fixup things in case you rotated the image with some utility which
+ignores the exif thumbnail. Just generating a new thumbnail with -g is
+another way to fix it.
+.TP
+.B -no
+Don't update the orientation tag.  By default exiftran sets the
+orientation to "1" (no transformation needed) to avoid other
+exif-aware applications try to rotate the already-rotated image
+again.
+.SH OTHER OPTIONS
+.TP
+.B -h
+print a short help text
+.TP
+.B -d
+Dump exif data for the file(s).
+.TP
+.B -c <text>
+Set jpeg comment tag to <text>.
+.TP
+.B -g
+(re)generate EXIF thumbnail.
+.TP
+.B -o <file>
+Specify output file.  Only one input file is allowed in this mode.
+.TP
+.B -i
+Enable inplace editing of the images.  Exiftran allows multiple input
+files then.  You must specify either this option or a output file with
+-o for all operations which modify the image (i.e. everything but -d
+right now).
+.TP
+.B -b
+Create a backup file when doing inplace editing.
+.TP
+.B -p
+Preserve timestamps (atime + mtime) when doing inplace editing.
+.SH EXAMPLES
+Autorotate all jpeg files in the current directory:
+.nf
+   exiftran -ai *.jpeg
+.fi
+.SH SEE ALSO
+jpegtran(1), exif(1)
+.SH AUTHOR
+Gerd Knorr <kraxel@bytesex.org>
+.SH COPYRIGHT
+Copyright (C) 2002 Gerd Knorr <kraxel@bytesex.org>
+.P
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+.P
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+.P
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.

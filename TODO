@@ -1,0 +1,22 @@
+
+- some effect filters
+- improve cut+paste [does complete images only right now ... ]
+- make the file browser save the thumbnails somewhere (optionally),
+  so it can be much faster the second time ...
+- screenshots
+- put images on root window / some batch processing.
+
+
+List is ordered according to my personal priorities.  More ideas
+welcome, but it doesn't automatically mean they will be added to the
+list.  iv is a interactive, small + fast[1] utility and will only
+support commonly needed features (focus on photos), compareable to xv.
+
+If you need a full featured image processing tool with all bells and
+whistles, better use the gimp.  To to stuff batched in scripts, use
+ImageMagick (convert utility / perl interface).
+
+
+[1] It has finished loading the image while the gimp still shows the
+    splash screen :-)
+

@@ -1,0 +1,69 @@
+#!/bin/bash
+
+# tmp dir
+DIR="${TMPDIR-/var/tmp}/fbps-$$"
+mkdir -p $DIR	|| exit 1
+trap "rm -rf $DIR" EXIT
+
+# parse options
+fbiopts=""
+gsopts=""
+passwd=""
+opt=1
+while test "$opt" = "1"; do
+	case "$1" in
+		-l)	gsopts="$gsopts -r100x100"
+			shift
+			;;
+		-xl)	gsopts="$gsopts -r120x120"
+			shift
+			;;
+		-xxl)	gsopts="$gsopts -r150x150"
+			shift
+			;;
+		-q | -a)
+			fbiopts="$fbiopts $1"
+			shift
+			;;
+		-d | -m | -t | -g | -f)
+			fbiopts="$fbiopts $1 $2"
+			shift; shift
+			;;
+		-p)	password="$2"
+			shift; shift
+			;;
+		-h)	echo fixme: help text
+			exit 1
+			;;
+		-*)	echo "unknown option: $1"
+			exit 1
+			;;
+		*)	opt=0
+			;;
+	esac
+done
+
+# run ghostscript
+echo
+echo "### rendering pages, please wait ... ###"
+echo
+gs	-dSAVER -dNOPAUSE -dBATCH			\
+	-sPDFPassword="$password"			\
+	-sDEVICE=tiffpack -sOutputFile=$DIR/ps%03d.tiff	\
+	$gsopts						\
+	"$1"
+
+# tell the user we are done :-)
+echo -ne "\\007"
+
+# sanity check
+pages=`ls $DIR/ps*.tiff 2>/dev/null | wc -l`
+if test "$pages" -eq "0"; then
+	echo
+	echo "Oops: ghostscript wrote no pages?"
+	echo
+	exit 1
+fi
+
+# show pages
+fbi $fbiopts -P $DIR/ps*.tiff

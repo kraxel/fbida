@@ -1,0 +1,47 @@
+
+what is it?
+===========
+
+Ida is a small and fast image viewer, motif-based.  For people who
+don't want the KDE/GNOME overhead.  Some basic editing functions are
+available too.
+
+
+build
+=====
+
+Check the INSTALL file for detailed build instructions.
+
+ida uses Motif 2.x features (utm, render tables).  This means you need
+openmotif, lesstif does *not* cut it.
+
+It also uses the usual graphics libraries (libtiff, libpng, libjpeg,
+...), you should have them installed to get support for these image
+formats.
+
+
+usage
+=====
+
+There is a manual page, check it out.
+
+
+what "ida" stands for?
+======================
+
+It is just a name.  The utility used to be named "iv" for "Image
+Viewer", but that gave lots of name clashes.  Its very likely that
+people name such a tool "iv", it is also used as shortcut for
+InterViews (remember Sun's Open Windows?).  So i decided to rename it.
+
+I looked for a short name starting with 'i' in a list for children
+first names.  I like "ida", so I picked this one.  It is a old, german
+name.
+
+
+Have fun,
+
+  Gerd
+
+-- 
+Gerd Knorr <kraxel@bytesex.org>

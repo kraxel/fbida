@@ -1,0 +1,173 @@
+
+! ----------------------------------------------------------------------------
+! some standard motif stuff [i18]
+
+*.cancelLabelString:				Abbrechen
+*.XmFileSelectionBox.dirListLabelString:	Verzeichnisse
+*.XmFileSelectionBox.fileListLabelString:	Dateien
+*.XmFileSelectionBox.selectionLabelString:	Auswahl
+
+
+! ----------------------------------------------------------------------------
+! strings [i18]
+
+Ida.aboutbox_popup.title:		Über ida
+Ida*aboutbox_popup*messageString:	\
+	ida - image viewer & editor	\n\
+	\n\
+	(c) 2001,02 Gerd Knorr <kraxel@bytesex.org>
+
+Ida.noundobox_popup.title:		Nicht verfügbar
+Ida*noundobox_popup*messageString:	\
+	Es kann nur der letzte Arbeitsschritt\n\
+	rückgänig gemacht werden.
+	
+Ida.errbox_popup.title:			Fehler
+Ida.load_popup.title:			Datei öffnen
+Ida.save_popup.title:			Datei speichern
+Ida.save_popup*format.labelString:	Dateiformat:
+Ida.print_popup.title:			Datei drucken
+Ida.print_popup*selectionLabelString:	Kommando
+Ida.print_popup*textString:		lpr
+
+Ida*jpeg_popup.title:			JPEG Einstellungen
+Ida*jpeg_popup*selectionLabelString:	Bildqualität (0 ... 100)
+Ida*ps_popup.title:			PostScript Einstellungen
+Ida*ps_popup*paper.labelString:		Papier:
+Ida*ps_popup*ori.labelString:		Format:
+Ida*ps_popup*oriM.portrait.labelString:	Hochformat
+Ida*ps_popup*oriM.landscape.labelString: Querformat
+
+Ida.gamma_popup.title:			Gammakorrektur
+Ida.gamma_popup*selectionLabelString:	Gamma Wert
+Ida.bright_popup.title:			Helligkeit ändern
+Ida.bright_popup*selectionLabelString:	Helligkeit
+Ida.contrast_popup.title:		Kontrast ändern
+Ida.contrast_popup*selectionLabelString: Kontrast
+Ida.rotate_popup.title:			Bild drehen
+Ida.rotate_popup*selectionLabelString:	Drehwinkel
+Ida.sharpe_popup.title:			Bild schärfen
+Ida.sharpe_popup*selectionLabelString:	Wert
+
+Ida.resize_popup.title:			Bild skalieren
+Ida.resize_popup*lx.labelString:	Breite (Pixel)
+Ida.resize_popup*ly.labelString:	Höhe (Pixel)
+Ida.resize_popup*lr.labelString:	Auflösung (dpi)
+Ida.resize_popup*lock.labelString:	Seitenverhältnis beibehalten
+Ida.resize_popup*size.labelString:	Größe ändern
+Ida.resize_popup*res.labelString:	Auflösung ändern
+Ida.resize_popup*phys.labelString:	Bildgröße
+
+Ida.color_popup.title:				Edit colors
+Ida.color_popup*hist.labelString:		Histograms
+Ida.color_popup*map.labelString:		Maps
+Ida.color_popup*lock.labelString:		Same values for all channels
+Ida.color_popup*vals.labelString:		Show values for channel:
+Ida.color_popup*valsM.red.labelString:		red
+Ida.color_popup*valsM.green.labelString:	green
+Ida.color_popup*valsM.blue.labelString:		blue
+Ida.color_popup*in.label.labelString:		Input range:
+Ida.color_popup*out.label.labelString:		Output range:
+Ida.color_popup*gamma.label.labelString:	Gamma:
+Ida.color_popup*white.labelString:		Weißpunkt setzen
+
+ctrl.title:				ida controls
+ctrl.form.status.labelString:		fixme
+
+ctrl*bar.file.labelString:		Datei
+ctrl*bar.file.mnemonic:			D
+ctrl*bar*load.labelString:		Öffnen ...
+ctrl*bar*load.mnemonic:			Odiaeresis
+ctrl*bar*save.labelString:		Speichern ...
+ctrl*bar*save.mnemonic:			S
+ctrl*bar*browse.labelString:		Datei Browser ...
+ctrl*bar*scan.labelString:		Scannen
+ctrl*bar*print.labelString:		Drucken ...
+ctrl*bar*quit.labelString:		Beenden
+ctrl*bar*quit.mnemonic:			B
+
+ctrl*bar.edit.labelString:		Bearbeiten
+ctrl*bar.edit.mnemonic:			B
+ctrl*bar*undo.labelString:		Rückgänig
+ctrl*bar*undo.mnemonic:			udiaeresis
+ctrl*bar*copy.labelString:		Kopieren
+ctrl*bar*paste.labelString:		Einfügen
+ctrl*bar*flipv.labelString:		Vertikal spiegeln
+ctrl*bar*flipv.mnemonic:		V
+ctrl*bar*fliph.labelString:		Horizontal spiegeln
+ctrl*bar*fliph.mnemonic:		H
+ctrl*bar*rotcw.labelString:		Drehen im Uhrzeigersinn
+ctrl*bar*rotccw.labelString:		Drehen gegen den Uhrzeigersinn
+ctrl*bar*invert.labelString:		Invertieren
+ctrl*bar*invert.mnemonic:		I
+ctrl*bar*crop.labelString:		Crop
+ctrl*bar*crop.mnemonic:			C
+ctrl*bar*acrop.labelString:		Autocrop
+ctrl*bar*acrop.mnemonic:		A
+ctrl*bar*scale.labelString:		Skalieren ...
+ctrl*bar*scale.mnemonic:		S
+ctrl*bar*rotany.labelString:		Drehen ...
+
+ctrl*bar.op.labelString:		Filter
+ctrl*bar.op.mnemonic:			F
+ctrl*bar*gamma.labelString:		Gamma ...
+ctrl*bar*gamma.mnemonic:		G
+ctrl*bar*bright.labelString:		Helligheit ...
+ctrl*bar*contr.labelString:		Kontrast ...
+ctrl*bar*color.labelString:		Farben bearbeiten
+ctrl*bar*color.mnemonic:		e
+ctrl*bar*gray.labelString:		In Graustufen wandeln
+ctrl*bar*blur.labelString:		Weich zeichnen
+ctrl*bar*sharpe.labelString:		Schärfen ...
+ctrl*bar*edge.labelString:		Kanten finden
+ctrl*bar*emboss.labelString:		Schattenriß
+
+ctrl*bar.view.labelString:		Ansicht
+ctrl*bar.view.mnemonic:			A
+ctrl*bar*prev.labelString:		Vorherige Datei
+ctrl*bar*next.labelString:		Nächste Datei
+ctrl*bar*prevpage.labelString:		Vorherige Seite
+ctrl*bar*nextpage.labelString:		Nächste Seite
+ctrl*bar*zoomin.labelString:		Vergrößern
+ctrl*bar*zoomout.labelString:		Verkleinern
+
+ctrl*bar.opt.labelString:		Einstellungen
+ctrl*bar.view.mnemonic:			E
+ctrl*bar*pcd.labelString:		PhotoCD Auflösung
+
+ctrl*bar.help.labelString:		Hilfe
+ctrl*bar.help.mnemonic:			H
+ctrl*bar*man.labelString:		Manual page ...
+ctrl*bar*man.mnemonic:			M
+ctrl*bar*about.labelString:		Über ...
+ctrl*bar*about.mnemonic:		Udiaeresis
+
+ctrl*tool.prev.toolTipString:		vorherige Datei
+ctrl*tool.next.toolTipString:		nächste Datei
+ctrl*tool.zoomin.toolTipString:		Vergrößern
+ctrl*tool.zoomout.toolTipString:	Verkleinern
+ctrl*tool.flipv.toolTipString:		Vertikal spiegeln
+ctrl*tool.fliph.toolTipString:		Horizontal spiegeln
+ctrl*tool.rotccw.toolTipString:		Drehen gegen Uhrzeigersinn
+ctrl*tool.rotcw.toolTipString:		Drehen im Uhrzeigersinn
+ctrl*tool.exit.toolTipString:		Beenden
+
+browser*bar.file.labelString:		Datei
+browser*bar.file.mnemonic:		D
+browser*bar*close.labelString:		Fenster schließen
+
+browser*bar.view.labelString:		Ansicht
+browser*bar.view.mnemonic:		A
+browser*bar*filter.labelString:		Filtern ...
+browser*bar*freset.labelString:		Filter aufheben
+
+browser.filter_popup.title:		Filter
+browser.filter_popup*selectionLabelString: pattern?
+
+browser*menu.copy.labelString:		Kopieren (ins Clipboard)
+browser*menu.rotcw.labelString:		Drehen im Uhrzeigersinn
+browser*menu.rotccw.labelString:	Drehen gegen den Uhrzeigersinn
+
+Ida.man_popup.title:			Manual page
+Ida.man_popup*okLabelString:		Fenster schließen
+Ida.man_popup*label.labelString:	Einen Moment bitte ...

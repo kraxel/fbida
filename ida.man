@@ -1,0 +1,102 @@
+.TH ida 1 "(c) 2001,02 Gerd Knorr"
+.SH NAME
+ida - image viewing and editing program
+.SH SYNOPSIS
+.B ida [ options ] files
+.SH DESCRIPTION
+.B ida
+is a small and fast application for viewing images.  Some basic
+editing functions are available too.
+.P
+You can specify any number of image files as arguments on the command
+line.  Or you can read a single image from stdin by specifying "-" as
+only argument ("xwd | ida -" works nice for screenshots).
+.SH OPTIONS
+.B ida
+understands the usual toolkit options (-geometry + friends).
+Additional options are:
+.TP
+.B -help
+print a short help text
+.TP
+.B -pcd n
+Pick size for PhotoCD images (1 .. 5, default 3).
+.TP
+.B -debug
+enable debug messages.  Also has the side effect that error messages
+are displayed on stderr only and \fInot\fP as message box.
+.SH GETTING STARTED
+.SS Mouse functions
+With the left mouse button you can creates and edit a selection
+rectangle.  The middle mouse button is used to start drag'n'drop
+operations.  The right mouse button brings up the control window with
+menus, toolbar and file list.
+.br
+.SS Keyboard Shortcuts
+Many keyboard shortcuts used by xv are available in ida too.  If you
+are familiar with xv if should be easy for you to get started with
+ida.
+.P
+All available keyboard shortcuts are also listed in the menus of the
+control window.  The most important ones are listed below:
+.P
+.nf
+space           next file
+backspace       previous file
+cursor keys     scrolling (hold ctrl key for big steps).
+plus / minus    zoom in/out
+Q               quit
+.fi
+.SS Supported image formats
+.B read:
+PPM, xwd, PhotoCD, xpm, xbm, bmp (uncompressed), JPEG, TIFF, PNG, GIF.
+The last four are supported using the usual libraries, i.e. you need
+to have them installed at compile time.
+.br
+.B write:
+PPM, PostScript, JPEG, TIFF, PNG.
+.SS Using drag'n'drop
+.B ida
+is a motif application and thus supports the motif drag'n'drop
+protocol in both directions.  The xdnd protocol is supported too, but
+only in one direction (receive drops).
+.P
+.B ida
+uses the middle mouse button to start a drag'n'drop operation (as the
+motif style guide suggests).  This works for the main window and the
+file buttons within the file browser.
+.P
+.B motif applications
+should have absolutely no problems to deal with ida's drag'n'drop
+support.  You can drop images into some netscape 4.x window -- it
+simply works.  Mozilla accepts motif drops too.
+.P
+Interoperation with 
+.B gnome / gtk
+is good.  I can drag files from ida to eeyes and visa versa without
+problems.  File drops from gmc into ida work just fine too.
+.P
+Interoperation with
+.B KDE
+is bad.  cut+paste works most of the time, drag'n'drop often doesn't.
+The X11 selection handling of the Qt toolkit has a few design bugs and
+sucks.  Basically the troll guys didn't understand what the TARGETS
+target is good for and violate the ICCCM specs by ignoring it.
+.SH AUTHOR
+Gerd Knorr <kraxel@bytesex.org>
+.SH COPYRIGHT
+Copyright (C) 2002 Gerd Knorr <kraxel@bytesex.org>
+.P
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+.P
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+.P
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.

@@ -1,0 +1,160 @@
+.TH fbi 1 "(c) 1999-2002 Gerd Knorr"
+.SH NAME
+fbi - linux \fBf\fPrame\fBb\fPuffer \fBi\fPmageviewer
+.SH SYNOPSIS
+.B fbi [ options ] file ...
+.SH DESCRIPTION
+.B fbi
+displays the specified file(s) on the linux console using the
+framebuffer device.  PhotoCD, jpeg, ppm, gif, tiff, xwd, bmp and png
+are supported directly.  For other formats fbi tries to use
+ImageMagick's convert.
+.SH OPTIONS
+.TP
+.B -h
+print usage info
+.TP
+.B -d device
+framebuffer device to use.  Default is the one your vc is
+mapped to.
+.TP
+.B -m mode
+name of the video mode to use video mode (must be listed in
+/etc/fb.modes).  Default is not to change the video mode.
+.TP
+.B -q
+be quiet: don't print anything.
+.TP
+.B -v
+be verbose: allways print filenames.
+.TP
+.B -P
+Enable textreading mode.  This has the effect that fbi will display
+large images without vertical offset (default is to center the
+images).  Space will first try to scroll down and go to the next image
+only if it is already on the bottom of the page.  Useful if the images
+you are watching text pages, all you have to do to get the next piece
+of text is to press space...
+.TP
+.B -t sec
+timeout: load next image after >sec< seconds without any
+keypress
+.TP
+.B -g gamma
+gamma correction.  Can also be put into the FBGAMMA environment
+variable.  Default is 1.0.  Requires Pseudocolor or Directcolor
+visual, doesn't work for Truecolor.
+.TP
+.B -r n
+select resolution.  PhotoCD only, n = 1..5.
+.TP
+.B -s n
+set scroll steps in pixels (default is 50).
+.TP
+.B -f font
+Set font.  This can be either a pcf console font file or a X11 font
+spec.  Using X11 fonts requires a font server (The one specified in
+the environment variable FONTSERVER or on localhost).  The FBFONT
+environment variable is used as default.  If unset, fbi will
+fallback to 10x20 (X11) / lat1u-16.psf (console).
+.TP
+.B -a
+Enable autozoom.  fbi will automagically pick a reasonable zoom factor
+when loading a new image.
+.TP
+.B --autoup
+Like autozoom, but scale up only.
+.TP
+.B --autodown
+Like autozoom, but scale down only.
+.TP
+.B -u
+Randomize the order of the filenames.
+.TP
+.B -e
+Enable editing commands.
+.TP
+.B -b
+create backup files (when editing images).
+.TP
+.B -p
+preserve timestamps (when editing images).
+.TP
+.B --comments
+Display comment tags (if present) instead of the filename.  Probaby
+only useful if you added reasonable comments yourself (using wrjpgcom
+for example), otherwise you likely just find texts pointing to the
+software which created the image.
+.SH KEYS
+.nf
+cursor keys     scroll large images
++, -            zoom in/out
+ESQ, Q          quit
+PgUp            previous image
+PgDn, Space     next image
+Return          next image, write the filename of the current
+                image to stdout.
+P               pause the slideshow (if started with -t, toggle)
+<number>g       jump to image #<number>
+.fi
+.P
+The Return vs. Space key thing can be used to create a file list while
+reviewing the images and use the list for batch processing later on.
+.SH EDIT IMAGE
+fbi also provides some very basic image editing facilities.  You have
+to start fbi with the -e switch to use them.
+.P
+.nf
+Shift+D         delete image
+R               rotate 90° clockwise
+L               rotate 90° counter-clock wise
+.fi
+.P
+The delete function actually wants a capital letter 'D', thus you have
+to type Shift+D.  This is done to avoid deleting images by mistake
+because there are no safety bells:  If you ask fbi to delete the image,
+it will be deleted without questions asked.
+.P
+The rotate function actually works for JPEG images only because it
+calls the jpegtran command to perform a lossless rotation if the image.
+It is especially useful if you review the images of your digital
+camera.
+.SH COMMON PROBLEMS
+.B fbi
+needs rw access to the framebuffer devices (/dev/fbN), i.e you (our
+your admin) have to make sure fbi can open the devices in rw mode.
+The IMHO most elegant way is to use pam_console (see
+/etc/security/console.perms) to chown the devices to the user logged
+in on the console.  Another way is to create some group, chown the
+special files to that group and put the users which are allowed to use
+the framebuffer device into the group.  You can also make the special
+files world writable, but be aware of the security implications this
+has.  On a private box it might be fine to handle it this way
+througth.
+.P
+.B fbi
+also needs access to the linux console (i.e. /dev/ttyN) for sane
+console switch handling.  That is obviously no problem for console
+logins, but any kind of a pseudo tty (xterm, ssh, screen, ...) will
+.B not
+work.
+.SH SEE ALSO
+fbset(1), convert(1), jpegtran(1)
+.SH AUTHOR
+Gerd Knorr <kraxel@bytesex.org>
+.SH COPYRIGHT
+Copyright (C) 1999-2000 Gerd Knorr <kraxel@bytesex.org>
+.P
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+.P
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+.P
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.

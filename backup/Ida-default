@@ -1,0 +1,178 @@
+! ----------------------------------------------------------------------------
+! strings [i18]
+
+Ida.aboutbox_popup.title:		About ida
+Ida*aboutbox_popup*messageString:	\
+	ida - image viewer & editor	\n\
+	\n\
+	(c) 2001,02 Gerd Knorr <kraxel@bytesex.org>
+
+Ida.noundobox_popup.title:		No undo
+Ida*noundobox_popup*messageString:	\
+	No undo info available, sorry.	\n\
+	You can undo the last step only.
+
+Ida.errbox_popup.title:			Errors
+Ida.load_popup.title:			Load File
+Ida.save_popup.title:			Save File
+Ida.save_popup*format.labelString:	Image format:
+Ida.print_popup.title:			Print File
+Ida.print_popup*selectionLabelString:	Print command
+Ida.print_popup*textString:		lpr
+
+Ida*jpeg_popup.title:			JPEG Options
+Ida*jpeg_popup*selectionLabelString:	Image quality (0 ... 100)
+Ida*ps_popup.title:			PostScript Options
+Ida*ps_popup*paper.labelString:		Paper size:
+Ida*ps_popup*ori.labelString:		Orientation:
+
+Ida.gamma_popup.title:			Gamma correction
+Ida.gamma_popup*selectionLabelString:	Gamma value
+Ida.bright_popup.title:			Adjust bright
+Ida.bright_popup*selectionLabelString:	Bright
+Ida.contrast_popup.title:		Adjust contrast
+Ida.contrast_popup*selectionLabelString: Contrast
+Ida.rotate_popup.title:			Rotate image
+Ida.rotate_popup*selectionLabelString:	angle
+Ida.sharpe_popup.title:			Sharpe image
+Ida.sharpe_popup*selectionLabelString:	value
+
+Ida.resize_popup.title:			Scale image
+Ida.resize_popup*lx.labelString:	Width (pixels)
+Ida.resize_popup*ly.labelString:	Height (pixels)
+Ida.resize_popup*lr.labelString:	Resolution (dpi)
+Ida.resize_popup*lock.labelString:	Keep aspect ratio
+Ida.resize_popup*size.labelString:	Change size
+Ida.resize_popup*res.labelString:	Change resolution
+Ida.resize_popup*phys.labelString:	Image size
+
+Ida.color_popup.title:				Edit colors
+Ida.color_popup*hist.labelString:		Histograms
+Ida.color_popup*map.labelString:		Maps
+Ida.color_popup*lock.labelString:		Same values for all channels
+Ida.color_popup*vals.labelString:		Show values for channel:
+Ida.color_popup*valsM.red.labelString:		red
+Ida.color_popup*valsM.green.labelString:	green
+Ida.color_popup*valsM.blue.labelString:		blue
+Ida.color_popup*in.label.labelString:		Input range:
+Ida.color_popup*out.label.labelString:		Output range:
+Ida.color_popup*gamma.label.labelString:	Gamma:
+!Ida.color_popup*white.labelString:		FIXME
+
+ctrl.title:				ida controls
+ctrl.form.status.labelString:		fixme
+
+ctrl*bar.file.labelString:		File
+ctrl*bar.file.mnemonic:			F
+ctrl*bar*load.labelString:		Load image ...
+ctrl*bar*load.mnemonic:			L
+ctrl*bar*save.labelString:		Save image ...
+ctrl*bar*save.mnemonic:			S
+ctrl*bar*browse.labelString:		File browser ...
+ctrl*bar*filelist.labelString:		File list ...
+ctrl*bar*scan.labelString:		Scan
+ctrl*bar*print.labelString:		Print ...
+ctrl*bar*print.mnemonic:		P
+ctrl*bar*quit.labelString:		Quit
+ctrl*bar*quit.mnemonic:			Q
+
+ctrl*bar.edit.labelString:		Edit
+ctrl*bar.edit.mnemonic:			E
+ctrl*bar*undo.labelString:		Undo last operation
+ctrl*bar*undo.mnemonic:			U
+ctrl*bar*copy.labelString:		Copy
+ctrl*bar*paste.labelString:		Paste
+ctrl*bar*flipv.labelString:		Flip vertical
+ctrl*bar*flipv.mnemonic:		v
+ctrl*bar*fliph.labelString:		Flip horizontal
+ctrl*bar*fliph.mnemonic:		h
+ctrl*bar*rotcw.labelString:		Turn clockwise
+ctrl*bar*rotcw.mnemonic:		T
+ctrl*bar*rotccw.labelString:		Turn counter clockwise
+ctrl*bar*invert.labelString:		Invert
+ctrl*bar*invert.mnemonic:		I
+ctrl*bar*crop.labelString:		Crop
+ctrl*bar*crop.mnemonic:			C
+ctrl*bar*acrop.labelString:		Autocrop
+ctrl*bar*acrop.mnemonic:		A
+ctrl*bar*scale.labelString:		Scale ...
+ctrl*bar*scale.mnemonic:		S
+ctrl*bar*rotany.labelString:		Rotate ...
+
+ctrl*bar.op.labelString:		Filters
+ctrl*bar.op.mnemonic:			F
+ctrl*bar*gamma.labelString:		Gamma ...
+ctrl*bar*gamma.mnemonic:		G
+ctrl*bar*bright.labelString:		Bright ...
+ctrl*bar*bright.mnemonic:		B
+ctrl*bar*contr.labelString:		Contrast ...
+ctrl*bar*contr.mnemonic:		C
+ctrl*bar*color.labelString:		Edit colors ...
+ctrl*bar*color.mnemonic:		E
+ctrl*bar*gray.labelString:		Grayscale
+ctrl*bar*blur.labelString:		Blur
+ctrl*bar*sharpe.labelString:		Sharpe ...
+ctrl*bar*edge.labelString:		Edge detect
+ctrl*bar*emboss.labelString:		Emboss
+
+ctrl*bar.view.labelString:		View
+ctrl*bar.view.mnemonic:			V
+ctrl*bar*prev.labelString:		previous file
+ctrl*bar*next.labelString:		next file
+ctrl*bar*prevpage.labelString:		previous page
+ctrl*bar*nextpage.labelString:		next page
+ctrl*bar*zoomin.labelString:		Zoom in
+ctrl*bar*zoomout.labelString:		Zoom out
+
+ctrl*bar.opt.labelString:		Options
+ctrl*bar.view.mnemonic:			O
+ctrl*bar*pcd.labelString:		PhotoCD resolution
+
+ctrl*bar.help.labelString:		Help
+ctrl*bar.help.mnemonic:			H
+ctrl*bar*man.labelString:		Manual page ...
+ctrl*bar*man.mnemonic:			M
+ctrl*bar*about.labelString:		About ...
+ctrl*bar*about.mnemonic:		A
+
+ctrl*tool.prev.toolTipString:		previous file
+ctrl*tool.next.toolTipString:		next file
+ctrl*tool.zoomin.toolTipString:		zoom in
+ctrl*tool.zoomout.toolTipString:	zoom out
+ctrl*tool.flipv.toolTipString:		flip vertical
+ctrl*tool.fliph.toolTipString:		flip horizontal
+ctrl*tool.rotccw.toolTipString:		turn counter clockwise
+ctrl*tool.rotcw.toolTipString:		turn clockwise
+ctrl*tool.exit.toolTipString:		quit
+
+browser.filter_popup.title:		Filter
+browser.filter_popup*selectionLabelString: pattern?
+
+Ida.man_popup.title:			Manual page
+Ida.man_popup*okLabelString:		close window
+Ida.man_popup*label.labelString:	please wait ...
+
+*cbar.file.labelString:			File
+*cbar.file.mnemonic:			F
+*cbar*new.labelString:			New list
+*cbar*new.mnemonic:			N
+*cbar*load.labelString:			Load list ...
+*cbar*load.mnemonic:			L
+*cbar*save.labelString:			Save list
+*cbar*save.mnemonic:			S
+*cbar*saveas.labelString:		Save list as ...
+*cbar*saveas.mnemonic:			a
+*cbar*close.labelString:		Close window
+
+*cbar.edit.labelString:			Edit
+*cbar.edit.mnemonic:			E
+*cbar*copy.labelString:			Copy
+*cbar*paste.labelString:		Paste
+*cbar*del.labelString:			Delete
+
+*cbar.view.labelString:			View
+*cbar.view.mnemonic:			V
+*cbar*spatial.labelString:		Large Icons
+*cbar*details.labelString:		Details
+*cbar*filter.labelString:		Filter ...
+*cbar*freset.labelString:		Reset filter

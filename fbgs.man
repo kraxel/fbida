@@ -1,0 +1,20 @@
+.TH fbps 1 "(c) 1999-2003 Gerd Knorr"
+.SH NAME
+fbgs - poor man's PostScript/pdf viewer for the linux
+framebuffer console
+.SH SYNOPSIS
+.B fbgs [ options ] file
+.SH DESCRIPTION
+.B fbgs
+is a simple wrapper script which takes a PostScript or pdf
+file as input, renders the pages using ghostscript into a
+temporarely directory and finally calls fbi to display them.
+.SH OPTIONS
+fbps understands all fbi options (they are passed throuth).
+Additionally you can specify -l, -xl or -xxl to get the pages
+rendered with 100, 120 or 150 dpi (default is 75). You can
+use option -p <password> if your PDF file requires password.
+.SH SEE ALSO
+fbi(1), gs(1)
+.SH AUTHOR
+Gerd Knorr <kraxel@bytesex.org>

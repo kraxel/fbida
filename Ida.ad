@@ -1,0 +1,655 @@
+! ----------------------------------------------------------------------------
+! fonts
+
+*renderTable: small
+*renderTable.fontType: FONT_IS_FONTSET
+*renderTable.fontName: \
+   -*-bitstream vera sans-medium-r-normal-*-*-140-*-*-p-*-iso8859-1, \
+   -*-bitstream vera sans-medium-r-normal-*-*-140-*-*-p-*-iso8859-15, \
+        -microsoft-tahoma-medium-r-normal-*-*-140-*-*-p-*-iso8859-*, \
+         -adobe-helvetica-medium-r-normal-*-*-140-*-*-p-*-iso8859-*, \
+        -cronyx-helvetica-medium-r-normal-*-*-140-*-*-p-*-koi8-r, \
+                -*-lucida-medium-r-normal-*-*-140-*-*-p-*-iso8859-*, \
+             -gnu-unifont-medium-r-normal-*-*-160-*-*-*-*-*-*, \
+                     -*-*-medium-r-normal-*-*-140-*-*-p-*-*-*, \
+                     -*-*-medium-r-normal-*-*-160-*-*-p-*-*-*, \
+                               -*-*-*-*-*-*-*-140-*-*-*-*-*-*, \
+                               -*-*-*-*-*-*-*-160-*-*-*-*-*-*, *
+*renderTable.small.fontType: FONT_IS_FONTSET
+*renderTable.small.fontName: \
+   -*-bitstream vera sans-medium-r-normal-*-*-100-*-*-p-*-iso8859-1, \
+   -*-bitstream vera sans-medium-r-normal-*-*-100-*-*-p-*-iso8859-15, \
+        -microsoft-tahoma-medium-r-normal-*-*-100-*-*-p-*-iso8859-*, \
+         -adobe-helvetica-medium-r-normal-*-*-100-*-*-p-*-iso8859-*, \
+        -cronyx-helvetica-medium-r-normal-*-*-100-*-*-p-*-koi8-r, \
+                -*-lucida-medium-r-normal-*-*-100-*-*-p-*-iso8859-*, \
+                     -*-*-medium-r-normal-*-*-100-*-*-p-*-*-*, \
+                     -*-*-medium-r-normal-*-*-120-*-*-p-*-*-*, \
+                               -*-*-*-*-*-*-*-100-*-*-*-*-*-*, \
+                               -*-*-*-*-*-*-*-120-*-*-*-*-*-*, *
+
+*XmTextField.renderTable: 
+*XmTextField.renderTable.fontType: FONT_IS_FONTSET
+*XmTextField.renderTable.fontName: \
+   -*-bitstream vera sans mono-medium-r-normal-*-*-140-*-*-*-*-iso8859-1, \
+   -*-bitstream vera sans mono-medium-r-normal-*-*-140-*-*-*-*-iso8859-15, \
+         -monotype-andale mono-medium-r-normal-*-*-140-*-*-*-*-iso8859-*, \
+                -adobe-courier-medium-r-normal-*-*-140-*-*-m-*-iso8859-*, \
+               -cronyx-courier-medium-r-normal-*-*-140-*-*-m-*-koi8-r, \
+           -*-lucidatypewriter-medium-r-normal-*-*-140-*-*-m-*-iso8859-*, \
+                          -*-*-medium-r-normal-*-*-140-*-*-m-*-*-*, \
+                          -*-*-medium-r-normal-*-*-160-*-*-m-*-*-*, \
+                                    -*-*-*-*-*-*-*-140-*-*-*-*-*-*, \
+                                    -*-*-*-*-*-*-*-160-*-*-*-*-*-*, *
+
+
+*background:		gray77
+!*shadowThickness:	2
+!*highlightThickness:	1
+
+
+! ----------------------------------------------------------------------------
+! image window
+
+Ida.geometry:			75x50
+!Ida.winGravity:		static
+Ida.view*translations:		#override		\
+	<Key>space:		Next()			\n\
+	<Key>osfDelete:		Prev()			\n\
+	<Key>osfBackSpace:	Prev()			\n\
+	<Key>Page_Down:		NextPage()		\n\
+	<Key>Page_Up:		PrevPage()		\n\
+	<Key>N:			NextPage()		\n\
+	~Ctrl<Key>P:		PrevPage()		\n\
+	<Key>KP_Add:		Zoom(inc)		\n\
+	<Key>KP_Subtract:	Zoom(dec)		\n\
+	<Btn2Down>:		Ipc(drag)		\n\
+	<Btn3Up>:		Popup(control)		\n\
+	\
+	<Key>G:			Gamma()			\n\
+	<Key>F:			Browser()		\n\
+	<Key>L:			Filelist()		\n\
+	Ctrl<Key>V:		Ipc(paste)		\n\
+	Alt<Key>V:		Ipc(paste)		\n\
+	Ctrl<Key>C:		Ipc(copy)		\n\
+	Alt<Key>C:		Ipc(copy)		\n\
+	\
+	Ctrl<Key>P:		Print()			\n\
+	Ctrl<Key>L:		Load()			\n\
+	Ctrl<Key>S:		Save()			\n\
+	Alt<Key>S:		Sharpe()		\n\
+	~Alt ~Ctrl<Key>S:	Resize()		\n\
+	<Key>plus:		Zoom(inc)		\n\
+	<Key>minus:		Zoom(dec)		\n\
+	<Key>U:			Undo()			\n\
+	~Alt ~Ctrl<Key>C:	Filter(crop)		\n\
+	~Alt ~Ctrl<Key>V:	Filter(flip-vert)	\n\
+	<Key>H:			Filter(flip-horz)	\n\
+	~Alt ~Shift<Key>T:	Filter(rotate-cw)	\n\
+	Shift<Key>T:		Filter(rotate-ccw)	\n\
+	Alt<Key>T:		Rotate()		\n\
+	<Key>I:			Filter(invert)		\n\
+	~Alt<Key>E:		Color()			\n\
+	Alt<Key>E:		F3x3(-1,-1,-1,-1,8,-1,-1,-1,-1) \n\
+	Alt<Key>B:		F3x3(1,1,1,1,1,1,1,1,1, 1,9) \n\
+	Alt<Key>M:		F3x3(1,0,0,0,0,0,0,0,-1, 0,0,128) \n\
+	<Key>osfHelp:		Man(ida)		\n\
+	<Key>Q:			Exit()
+
+Ida.view.VertScrollBar.accelerators: #override		\
+	<Btn4Up>:		IncrementUpOrLeft(Up)	\n\
+	<Btn5Up>:		IncrementDownOrRight(Down)\n\
+	~Ctrl<Key>osfUp:	IncrementUpOrLeft(Up)	\n\
+	~Ctrl<Key>osfDown:	IncrementDownOrRight(Down)\n\
+	Ctrl<Key>osfUp:		PageUpOrLeft(Up)	\n\
+	Ctrl<Key>osfDown:	PageDownOrRight(Down)
+Ida.view.HorScrollBar.accelerators: #override		\
+	~Ctrl<Key>osfLeft:	IncrementUpOrLeft(Left)	\n\
+	~Ctrl<Key>osfRight:	IncrementDownOrRight(Right)\n\
+	Ctrl<Key>osfLeft:	PageUpOrLeft(Left)	\n\
+	Ctrl<Key>osfRight:	PageDownOrRight(Right)
+
+
+Ida.view.shadowThickness:	1
+Ida.view.scrollingPolicy:	AUTOMATIC
+Ida.view.scrollBarPlacement:	BOTTOM_RIGHT
+Ida.view.scrolledWindowChildType: SCROLL_VERT
+
+Ida.view*image.backgroundPixmap:	none
+Ida.view*image.borderWidth:		0
+Ida.view*image.highlightThickness:	1
+Ida.view*image.highlightColor:		red
+
+Ida.aboutbox_popup.deleteResponse:	DESTROY
+Ida.aboutbox_popup.title:		About ida
+Ida*aboutbox_popup*messageString:	\
+	ida - image viewer & editor	\n\
+	\n\
+	(c) 2001,02 Gerd Knorr <kraxel@bytesex.org>
+
+Ida.sorrybox_popup.deleteResponse:	DESTROY
+
+Ida.noundobox_popup.deleteResponse:	DESTROY
+Ida.noundobox_popup.title:		No undo
+Ida*noundobox_popup*messageString:	\
+	No undo info available, sorry.	\n\
+	You can undo the last step only.
+
+
+! ----------------------------------------------------------------------------
+! dialog boxes
+
+Ida.XmDialogShell.deleteResponse:	DESTROY
+Ida.XmDialogShell*scale.orientation:	HORIZONTAL
+Ida.XmDialogShell*scale.showValue:	True
+
+Ida.errbox_popup.deleteResponse:	UNMAP
+Ida.errbox_popup.title:			Errors
+
+Ida.load_popup.deleteResponse:		UNMAP
+Ida.load_popup.title:			Load File
+
+Ida.save_popup*deleteResponse:		UNMAP
+Ida.save_popup*dialogStyle:		DIALOG_PRIMARY_APPLICATION_MODAL
+Ida.save_popup.title:			Save File
+Ida.save_popup*format.labelString:	Image format:
+
+Ida.print_popup*deleteResponse:		UNMAP
+Ida.print_popup*dialogStyle:		DIALOG_PRIMARY_APPLICATION_MODAL
+Ida.print_popup.title:			Print File
+Ida.print_popup*selectionLabelString:	Print command
+Ida.print_popup*textString:		lpr
+
+Ida*ps_popup*rc1.orientation:		HORIZONTAL
+Ida*ps_popup*draw.borderWidth:		1
+Ida*ps_popup*draw.background:		white
+Ida*ps_popup*draw.resizePolicy:		RESIZE_NONE
+Ida*ps_popup*scale.titleString:		Scaling
+Ida*ps_popup*scale.minimum:		10
+Ida*ps_popup*scale.maximum:		1000
+Ida*ps_popup*scale.decimalPoints:	1
+Ida*ps_popup.title:			PostScript Options
+Ida*ps_popup*paper.labelString:		Paper size:
+Ida*ps_popup*ori.labelString:		Orientation:
+
+Ida*jpeg_popup.title:			JPEG Options
+Ida*jpeg_popup*selectionLabelString:	Image quality (0 ... 100)
+
+Ida.gamma_popup*scale.minimum:		20
+Ida.gamma_popup*scale.maximum:		500
+Ida.gamma_popup*scale.decimalPoints:	2
+Ida.gamma_popup.title:			Gamma correction
+Ida.gamma_popup*selectionLabelString:	Gamma value
+
+Ida.bright_popup*scale.minimum:		-256
+Ida.bright_popup*scale.maximum:		256
+Ida.bright_popup.title:			Adjust bright
+Ida.bright_popup*selectionLabelString:	Bright
+
+Ida.contrast_popup*scale.minimum:	-128
+Ida.contrast_popup*scale.maximum:	512
+Ida.contrast_popup.title:		Adjust contrast
+Ida.contrast_popup*selectionLabelString: Contrast
+
+Ida.rotate_popup*scale.minimum:		-180
+Ida.rotate_popup*scale.maximum:		180
+Ida.rotate_popup.title:			Rotate image
+Ida.rotate_popup*selectionLabelString:	angle
+
+Ida.sharpe_popup*scale.minimum:		0
+Ida.sharpe_popup*scale.maximum:		100
+Ida.sharpe_popup.title:			Sharpe image
+Ida.sharpe_popup*selectionLabelString:	value
+
+Ida.resize_popup.deleteResponse:	DESTROY
+Ida.resize_popup*rc.adjustMargin:	false
+Ida.resize_popup*rc.rc.orientation:	HORIZONTAL
+Ida.resize_popup*rc.rc.?.indicatorType:	ONE_OF_MANY
+Ida.resize_popup.title:			Scale image
+Ida.resize_popup*lx.labelString:	Width (pixels)
+Ida.resize_popup*ly.labelString:	Height (pixels)
+Ida.resize_popup*lr.labelString:	Resolution (dpi)
+Ida.resize_popup*lock.labelString:	Keep aspect ratio
+Ida.resize_popup*size.labelString:	Change size
+Ida.resize_popup*res.labelString:	Change resolution
+Ida.resize_popup*phys.labelString:	Image size
+
+
+! ----------------------------------------------------------------------------
+! edit colors dialog
+
+Ida.color_popup.deleteResponse:			DESTROY
+
+Ida.color_popup.title:				Edit colors
+Ida.color_popup*hist.labelString:		Histograms
+Ida.color_popup*map.labelString:		Maps
+Ida.color_popup*lock.labelString:		Same values for all channels
+Ida.color_popup*vals.labelString:		Show values for channel:
+Ida.color_popup*valsM.red.labelString:		red
+Ida.color_popup*valsM.green.labelString:	green
+Ida.color_popup*valsM.blue.labelString:		blue
+Ida.color_popup*in.label.labelString:		Input range:
+Ida.color_popup*out.label.labelString:		Output range:
+Ida.color_popup*gamma.label.labelString:	Gamma:
+!Ida.color_popup*white.labelString:		FIXME
+
+Ida.color_popup*XmForm*leftOffset:		10
+Ida.color_popup*XmForm*rightOffset:		10
+Ida.color_popup*XmForm*topOffset:		10
+Ida.color_popup*XmForm*bottomOffset:		10
+Ida.color_popup*XmForm*leftAttachment:		ATTACH_WIDGET
+Ida.color_popup*XmForm*topAttachment:		ATTACH_WIDGET
+Ida.color_popup*XmForm.sep.rightAttachment:	ATTACH_FORM
+Ida.color_popup*XmForm.XmRowColumn.rightAttachment: ATTACH_FORM
+Ida.color_popup*XmForm.XmRowColumn.orientation:	HORIZONTAL
+Ida.color_popup*XmText.columns:			5
+
+Ida.color_popup*XmDrawingArea.background:	white
+Ida.color_popup*XmDrawingArea.borderWidth:	1
+Ida.color_popup*XmDrawingArea.borderColor:	black
+
+Ida.color_popup*hred.topWidget:			hist
+Ida.color_popup*hgreen.topWidget:		hred
+Ida.color_popup*hblue.topWidget:		hgreen
+
+Ida.color_popup*map.leftWidget:			hred
+Ida.color_popup*mred.topWidget:			hist
+Ida.color_popup*mred.leftWidget:		hred
+Ida.color_popup*mred.rightAttachment:		ATTACH_FORM
+Ida.color_popup*mgreen.topWidget:		mred
+Ida.color_popup*mgreen.leftWidget:		hgreen
+Ida.color_popup*mgreen.rightAttachment:		ATTACH_FORM
+Ida.color_popup*mblue.topWidget:		mgreen
+Ida.color_popup*mblue.leftWidget:		hblue
+Ida.color_popup*mblue.rightAttachment:		ATTACH_FORM
+
+Ida.color_popup*lock.topWidget:			hblue
+Ida.color_popup*vals.topWidget:			lock
+Ida.color_popup*in.topWidget:			vals
+Ida.color_popup*out.topWidget:			in
+Ida.color_popup*gamma.topWidget:		out
+Ida.color_popup*pick.topWidget:			gamma
+
+
+! ----------------------------------------------------------------------------
+! control
+
+ctrl.title:				ida controls
+ctrl.form.status.labelString:		fixme
+ctrl*XmMenuShell.XmRowColumn.tearOffModel: TEAR_OFF_ENABLED
+
+ctrl*tool.orientation:			HORIZONTAL
+ctrl*tool.XmPushButton.shadowThickness:	1
+
+ctrl.toolTipEnable:			1
+ctrl.toolTipPostDelay:			2000
+ctrl.toolTipPostDuration:		5000
+ctrl*TipLabel.foreground:		black
+ctrl*TipLabel.background:		lightyellow
+ctrl*TipShell.borderWidth:		1
+ctrl*TipShell.borderColor:		black
+ctrl*tool.XmSeparator.orientation:	VERTICAL
+ctrl*tool.XmSeparator.width:		12
+ctrl*tool.XmSeparator.margin:		3
+ctrl*tool.XmPushButton.labelType:	PIXMAP
+ctrl*tool.prev.toolTipString:		previous file
+ctrl*tool.prev.labelPixmap:		prev
+ctrl*tool.next.toolTipString:		next file
+ctrl*tool.next.labelPixmap:		next
+ctrl*tool.zoomin.toolTipString:		zoom in
+ctrl*tool.zoomin.labelPixmap:		zoomin
+ctrl*tool.zoomout.toolTipString:	zoom out
+ctrl*tool.zoomout.labelPixmap:		zoomout
+ctrl*tool.flipv.toolTipString:		flip vertical
+ctrl*tool.flipv.labelPixmap:		flipv
+ctrl*tool.fliph.toolTipString:		flip horizontal
+ctrl*tool.fliph.labelPixmap:		fliph
+ctrl*tool.rotccw.toolTipString:		turn counter clockwise
+ctrl*tool.rotccw.labelPixmap:		rotccw
+ctrl*tool.rotcw.toolTipString:		turn clockwise
+ctrl*tool.rotcw.labelPixmap:		rotcw
+ctrl*tool.exit.toolTipString:		quit
+ctrl*tool.exit.labelPixmap:		exit
+
+ctrl.form*list.visibleItemCount:	12
+ctrl.form*list.translations:	#override		\
+	<Key>space:		Next()			\n\
+	<Key>osfDelete:		Prev()			\n\
+	<Key>osfBackSpace:	Prev()			\n\
+	<Key>KP_Add:		Zoom(inc)		\n\
+	<Key>KP_Subtract:	Zoom(dec)
+
+! file menu
+ctrl*bar.file.labelString:		File
+ctrl*bar.file.mnemonic:			F
+ctrl*bar*load.labelString:		Load image ...
+ctrl*bar*load.mnemonic:			L
+ctrl*bar*load.acceleratorText:		Ctrl+L
+ctrl*bar*load.accelerator:		Ctrl<Key>L
+ctrl*bar*save.labelString:		Save image ...
+ctrl*bar*save.mnemonic:			S
+ctrl*bar*save.acceleratorText:		Ctrl+S
+ctrl*bar*save.accelerator:		Ctrl<Key>S
+ctrl*bar*browse.labelString:		File browser ...
+ctrl*bar*browse.acceleratorText:	F
+ctrl*bar*browse.accelerator:		<Key>F
+ctrl*bar*filelist.labelString:		File list ...
+ctrl*bar*filelist.acceleratorText:	L
+ctrl*bar*filelist.accelerator:		<Key>L
+ctrl*bar*scan.labelString:		Scan
+ctrl*bar*print.labelString:		Print ...
+ctrl*bar*print.mnemonic:		P
+ctrl*bar*print.acceleratorText:		Ctrl+P
+ctrl*bar*print.accelerator:		Ctrl<Key>P
+ctrl*bar*quit.labelString:		Quit
+ctrl*bar*quit.mnemonic:			Q
+ctrl*bar*quit.acceleratorText:		Q
+ctrl*bar*quit.accelerator:		<Key>Q
+
+! edit menu
+ctrl*bar.edit.labelString:		Edit
+ctrl*bar.edit.mnemonic:			E
+ctrl*bar*undo.labelString:		Undo last operation
+ctrl*bar*undo.mnemonic:			U
+ctrl*bar*undo.acceleratorText:		U
+ctrl*bar*undo.accelerator:		<Key>U
+ctrl*bar*copy.labelString:		Copy
+ctrl*bar*copy.acceleratorText:		Ctrl+C
+ctrl*bar*copy.accelerator:		Ctrl<Key>C
+ctrl*bar*paste.labelString:		Paste
+ctrl*bar*paste.acceleratorText:		Ctrl+V
+ctrl*bar*paste.accelerator:		Ctrl<Key>V
+ctrl*bar*flipv.labelString:		Flip vertical
+ctrl*bar*flipv.mnemonic:		v
+ctrl*bar*flipv.acceleratorText:		V
+ctrl*bar*flipv.accelerator:		<Key>V
+ctrl*bar*fliph.labelString:		Flip horizontal
+ctrl*bar*fliph.mnemonic:		h
+ctrl*bar*fliph.acceleratorText:		H
+ctrl*bar*fliph.accelerator:		<Key>H
+ctrl*bar*rotcw.labelString:		Turn clockwise
+ctrl*bar*rotcw.mnemonic:		T
+ctrl*bar*rotcw.acceleratorText:		T
+ctrl*bar*rotcw.accelerator:		~Meta ~Shift<Key>T
+ctrl*bar*rotccw.labelString:		Turn counter clockwise
+ctrl*bar*rotccw.acceleratorText:	Shift+T
+ctrl*bar*rotccw.accelerator:		Shift<Key>T
+ctrl*bar*invert.labelString:		Invert
+ctrl*bar*invert.mnemonic:		I
+ctrl*bar*invert.acceleratorText:	I
+ctrl*bar*invert.accelerator:		<Key>I
+ctrl*bar*crop.labelString:		Crop
+ctrl*bar*crop.mnemonic:			C
+ctrl*bar*crop.acceleratorText:		C
+ctrl*bar*crop.accelerator:		<Key>C
+ctrl*bar*acrop.labelString:		Autocrop
+ctrl*bar*acrop.mnemonic:		A
+ctrl*bar*scale.labelString:		Scale ...
+ctrl*bar*scale.mnemonic:		S
+ctrl*bar*scale.acceleratorText:		S
+ctrl*bar*scale.accelerator:		~Ctrl<Key>S
+ctrl*bar*rotany.labelString:		Rotate ...
+ctrl*bar*rotany.acceleratorText:	Alt+T
+ctrl*bar*rotany.accelerator:		Alt<Key>T
+
+! filter menu
+ctrl*bar.op.labelString:		Filters
+ctrl*bar.op.mnemonic:			F
+ctrl*bar*gamma.labelString:		Gamma ...
+ctrl*bar*gamma.mnemonic:		G
+ctrl*bar*gamma.acceleratorText:		G
+ctrl*bar*gamma.accelerator:		<Key>G
+ctrl*bar*bright.labelString:		Bright ...
+ctrl*bar*bright.mnemonic:		B
+ctrl*bar*contr.labelString:		Contrast ...
+ctrl*bar*contr.mnemonic:		C
+ctrl*bar*color.labelString:		Edit colors ...
+ctrl*bar*color.mnemonic:		E
+ctrl*bar*color.acceleratorText:		E
+ctrl*bar*color.accelerator:		~Alt<Key>E
+ctrl*bar*gray.labelString:		Grayscale
+ctrl*bar*blur.labelString:		Blur
+ctrl*bar*blur.acceleratorText:		Alt+B
+ctrl*bar*blur.accelerator:		Alt<Key>B
+ctrl*bar*sharpe.labelString:		Sharpe ...
+ctrl*bar*sharpe.acceleratorText:	Alt+S
+ctrl*bar*sharpe.accelerator:		Alt<Key>S
+ctrl*bar*edge.labelString:		Edge detect
+ctrl*bar*edge.acceleratorText:		Alt+E
+ctrl*bar*edge.accelerator:		Alt<Key>E
+ctrl*bar*emboss.labelString:		Emboss
+ctrl*bar*emboss.acceleratorText:	Alt+M
+ctrl*bar*emboss.accelerator:		Alt<Key>m
+
+! view menu
+ctrl*bar.view.labelString:		View
+ctrl*bar.view.mnemonic:			V
+ctrl*bar*prev.labelString:		Previous file
+ctrl*bar*prev.acceleratorText:		backspace
+!ctrl*bar*prev.accelerator:		<Key>Backspace
+ctrl*bar*next.labelString:		Next file
+ctrl*bar*next.acceleratorText:		space
+!ctrl*bar*next.accelerator:		<Key>space
+ctrl*bar*prevpage.labelString:		Previous page
+ctrl*bar*prevpage.acceleratorText:	PageUp
+!ctrl*bar*prevpage.accelerator:		<Key>osfPageUp
+ctrl*bar*nextpage.labelString:		Next page
+ctrl*bar*nextpage.acceleratorText:	PageDown
+!ctrl*bar*nextpage.accelerator:		<Key>osfPageDown
+ctrl*bar*zoomin.labelString:		Zoom in
+ctrl*bar*zoomin.acceleratorText:	plus
+ctrl*bar*zoomin.accelerator:		<Key>plus
+ctrl*bar*zoomout.labelString:		Zoom out
+ctrl*bar*zoomout.acceleratorText:	minus
+ctrl*bar*zoomout.accelerator:		<Key>minus
+
+! options menu
+ctrl*bar.opt.labelString:		Options
+ctrl*bar.opt.mnemonic:			O
+ctrl*bar*pcd.labelString:		PhotoCD resolution
+ctrl*bar*autozoom.labelString:		Autozoom
+ctrl*bar*cfgsave.labelString:		Save Options
+
+! options/photocd menu
+ctrl*bar*pcdM.1.labelString:		192 x 128
+ctrl*bar*pcdM.2.labelString:		384 x 256
+ctrl*bar*pcdM.3.labelString:		768 x 512
+ctrl*bar*pcdM.4.labelString:		1536 x 1024
+ctrl*bar*pcdM.5.labelString:		3072 x 2048
+
+! help menu
+ctrl*bar.help.labelString:		Help
+ctrl*bar.help.mnemonic:			H
+ctrl*bar*man.labelString:		Manual page ...
+ctrl*bar*man.mnemonic:			M
+ctrl*bar*man.acceleratorText:		F1
+ctrl*bar*man.accelerator:		<Key>F1
+ctrl*bar*about.labelString:		About ...
+ctrl*bar*about.mnemonic:		A
+
+ctrl.form.*.leftAttachment:		ATTACH_FORM
+ctrl.form.*.rightAttachment:		ATTACH_FORM
+ctrl.form.tool.topAttachment:		ATTACH_WIDGET
+ctrl.form.tool.topWidget:		bar
+ctrl.form.listSW.topAttachment:		ATTACH_WIDGET
+ctrl.form.listSW.topWidget:		tool
+ctrl.form.listSW.bottomAttachment:	ATTACH_WIDGET
+ctrl.form.listSW.bottomWidget:		status
+ctrl.form.listSW.width:			320
+ctrl.form.listSW.height:		240
+ctrl.form.status.bottomAttachment:	ATTACH_FORM
+ctrl.form.status.alignment:		ALIGNMENT_BEGINNING
+
+
+! ----------------------------------------------------------------------------
+! man page renderer
+
+Ida.man_popup.deleteResponse:			DESTROY
+Ida.man_popup*view.width:			500
+Ida.man_popup*view.height:			600
+Ida.man_popup*view.scrollingPolicy:		AUTOMATIC
+Ida.man_popup*view.scrollBarPlacement:		BOTTOM_RIGHT
+
+Ida.man_popup.title:			Manual page
+Ida.man_popup*okLabelString:		close window
+Ida.man_popup*label.labelString:	please wait ...
+
+Ida.man_popup*label.alignment:			ALIGNMENT_BEGINNING
+Ida.man_popup*label.marginWidth:			5
+Ida.man_popup*label.marginHeight:		5
+Ida.man_popup*label.renderTable: bold,underline
+Ida.man_popup*label.renderTable.fontType: FONT_IS_FONTSET
+Ida.man_popup*label.renderTable.fontName: \
+      -*-fixed-medium-r-normal--13-*-*-*-*-*-iso8859-*, \
+    -*-fixed-medium-r-normal-ja-13-*-*-*-*-*-iso10646-1, \
+  -gnu-unifont-medium-r-normal--16-*-*-*-*-*-*-*,*
+
+Ida.man_popup*label.renderTable.bold.fontType: FONT_IS_FONTSET
+Ida.man_popup*label.renderTable.bold.fontName: \
+       -*-fixed-bold-r-normal--13-*-*-*-*-*-iso8859-*, \
+   -*-fixed-medium-r-normal-ja-13-*-*-*-*-*-iso10646-1, \
+   -gnu-unifont-bold-r-normal--16-*-*-*-*-*-*-*,*
+
+Ida.man_popup*label.renderTable.underline.underlineType: SINGLE_LINE
+
+
+! ----------------------------------------------------------------------------
+! hex viewer
+
+Ida.hex_popup.deleteResponse:			DESTROY
+Ida.hex_popup*view.width:			600
+Ida.hex_popup*view.height:			600
+Ida.hex_popup*view.scrollingPolicy:		AUTOMATIC
+Ida.hex_popup*view.scrollBarPlacement:		BOTTOM_RIGHT
+
+Ida.hex_popup*label.alignment:			ALIGNMENT_BEGINNING
+Ida.hex_popup*label.marginWidth:		5
+Ida.hex_popup*label.marginHeight:		5
+Ida.hex_popup*label.renderTable: bold,underline
+Ida.hex_popup*label.renderTable.fontType: FONT_IS_FONTSET
+Ida.hex_popup*label.renderTable.fontName: \
+      -*-fixed-medium-r-normal--13-*-*-*-*-*-iso8859-*, \
+    -*-fixed-medium-r-normal-ja-13-*-*-*-*-*-iso10646-1, \
+  -gnu-unifont-medium-r-normal--16-*-*-*-*-*-*-*,*
+
+Ida.hex_popup*label.renderTable.bold.fontType: FONT_IS_FONTSET
+Ida.hex_popup*label.renderTable.bold.fontName: \
+      -*-fixed-bold-r-normal--13-*-*-*-*-*-iso8859-*, \
+  -*-fixed-medium-r-normal-ja-13-*-*-*-*-*-iso10646-1, \
+  -gnu-unifont-bold-r-normal--16-*-*-*-*-*-*-*,*
+
+Ida.hex_popup*label.renderTable.underline.underlineType: SINGLE_LINE
+
+
+! ----------------------------------------------------------------------------
+! file browser
+
+browser.geometry:			600x450
+browser.form.?.leftAttachment:		ATTACH_FORM
+browser.form.?.rightAttachment:		ATTACH_FORM
+browser.form.scroll.topAttachment:	ATTACH_WIDGET
+browser.form.scroll.topWidget:		cbar
+browser.form.scroll.bottomAttachment:	ATTACH_WIDGET
+browser.form.scroll.bottomWidget:	status
+browser.form.status.bottomAttachment:	ATTACH_FORM
+browser.form.status.alignment:		ALIGNMENT_BEGINNING
+
+browser.form.scroll.scrollingPolicy:		AUTOMATIC
+browser.form.scroll.scrollBarPlacement:		BOTTOM_RIGHT
+browser.form.scroll.XmScrollBar.highlightThickness: 1
+
+browser.filter_popup.title:		Filter
+browser.filter_popup*selectionLabelString: pattern?
+
+browser*comment_popup.title:			JPEG Comment
+browser*comment_popup*selectionLabelString:	Please enter/edit the comment here.
+
+
+! ----------------------------------------------------------------------------
+! file lists
+
+filelist.geometry:			300x400
+filelist.form.?.leftAttachment:		ATTACH_FORM
+filelist.form.?.rightAttachment:	ATTACH_FORM
+filelist.form.scroll.topAttachment:	ATTACH_WIDGET
+filelist.form.scroll.topWidget:		cbar
+filelist.form.scroll.bottomAttachment:	ATTACH_WIDGET
+filelist.form.scroll.bottomWidget:	status
+filelist.form.status.bottomAttachment:	ATTACH_FORM
+filelist.form.status.alignment:		ALIGNMENT_BEGINNING
+
+filelist.form.scroll.scrollingPolicy:		AUTOMATIC
+filelist.form.scroll.scrollBarPlacement:	BOTTOM_RIGHT
+filelist.form.scroll.XmScrollBar.highlightThickness: 1
+
+
+! ----------------------------------------------------------------------------
+! browser + file list common stuff
+
+*container.outlineButtonPolicy:			OUTLINE_BUTTON_ABSENT
+*container.spatialStyle:			CELLS
+*container.spatialResizeModel:			GROW_MINOR
+*container.spatialSnapModel:			CENTER
+*container.detailTabList:			3cm
+!*container.spatialIncludeModel:		APPEND
+!*container.layoutDirection:			LEFT_TO_RIGHT_TOP_TO_BOTTOM
+!*container.background:				gray85
+*container.primaryOwnership:			XmOWN_NEVER
+*container.XmIconGadget.highlightColor:		darkred
+*container.XmIconGadget.shadowThickness:	1
+
+! file menu
+*cbar.file.labelString:			File
+*cbar.file.mnemonic:			F
+*cbar*new.labelString:			New list
+*cbar*new.mnemonic:			N
+*cbar*load.labelString:			Load list ...
+*cbar*load.mnemonic:			L
+*cbar*save.labelString:			Save list
+*cbar*save.mnemonic:			S
+*cbar*saveas.labelString:		Save list as ...
+*cbar*saveas.mnemonic:			a
+*cbar*close.labelString:		Close window
+*cbar*close.acceleratorText:		Q
+*cbar*close.accelerator:		<Key>Q
+
+! edit menu
+*cbar.edit.labelString:			Edit
+*cbar.edit.mnemonic:			E
+*cbar*copy.labelString:			Copy
+*cbar*copy.acceleratorText:		Ctrl+C
+*cbar*copy.accelerator:			Ctrl<Key>C
+*cbar*paste.labelString:		Paste
+*cbar*paste.acceleratorText:		Ctrl+V
+*cbar*paste.accelerator:		Ctrl<Key>V
+*cbar*del.labelString:			Delete
+
+! view menu
+*cbar.view.labelString:			View
+*cbar.view.mnemonic:			V
+*cbar*spatial.labelString:		Large Icons
+*cbar*details.labelString:		Details
+*cbar*filter.labelString:		Filter ...
+*cbar*filter.acceleratorText:		F
+*cbar*filter.accelerator:		<Key>F
+*cbar*freset.labelString:		Reset filter
+
+! jpeg ops menu
+*cbar.ops.labelString:			JPEG
+*cbar.ops.mnemonic:			J
+*cbar*rotexif.labelString:		Auto Rotate (by EXIT Tag)
+*cbar*rotexif.mnemonic:			A
+*cbar*rotcw.labelString:		Rotate Clockwise
+*cbar*rotccw.labelString:		Rotate Counterclockwise
+*cbar*comment.labelString:		Edit Comment ...
+*cbar*comment.mnemonic:			E
+*cbar*comment.acceleratorText:		E
+*cbar*comment.accelerator:		<Key>E
+
+! bookmarks
+*cbar.dirs.labelString:			Bookmarks
+*cbar.dirs.mnemonic:			B
+
+! lists
+*cbar.lists.labelString:		Lists
+*cbar.lists.mnemonic:			L

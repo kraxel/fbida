@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Name=ida
+GenericName=Image Viewer
+Exec=ida %F
+Terminal=no
+Categories=Motif;Graphics;Viewer
+MimeType=image/jpeg;image/tiff;image/png

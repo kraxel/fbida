@@ -1,0 +1,180 @@
+
+0.21
+====
+
+ * add support to edit jpeg comments.
+ * various minor fixes/tweaks.
+
+ 
+0.20
+====
+
+ * file browser code is largely rewritten.
+ * added support to maintain file lists.
+ * lots of minor tweaks.
+
+
+0.19
+====
+
+ * url support for most image formats.
+
+ 
+0.16 => 0.17
+============
+
+ * fixed some signed/unsigned bugs.
+ * fixed tiff loader bug.
+ * utf-8 locale crash workaround.
+
+
+0.15 => 0.16
+============
+
+ * ditched autotools crap into the waste basket.
+ * fixed plenty of gcc 3.3 warnings.
+ * file browser improvements.
+ * tweaked font sets.
+ * multiplage support (Andrey Kiselev).
+
+ 
+0.14 => 0.15
+============
+
+ * more tiff loader fixes (based on patches by
+   Andrey Kiselev <dron@ak4719.spb.edu>).
+ * png loader fixes.
+
+
+0.13 => 0.14
+============
+
+ * tiff loader fixes (for b/w images).
+ * Made pixmap selection transfer less strict.
+
+
+0.12 => 0.13
+============
+
+ * fixed selections / clipboard / cut+paste handling.
+ * fixed some warnings.
+ * dropped extra "make depend" pass from build proccess.
+
+
+0.11 => 0.12
+============
+
+ * added tooltips (needs OpenMotif 2.2 to work).
+ * made the scale image dialog take care about image resolution.
+ * some fixes in sane code.
+ * man page updates.
+ * unbundled libpcd.
+
+
+0.10 => 0.11
+============
+
+ * renamed "iv" to "ida".
+ * hex viewer fixes.
+ * [ fixme: weißpunkt ]
+ * sane support.
+ * keep track of the image resolution
+ * The image size for printing / PostScript export defaults to the
+   original size (calculated from image resolution if available).
+
+
+0.9 => 0.10
+===========
+
+ * do scaling with floats to avoid rounding errors with large
+   scale factors.
+ * fixed segfault with huge zoom factors / huge images.
+ * need a new name for the utility, "iv" has way to much name
+   clashes.  ideas are welcome ...
+
+
+0.8 => 0.9
+==========
+
+ * fixed memory leak in file browser.
+
+
+0.7 => 0.8
+==========
+
+ * added loader for (uncompressed) windows bitmap files.
+ * some minor changes for image save code - can write tmp files
+   cleanly now.  DnD for uses jpeg for tmp files, so you can drop them
+   into netscape.
+ * added loader for xbm files.
+ * Some minor DnD fixes.
+ * better "busy cursor" handling.
+ * added wildcards filter to the file browser
+ * file browser DnD fixes.
+ * made PhotoCD resolution switchable at runtime.
+
+
+0.6 => 0.7
+==========
+
+ * added some handlers for selection data transfer, for
+   clipboard + drag'n'drop support.
+
+
+0.5 => 0.6
+==========
+
+ * added simple file browser.
+ * fixed bugs in png image loader.
+ * fixed a bug in the gif loader.
+ * figured out that libungif 4.1 is broken (if iv segfaults when loading
+   gif images, try downgrading to libungif 3.0 + rebuild)
+ * added autocrop.
+ * added print dialog.
+ * added blur,sharpe and emboss filters.
+
+
+0.4 => 0.5
+==========
+
+ * add options for image saving (jpeg, PostScript).
+ * added PNG write support.
+
+
+0.3 => 0.4
+==========
+
+ * Added resize.
+ * Added free rotation.
+ * Added edge detect filter.
+ * Some fine tuning here and there.
+ * Added i18n + german translation.
+
+
+0.2 => 0.3
+==========
+
+ * added PhotoCD support.
+ * fixed some minor nitpicks.
+ * added toolbar.
+ * added support for writing tiff images.
+ * most image operations look at the selected area now.
+ * added support for writing Postscript.  Needs more work, not
+   configurable yet (does: A4, portrait, image centered and scaled to
+   max size with same aspect ratio).
+
+
+0.1 => 0.2
+==========
+
+ * implemented saving (ppm, jpeg).
+ * redirect stderr to a message box.
+ * color editor works.
+ * fixed a bug in the gif loader.
+ * fixed bugs in the tiff loader.
+ * added -debug + -help command line switches.
+ * added x window dump loader.
+ * added support for reading images from stdin (you can now do
+   screenshots using "xwd | iv -" for example).
+ * added one-level undo.
+ * added crop
