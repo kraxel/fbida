@@ -1,7 +1,7 @@
 # just some maintainer stuff for me ...
 ########################################################################
 
-make-sync-dir = $(HOME)/src/gnu-make
+make-sync-dir = $(HOME)/projects/gnu-makefiles
 
 .PHONY: sync
 sync:: distclean

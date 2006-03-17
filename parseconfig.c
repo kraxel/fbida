@@ -3,6 +3,8 @@
  *
  */
 
+#include "config.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,6 +15,7 @@
 #include <sys/types.h>
 
 #include "list.h"
+#include "misc.h"
 #include "parseconfig.h"
 
 struct cfg_entry {
@@ -36,23 +39,6 @@ struct cfg_domain {
 };
 
 LIST_HEAD(domains);
-
-/* ------------------------------------------------------------------------ */
-/* prehistoric libc ;)                                                      */
-
-#ifndef HAVE_STRCASESTR
-char* strcasestr(char *haystack, char *needle)
-{
-    int hlen = strlen(haystack);
-    int nlen = strlen(needle);
-    int offset;
-
-    for (offset = 0; offset <= hlen - nlen; offset++)
-	if (0 == strncasecmp(haystack+offset,needle,nlen))
-	    return haystack+offset;
-    return NULL;
-}
-#endif
 
 /* ------------------------------------------------------------------------ */
 /* internal stuff                                                           */
@@ -270,10 +256,14 @@ cfg_set_str(char *dname, char *sname, char *ename, const char *value)
 {
     struct cfg_domain  *domain  = NULL;
     struct cfg_section *section = NULL;
-    
-    domain  = cfg_get_domain(dname);
-    section = cfg_get_section(domain,sname);
-    cfg_set_entry(section,ename,value);
+
+    if (NULL == value) {
+	cfg_del_entry(dname, sname, ename);
+    } else {
+	domain  = cfg_get_domain(dname);
+	section = cfg_get_section(domain,sname);
+	cfg_set_entry(section,ename,value);
+    }
 }
 
 void
@@ -451,41 +441,41 @@ cfg_parse_cmdline(int *argc, char **argv, struct cfg_cmdline *opt)
 }
 
 void
-cfg_help_cmdline(struct cfg_cmdline *opt, int w1, int w2, int w3)
+cfg_help_cmdline(FILE *fp, struct cfg_cmdline *opt, int w1, int w2, int w3)
 {
     char *val;
     int o,len;
     
     for (o = 0; opt[o].cmdline != NULL; o++) {
-	fprintf(stderr,"%*s",w1,"");
+	fprintf(fp,"%*s",w1,"");
 	if (opt[o].letter) {
-	    fprintf(stderr,"-%c  ",opt[o].letter);
+	    fprintf(fp,"-%c  ",opt[o].letter);
 	} else {
-	    fprintf(stderr,"    ");
+	    fprintf(fp,"    ");
 	}
 
 	if (opt[o].yesno) {
-	    len = fprintf(stderr,"-(no)%s ",opt[o].cmdline);
+	    len = fprintf(fp,"-(no)%s ",opt[o].cmdline);
 	} else if (opt[o].needsarg) {
-	    len = fprintf(stderr,"-%s <arg> ",opt[o].cmdline);
+	    len = fprintf(fp,"-%s <arg> ",opt[o].cmdline);
 	} else {
-	    len = fprintf(stderr,"-%s ",opt[o].cmdline);
+	    len = fprintf(fp,"-%s ",opt[o].cmdline);
 	}
 	if (len < w2)
-	    fprintf(stderr,"%*s",w2-len,"");
+	    fprintf(fp,"%*s",w2-len,"");
 
-	len = fprintf(stderr,"%s ",opt[o].desc);
+	len = fprintf(fp,"%s ",opt[o].desc);
 
 	if (w3) {
 	    if (len < w3)
-		fprintf(stderr,"%*s",w3-len,"");
+		fprintf(fp,"%*s",w3-len,"");
 	    val = cfg_get_str(opt[o].option.domain,
 			      opt[o].option.section,
 			      opt[o].option.entry);
 	    if (val)
-		fprintf(stderr,"[%s]",val);
+		fprintf(fp,"[%s]",val);
 	}
- 	fprintf(stderr,"\n");
+ 	fprintf(fp,"\n");
     }
 }
 
@@ -637,7 +627,7 @@ cfg_sections_prev(char *dname, char *current)
     return section->name;
 }
 
-int cfg_sections_count(char *dname)
+unsigned int cfg_sections_count(char *dname)
 {
     struct list_head   *item;
     struct cfg_domain  *domain;
@@ -736,7 +726,7 @@ cfg_entries_prev(char *dname, char *sname, char *current)
     return entry->name;
 }
 
-int cfg_entries_count(char *dname, char *sname)
+unsigned int cfg_entries_count(char *dname, char *sname)
 {
     struct list_head   *item;
     struct cfg_section *section;
@@ -812,8 +802,8 @@ cfg_get_str(char *dname, char *sname, char *ename)
     return entry->value;
 }
 
-int
-cfg_get_int(char *dname, char *sname, char *ename, int def)
+unsigned int
+cfg_get_int(char *dname, char *sname, char *ename, unsigned int def)
 {
     char *val;
 
@@ -823,8 +813,8 @@ cfg_get_int(char *dname, char *sname, char *ename, int def)
     return atoi(val);
 }
 
-int
-cfg_get_signed_int(char *dname, char *sname, char *ename, unsigned int def)
+signed int
+cfg_get_signed_int(char *dname, char *sname, char *ename, signed int def)
 {
     char *val;
 
@@ -865,7 +855,7 @@ cfg_get_bool(char *dname, char *sname, char *ename, int def)
 /* ------------------------------------------------------------------------ */
 /* get/set flags                                                            */
 
-int cfg_get_sflags(char *dname, char *sname)
+unsigned int cfg_get_sflags(char *dname, char *sname)
 {
     struct cfg_section *section;
 
@@ -875,7 +865,7 @@ int cfg_get_sflags(char *dname, char *sname)
     return section->flags;
 }
 
-int cfg_get_eflags(char *dname, char *sname, char *ename)
+unsigned int cfg_get_eflags(char *dname, char *sname, char *ename)
 {
     struct cfg_entry   *entry;
 
@@ -885,8 +875,8 @@ int cfg_get_eflags(char *dname, char *sname, char *ename)
     return entry->flags;
 }
 
-int cfg_set_sflags(char *dname, char *sname,
-		   unsigned int mask, unsigned int bits)
+unsigned int cfg_set_sflags(char *dname, char *sname,
+			    unsigned int mask, unsigned int bits)
 {
     struct cfg_section *section;
 
@@ -898,8 +888,8 @@ int cfg_set_sflags(char *dname, char *sname,
     return section->flags;
 }
 
-int cfg_set_eflags(char *dname, char *sname, char *ename,
-		   unsigned int mask, unsigned int bits)
+unsigned int cfg_set_eflags(char *dname, char *sname, char *ename,
+			    unsigned int mask, unsigned int bits)
 {
     struct cfg_entry   *entry;
 

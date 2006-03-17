@@ -29,9 +29,11 @@ INSTALL_DATA	:= $(INSTALL) -m 644
 INSTALL_DIR	:= $(INSTALL) -d
 
 # cflags
-CFLAGS	?= -g -O2
-CFLAGS	+= -Wall -Wmissing-prototypes -Wstrict-prototypes \
-	   -Wpointer-arith -Wunused
+CFLAGS		?= -g -O2
+CXXFLAGS	?= $(CFLAGS)
+CFLAGS		+= -Wall -Wmissing-prototypes -Wstrict-prototypes \
+		   -Wpointer-arith -Wunused
+CXXFLAGS	+= -Wall -Wpointer-arith -Wunused
 
 # add /usr/local to the search path if something is in there ...
 ifneq ($(wildcard /usr/local/include/*.h),)

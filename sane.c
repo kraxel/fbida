@@ -37,7 +37,7 @@ build_menu(Widget widget, XtPointer clientdata, XtPointer call_data)
 		  XtNnumChildren,&nchildren,
 		  NULL);
     wlist = malloc(sizeof(Widget*)*nchildren);
-    memcpy(list,children,sizeof(Widget*)*nchildren);
+    memcpy(wlist,children,sizeof(Widget*)*nchildren);
     for (i = 0; i < nchildren; i++)
         XtDestroyWidget(wlist[i]);
     free(wlist);

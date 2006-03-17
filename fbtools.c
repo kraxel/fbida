@@ -323,6 +323,7 @@ fb_init(char *device, char *mode, int vt)
 {
     char   fbdev[16];
     struct vt_stat vts;
+    unsigned long page_mask;
 
     dev_init();
     tty = 0;
@@ -424,15 +425,14 @@ fb_init(char *device, char *mode, int vt)
 	goto err;
     }
 #endif
-    fb_mem_offset = (unsigned long)(fb_fix.smem_start) & (~PAGE_MASK);
+    page_mask = getpagesize()-1;
+    fb_mem_offset = (unsigned long)(fb_fix.smem_start) & (~page_mask);
     fb_mem = mmap(NULL,fb_fix.smem_len+fb_mem_offset,
 		  PROT_READ|PROT_WRITE,MAP_SHARED,fb,0);
     if (-1L == (long)fb_mem) {
 	perror("mmap");
 	goto err;
     }
-//    fprintf(stderr,"fb_mem = %p\n",fb_mem);
-
     /* move viewport to upper left corner */
     if (fb_var.xoffset != 0 || fb_var.yoffset != 0) {
 	fb_var.xoffset = 0;

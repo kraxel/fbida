@@ -1,7 +1,7 @@
 #
 # simple autoconf system for GNU make
 #
-# (c) 2002-2004 Gerd Knorr <kraxel@bytesex.org>
+# (c) 2002-2006 Gerd Hoffmann <kraxel@suse.de>
 #
 # credits for creating this one go to the autotools people because
 # they managed it to annoy lots of developers and users (including
@@ -108,6 +108,13 @@ ac_resdir = $(shell \
 	$(call ac_init,for X11 app-defaults prefix);\
 	$(call ac_s_cmd, test -d /etc/X11/app-defaults &&\
 		echo "/etc/X11" || echo "/usr/X11R6/lib/X11");\
+	$(call ac_fini))
+
+# check if package is installed, via pkg-config
+# args: pkg name
+ac_pkg_config = $(shell \
+	$(call ac_init,for $(1) (using pkg-config));\
+	$(call ac_b_cmd, pkg-config $(1));\
 	$(call ac_fini))
 
 

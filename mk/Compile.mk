@@ -1,7 +1,7 @@
 #
 # some rules to compile stuff ...
 #
-# (c) 2002-2004 Gerd Knorr <kraxel@bytesex.org>
+# (c) 2002-2006 Gerd Hoffmann <kraxel@suse.de>
 #
 # main features:
 #  * autodependencies via "cpp -MD"
