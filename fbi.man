@@ -96,6 +96,7 @@ V               enable/disable status line
 H               display textbox with brief help
 I               display textbox with some EXIF info
 <number>g       jump to image #<number>
+<number>s       set zoom to <number>%
 .fi
 .P
 The Return vs. Space key thing can be used to create a file list while

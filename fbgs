@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # tmp dir
-DIR="${TMPDIR-/var/tmp}/fbps-$$"
-mkdir -p $DIR	|| exit 1
+DIR="$(mktemp -dtp ${TMPDIR-/var/tmp} fbgs-XXXXXX)"
+test -d "$DIR" || exit 1
 trap "rm -rf $DIR" EXIT
 
 # parse options

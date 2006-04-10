@@ -120,6 +120,7 @@ static float fbgamma = 1;
 /* Command line options. */
 int autodown;
 int autoup;
+int autofirst;
 int comments;
 int transparency = 40;
 
@@ -155,8 +156,8 @@ usage(char *name)
 	    "\n",
 	    name);
 
-    cfg_help_cmdline(fbi_cmd,4,20,0);
-    cfg_help_cmdline(fbi_cfg,4,20,40);
+    cfg_help_cmdline(stderr,fbi_cmd,4,20,0);
+    cfg_help_cmdline(stderr,fbi_cfg,4,20,40);
 
     fprintf(stderr,
 	    "\n"
@@ -1181,6 +1182,7 @@ main(int argc, char *argv[])
     once        = GET_ONCE();
     autoup      = GET_AUTO_UP();
     autodown    = GET_AUTO_DOWN();
+    autofirst   = GET_AUTO_FIRST();
     fitwidth    = GET_FIT_WIDTH();
     statusline  = GET_VERBOSE();
     textreading = GET_TEXT_MODE();
@@ -1259,6 +1261,8 @@ main(int argc, char *argv[])
 			scale = 1;
 		    if (scale > 1 && !autoup)
 			scale = 1;
+		    if (autofirst)
+			autoup = autodown = 0;
 		}
 		if (scale != 1) {
 		    snprintf(linebuffer, sizeof(linebuffer),

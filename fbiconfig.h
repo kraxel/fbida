@@ -12,6 +12,7 @@
 
 #define O_AUTO_UP		O_OPTIONS, "auto-up"
 #define O_AUTO_DOWN		O_OPTIONS, "auto-down"
+#define O_AUTO_FIRST		O_OPTIONS, "auto-first"
 #define O_FIT_WIDTH		O_OPTIONS, "fit-width"
 #define O_QUIET		        O_OPTIONS, "quiet"
 #define O_VERBOSE		O_OPTIONS, "verbose"
@@ -41,6 +42,7 @@
 
 #define GET_AUTO_UP()		cfg_get_bool(O_AUTO_UP,       0)
 #define GET_AUTO_DOWN()		cfg_get_bool(O_AUTO_DOWN,     0)
+#define GET_AUTO_FIRST()	cfg_get_bool(O_AUTO_DOWN,     0)
 #define GET_FIT_WIDTH()		cfg_get_bool(O_FIT_WIDTH,     0)
 #define GET_QUIET()		cfg_get_bool(O_QUIET,         0)
 #define GET_VERBOSE()		cfg_get_bool(O_VERBOSE,       1)

@@ -61,6 +61,11 @@ struct cfg_cmdline fbi_cfg[] = {
 	.yesno    = 1,
 	.desc     = "  like the above, but downscale only",
     },{
+	.cmdline  = "autofirst",
+	.option   = { O_AUTO_FIRST },
+	.yesno    = 1,
+	.desc     = "  autoscale first image only",
+    },{
 	.cmdline  = "fitwidth",
 	.option   = { O_FIT_WIDTH },
 	.yesno    = 1,
