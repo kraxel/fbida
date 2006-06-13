@@ -3,6 +3,7 @@
 #include <string.h>
 #include <math.h>
 #include <wchar.h>
+#include <inttypes.h>
 #include <sys/ioctl.h>
 #include <linux/fb.h>
 
@@ -130,9 +131,9 @@ static void shadow_lut_init(int depth)
 
 static void shadow_render_line(int line, unsigned char *dest, char unsigned *buffer)
 {
-    unsigned char  *ptr  = (void*)dest;
-    unsigned short *ptr2 = (void*)dest;
-    unsigned long  *ptr4 = (void*)dest;
+    uint8_t  *ptr  = (void*)dest;
+    uint16_t *ptr2 = (void*)dest;
+    uint32_t *ptr4 = (void*)dest;
     int x;
 
     switch (fb_var.bits_per_pixel) {
