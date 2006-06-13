@@ -2,7 +2,7 @@
  * file viewer (hex dump)
  * quick & dirty for now, handling xxl files doesn't work very well ...
  *
- * (c) 2001 Gerd Knorr <kraxel@bytesex.org>
+ * (c) 2001 Gerd Hoffmann <kraxel@bytesex.org>
  *
  */
 

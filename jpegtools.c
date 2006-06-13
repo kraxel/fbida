@@ -5,7 +5,7 @@
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
  * 
- * plenty of changes by Gerd Knorr <kraxel@bytesex.org>, with focus on
+ * plenty of changes by Gerd Hoffmann <kraxel@bytesex.org>, with focus on
  * digital image processing and sane exif handling:
  *
  *   - does transformations only (flip/rotate/transpose/transverse).

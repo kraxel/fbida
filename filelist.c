@@ -1,6 +1,6 @@
 /*
  * file list management ("virtual photo album").
- * (c) 2003 Gerd Knorr <kraxel@bytesex.org>
+ * (c) 2003 Gerd Hoffmann <kraxel@bytesex.org>
  *
  */
 

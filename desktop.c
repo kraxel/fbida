@@ -6,7 +6,7 @@
  * no caching, no other clever tricks ...
  * ida + fbi only use the Comment= entry of .directory files.
  *
- * (c) 2004 Gerd Knorr <kraxel@bytesex.org>
+ * (c) 2004 Gerd Hoffmann <kraxel@bytesex.org>
  *
  */
 #include <stdio.h>

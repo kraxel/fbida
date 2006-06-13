@@ -34,7 +34,7 @@ static const char *description =
     "deliver thumbnails for any JPEG image below below your document root which\n"
     "it is allowed to open by unix file permissions.\n"
     "\n"
-    "(c) 2004 Gerd Knorr <kraxel@bytesex.org> [SUSE Labs]\n"
+    "(c) 2004 Gerd Hoffmann <kraxel@bytesex.org> [SUSE Labs]\n"
     "\n";
 
 /* -------------------------------------------------------------------------- */

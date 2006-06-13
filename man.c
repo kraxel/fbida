@@ -1,6 +1,6 @@
 /*
  * motif-based man page renderer
- * (c) 2001 Gerd Knorr <kraxel@bytesex.org>
+ * (c) 2001 Gerd Hoffmann <kraxel@bytesex.org>
  *
  */
 

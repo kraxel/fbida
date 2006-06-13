@@ -105,7 +105,7 @@ usage(FILE *fp, char *name)
 	    "    -p       preserve timestamps  (with -i)\n"
 	    "\n"
 	    "-- \n"
-	    "Gerd Knorr <kraxel@bytesex.org> [SUSE Labs]\n",
+	    "Gerd Hoffmann <kraxel@bytesex.org> [SUSE Labs]\n",
 	    name);
 }
 

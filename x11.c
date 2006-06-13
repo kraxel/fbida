@@ -1,7 +1,7 @@
 /*
  * some X11 ximage / pixmaps rotines
  *
- *   (c) 1996 Gerd Knorr <kraxel@goldbach.in-berlin.de>
+ *   (c) 1996 Gerd Hoffmann <kraxel@goldbach.in-berlin.de>
  *
  * basic usage:
  *  1) call x11_color_init()
