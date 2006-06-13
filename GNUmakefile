@@ -8,6 +8,7 @@ resdir	=  $(DESTDIR)$(RESDIR)
 
 # fixup flags
 CFLAGS	+= -DVERSION='"$(VERSION)"' -I$(srcdir)
+CFLAGS	+= -Wno-pointer-sign
 
 # default target
 all: build

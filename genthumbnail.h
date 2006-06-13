@@ -1,1 +1,1 @@
-int create_thumbnail(char *filename, char *dest, int max);
+int create_thumbnail(char *filename, unsigned char *dest, int max);

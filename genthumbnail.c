@@ -152,7 +152,7 @@ compress_thumbnail(struct ida_image *img, char *dest, int max)
 
 /* ---------------------------------------------------------------------- */
 
-int create_thumbnail(char *filename, char *dest, int max)
+int create_thumbnail(char *filename, unsigned char *dest, int max)
 {
     struct ida_image *img,*thumb;
     int size;

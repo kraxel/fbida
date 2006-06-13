@@ -707,7 +707,7 @@ static float auto_scale(struct ida_image *img)
 static int
 svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 {
-    static int      paused = 0;
+    static int      paused = 0, skip = KEY_SPACE;
     int             exif = 0, help = 0;
     int             rc;
     char            key[11];
@@ -718,7 +718,7 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 
     *nr = 0;
     if (NULL == img)
-	return KEY_SPACE; /* skip */
+	return skip;
     
     if (new_image) {
 	/* start with centered image, if larger than screen */
@@ -821,6 +821,7 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 		redraw = 1;
 		top += text_steps;
 	    } else {
+		skip = KEY_SPACE;
 		return KEY_SPACE;
 	    }
 
@@ -850,6 +851,7 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 		redraw = 1;
 		top -= text_steps;
 	    } else {
+		skip = KEY_PGUP;
 		return KEY_PGUP;
 	    }
 
@@ -862,6 +864,7 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 		redraw = 1;
 		top += text_steps;
 	    } else {
+		skip = KEY_PGDN;
 		return KEY_PGDN;
 	    }
 	    
@@ -1122,7 +1125,7 @@ static void edit_desc(struct ida_image *img, char *filename)
 static void cleanup_and_exit(int code)
 {
     shadow_fini();
-    fb_clear_mem();
+    fb_clear_screen();
     tty_restore();
     fb_cleanup();
     flist_print_tagged(stdout);

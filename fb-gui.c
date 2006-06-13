@@ -47,14 +47,19 @@ linear_palette(int r, int g, int b)
     size = 256 >> (8 - r);
     for (i = 0; i < size; i++)
         p_red[i] = calc_gamma(i,size);
+    p_cmap.len = size;
 
     size = 256 >> (8 - g);
     for (i = 0; i < size; i++)
         p_green[i] = calc_gamma(i,size);
+    if (p_cmap.len < size)
+	p_cmap.len = size;
 
     size = 256 >> (8 - b);
     for (i = 0; i < size; i++)
 	p_blue[i] = calc_gamma(i,size);
+    if (p_cmap.len < size)
+	p_cmap.len = size;
 }
 
 static void
@@ -70,6 +75,7 @@ dither_palette(int r, int g, int b)
 	p_green[i] = calc_gamma(gs * ((i / b) % g),       255);
 	p_blue[i]  = calc_gamma(bs * ((i) % b),           255);
     }
+    p_cmap.len = 256;
 }
 
 static void shadow_lut_init_one(int32_t *lut, int bits, int shift)

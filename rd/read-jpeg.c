@@ -4,6 +4,7 @@
 #include <string.h>
 #include <errno.h>
 #include <jpeglib.h>
+#include <setjmp.h>
 
 #include <libexif/exif-data.h>
 
@@ -18,6 +19,7 @@ struct jpeg_state {
     
     struct jpeg_decompress_struct cinfo;
     struct jpeg_error_mgr jerr;
+    jmp_buf errjump;
     JSAMPARRAY buffer;            /* Output row buffer */
     int row_stride,linelength;    /* physical row width in output buffer */
     unsigned char *image,*ptr;
@@ -65,6 +67,16 @@ static struct jpeg_source_mgr thumbnail_mgr = {
 /* ---------------------------------------------------------------------- */
 /* jpeg loader                                                            */
 
+static void jerror_exit(j_common_ptr info)
+{
+    struct jpeg_decompress_struct *cinfo = (struct jpeg_decompress_struct *)info;
+    struct jpeg_state *h  = container_of(cinfo, struct jpeg_state, cinfo);
+    cinfo->err->output_message(info);
+    longjmp(h->errjump, 1);
+    jpeg_destroy_decompress(cinfo);
+    exit(1);
+}
+
 static void*
 jpeg_init(FILE *fp, char *filename, unsigned int page,
 	  struct ida_image_info *i, int thumbnail)
@@ -77,6 +89,10 @@ jpeg_init(FILE *fp, char *filename, unsigned int page,
     h->infile = fp;
 
     h->cinfo.err = jpeg_std_error(&h->jerr);
+    h->cinfo.err->error_exit = jerror_exit;
+    if(setjmp(h->errjump))
+	return 0;
+
     jpeg_create_decompress(&h->cinfo);
     jpeg_save_markers(&h->cinfo, JPEG_COM,    0xffff); /* comment */
     jpeg_save_markers(&h->cinfo, JPEG_APP0+1, 0xffff); /* EXIF */
@@ -156,6 +172,9 @@ jpeg_read(unsigned char *dst, unsigned int line, void *data)
 {
     struct jpeg_state *h = data;
     JSAMPROW row = dst;
+
+    if(setjmp(h->errjump))
+	return;
     jpeg_read_scanlines(&h->cinfo, &row, 1);
 }
 
@@ -163,6 +182,9 @@ static void
 jpeg_done(void *data)
 {
     struct jpeg_state *h = data;
+
+    if (setjmp(h->errjump))
+	return;
     jpeg_destroy_decompress(&h->cinfo);
     if (h->infile)
 	fclose(h->infile);
