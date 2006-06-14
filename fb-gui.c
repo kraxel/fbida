@@ -27,7 +27,7 @@ static float p_gamma = 1;
 static unsigned short p_red[256], p_green[256], p_blue[256];
 static struct fb_cmap p_cmap = { 0, 256, p_red, p_green, p_blue };
 
-static int32_t s_lut_red[256], s_lut_green[256], s_lut_blue[256];
+static int32_t s_lut_transp[256], s_lut_red[256], s_lut_green[256], s_lut_blue[256];
 
 static unsigned char **shadow;
 static unsigned int  *sdirty,swidth,sheight;
@@ -97,6 +97,7 @@ static void shadow_lut_init(int depth)
 	fb_var.green.length &&
 	fb_var.blue.length) {
 	/* fb_var.{red|green|blue} looks sane, use it */
+	shadow_lut_init_one(s_lut_transp, fb_var.transp.length, fb_var.transp.offset);
 	shadow_lut_init_one(s_lut_red,   fb_var.red.length,   fb_var.red.offset);
 	shadow_lut_init_one(s_lut_green, fb_var.green.length, fb_var.green.offset);
 	shadow_lut_init_one(s_lut_blue,  fb_var.blue.length,  fb_var.blue.offset);
@@ -118,6 +119,10 @@ static void shadow_lut_init(int depth)
 		s_lut_blue[i]  = (i & 0xf8) >> 3;	/* bits -------- ---bbbbb */
 	    }
 	    break;
+	case 32:
+	    for (i = 0; i < 256; i++) {
+		s_lut_transp[i] = i << 24;		/* byte a--- */
+	    }
 	case 24:
 	    for (i = 0; i < 256; i++) {
 		s_lut_red[i]   = i << 16;	        /* byte -r-- */
@@ -157,7 +162,8 @@ static void shadow_render_line(int line, unsigned char *dest, char unsigned *buf
 	break;
     case 32:
 	for (x = 0; x < swidth; x++) {
-	    ptr4[x] = s_lut_red[buffer[x*3]] |
+	    ptr4[x] = s_lut_transp[255] |
+		s_lut_red[buffer[x*3]] |
 		s_lut_green[buffer[x*3+1]] |
 		s_lut_blue[buffer[x*3+2]];
 	}
