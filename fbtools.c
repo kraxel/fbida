@@ -426,7 +426,7 @@ fb_init(char *device, char *mode, int vt)
     }
 #endif
     page_mask = getpagesize()-1;
-    fb_mem_offset = (unsigned long)(fb_fix.smem_start) & (~page_mask);
+    fb_mem_offset = (unsigned long)(fb_fix.smem_start) & page_mask;
     fb_mem = mmap(NULL,fb_fix.smem_len+fb_mem_offset,
 		  PROT_READ|PROT_WRITE,MAP_SHARED,fb,0);
     if (-1L == (long)fb_mem) {
