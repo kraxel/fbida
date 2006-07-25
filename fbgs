@@ -51,7 +51,7 @@ done
 echo
 echo "### rendering pages, please wait ... ###"
 echo
-gs	-dSAVER -dNOPAUSE -dBATCH			\
+gs	-dSAFER -dNOPAUSE -dBATCH			\
 	-sPDFPassword="$password"			\
 	-sDEVICE=${device} -sOutputFile=$DIR/ps%03d.tiff \
 	$gsopts						\
