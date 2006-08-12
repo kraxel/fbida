@@ -336,13 +336,16 @@ static void flist_print_tagged(FILE *fp)
 
 static void
 shadow_draw_image(struct ida_image *img, int xoff, int yoff,
-		  unsigned int first, unsigned int last)
+		  unsigned int first, unsigned int last, int weight)
 {
     unsigned int     dwidth  = MIN(img->i.width,  fb_var.xres);
     unsigned int     dheight = MIN(img->i.height, fb_var.yres);
     unsigned int     data, offset, y, xs, ys;
 
-    shadow_clear_lines(first, last);
+    if (100 == weight)
+	shadow_clear_lines(first, last);
+    else
+	shadow_darkify(0, fb_var.xres, first, last, 100 - weight);
     
     /* offset for image data (image > screen, select visible area) */
     offset = (yoff * img->i.width + xoff) * 3;
@@ -363,7 +366,12 @@ shadow_draw_image(struct ida_image *img, int xoff, int yoff,
 	    continue;
 	if (ys+y > last)
 	    continue;
-	shadow_draw_rgbdata(xs, ys+y, dwidth, img->data + data + offset);
+	if (100 == weight)
+	  shadow_draw_rgbdata(xs, ys+y, dwidth,
+			      img->data + data + offset);
+	else
+	  shadow_merge_rgbdata(xs, ys+y, dwidth, weight,
+			       img->data + data + offset);
     }
 }
 
@@ -374,7 +382,7 @@ static void status_prepare(void)
     int y2 = fb_var.yres - 1;
 
     if (img) {
-	shadow_draw_image(img, fcurrent->left, fcurrent->top, y1, y2);
+	shadow_draw_image(img, fcurrent->left, fcurrent->top, y1, y2, 100);
 	shadow_darkify(0, fb_var.xres-1, y1, y2, transparency);
     } else {
 	shadow_clear_lines(y1, y2);
@@ -734,8 +742,47 @@ static float auto_scale(struct ida_image *img)
 
 /* ---------------------------------------------------------------------- */
 
+static void effect_blend(struct flist *f, struct flist *t)
+{
+    static int duration = 300; /* msecs */
+    struct timeval start, now;
+    int msecs, weight = 0;
+
+#if 0
+    char linebuffer[80];
+    int pos = 0;
+#endif
+
+    gettimeofday(&start, NULL);
+    do {
+	gettimeofday(&now, NULL);
+	msecs  = (now.tv_sec  - start.tv_sec)  * 1000;
+	msecs += (now.tv_usec - start.tv_usec) / 1000;
+	weight = msecs * 100 / duration;
+	if (weight > 100)
+	    weight = 100;
+	shadow_draw_image(flist_img_get(f), f->left, f->top,
+			  0, fb_var.yres-1, 100);
+	shadow_draw_image(flist_img_get(t), t->left, t->top,
+			  0, fb_var.yres-1, weight);
+
+#if 0
+	pos += snprintf(linebuffer+pos, sizeof(linebuffer)-pos,
+			" %d%%", weight);
+	status_update(linebuffer, NULL);
+#endif
+
+	shadow_render();
+    } while (weight < 100);
+
+#if 0
+     sleep(1);
+#endif
+}
+
 static int
-svga_show(struct flist *f, int timeout, char *desc, char *info, int *nr)
+svga_show(struct flist *f, struct flist *prev,
+	  int timeout, char *desc, char *info, int *nr)
 {
     static int        paused = 0, skip = KEY_SPACE;
 
@@ -772,7 +819,12 @@ svga_show(struct flist *f, int timeout, char *desc, char *info, int *nr)
 		if (f->left + fb_var.xres > img->i.width)
 		    f->left = img->i.width - fb_var.xres;
 	    }
-	    shadow_draw_image(img, f->left, f->top, 0, fb_var.yres-1);
+	    if (prev && prev != f) {
+		effect_blend(prev, f);
+		prev = NULL;
+	    } else {
+		shadow_draw_image(img, f->left, f->top, 0, fb_var.yres-1, 100);
+	    }
 	    status_update(desc, info);
 	    shadow_render();
 
@@ -1315,6 +1367,7 @@ main(int argc, char *argv[])
     int              i, arg, key;
     char             *info, *desc, *filelist;
     char             linebuffer[128];
+    struct flist     *fprev = NULL;
 
 #if 0
     /* debug aid, to attach gdb ... */ 
@@ -1413,7 +1466,9 @@ main(int argc, char *argv[])
 	    info = make_info(fcurrent->fimg, fcurrent->scale);
 	}
 
-	switch (key = svga_show(fcurrent, timeout, desc, info, &arg)) {
+	key = svga_show(fcurrent, fprev, timeout, desc, info, &arg);
+	fprev = fcurrent;
+	switch (key) {
 	case KEY_DELETE:
 	    if (editable) {
 		struct flist *fdel = fcurrent;

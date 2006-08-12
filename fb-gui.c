@@ -344,6 +344,17 @@ void shadow_draw_rgbdata(int x, int y, int pixels, unsigned char *rgb)
     sdirty[y]++;
 }
 
+void shadow_merge_rgbdata(int x, int y, int pixels, int weight,
+			  unsigned char *rgb)
+{
+    unsigned char *dest = shadow[y] + 3*x;
+    int i = 3*pixels;
+
+    while (i-- > 0)
+	*(dest++) += *(rgb++) * weight / 100;
+    sdirty[y]++;
+}
+
 
 void shadow_darkify(int x1, int x2, int y1,int y2, int percent)
 {
@@ -354,22 +365,25 @@ void shadow_darkify(int x1, int x2, int y1,int y2, int percent)
 	h = x2, x2 = x1, x1 = h;
     if (y2 < y1)
 	h = y2, y2 = y1, y1 = h;
+    
+    if (x1 < 0)
+	x1 = 0;
+    if (x2 >= swidth)
+	x2 = swidth;
+
+    if (y1 < 0)
+	y1 = 0;
+    if (y2 >= sheight)
+	y2 = sheight;
 
     for (y = y1; y <= y2; y++) {
-	if (y < 0)
-	    continue;
-	if (y >= sheight)
-	    continue;
 	sdirty[y]++;
 	ptr = shadow[y];
-	for (x = x1; x <= x2; x++) {
-	    if (x < 0)
-		continue;
-	    if (x >= swidth)
-		continue;
-	    ptr[3*x+0] = ptr[3*x+0] * percent / 100;
-	    ptr[3*x+1] = ptr[3*x+1] * percent / 100;
-	    ptr[3*x+2] = ptr[3*x+2] * percent / 100;
+	ptr += 3*x1;
+	x = 3*(x2-x1+1);
+	while (x-- > 0) {
+	    *ptr = *ptr * percent / 100;
+	    ptr++;
 	}
     }
 }
@@ -384,18 +398,20 @@ void shadow_reverse(int x1, int x2, int y1,int y2)
     if (y2 < y1)
 	h = y2, y2 = y1, y1 = h;
 
+    if (x1 < 0)
+	x1 = 0;
+    if (x2 >= swidth)
+	x2 = swidth;
+
+    if (y1 < 0)
+	y1 = 0;
+    if (y2 >= sheight)
+	y2 = sheight;
+
     for (y = y1; y <= y2; y++) {
-	if (y < 0)
-	    continue;
-	if (y >= sheight)
-	    continue;
 	sdirty[y]++;
 	ptr = shadow[y];
 	for (x = x1; x <= x2; x++) {
-	    if (x < 0)
-		continue;
-	    if (x >= swidth)
-		continue;
 	    ptr[3*x+0] = 255-ptr[3*x+0];
 	    ptr[3*x+1] = 255-ptr[3*x+1];
 	    ptr[3*x+2] = 255-ptr[3*x+2];

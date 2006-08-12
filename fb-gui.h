@@ -14,7 +14,10 @@ void shadow_fini(void);
 
 void shadow_draw_line(int x1, int x2, int y1,int y2);
 void shadow_draw_rect(int x1, int x2, int y1,int y2);
-void shadow_draw_rgbdata(int x, int y, int pixels, unsigned char *rgb);
+void shadow_draw_rgbdata(int x, int y, int pixels,
+			 unsigned char *rgb);
+void shadow_merge_rgbdata(int x, int y, int pixels, int weight,
+			  unsigned char *rgb);
 void shadow_darkify(int x1, int x2, int y1,int y2, int percent);
 void shadow_reverse(int x1, int x2, int y1,int y2);
 
