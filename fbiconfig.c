@@ -61,11 +61,6 @@ struct cfg_cmdline fbi_cfg[] = {
 	.yesno    = 1,
 	.desc     = "  like the above, but downscale only",
     },{
-	.cmdline  = "autofirst",
-	.option   = { O_AUTO_FIRST },
-	.yesno    = 1,
-	.desc     = "  autoscale first image only",
-    },{
 	.cmdline  = "fitwidth",
 	.option   = { O_FIT_WIDTH },
 	.yesno    = 1,
@@ -110,7 +105,17 @@ struct cfg_cmdline fbi_cfg[] = {
 	.option   = { O_PRESERVE },
 	.yesno    = 1,
 	.desc     = "  preserve timestamps when editing",
+    },{
+	.cmdline  = "readahead",
+	.option   = { O_READ_AHEAD },
+	.yesno    = 1,
+	.desc     = "read ahead images into cache",
 
+    },{
+	.cmdline  = "cachemem",
+	.option   = { O_CACHE_MEM },
+	.needsarg = 1,
+	.desc     = "image cache size in megabytes",
     },{
 	.letter   = 'T',
 	.cmdline  = "vt",

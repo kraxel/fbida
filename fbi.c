@@ -48,7 +48,9 @@
 
 #define TRUE            1
 #define FALSE           0
+#undef  MAX
 #define MAX(x,y)        ((x)>(y)?(x):(y))
+#undef  MIN
 #define MIN(x,y)        ((x)<(y)?(x):(y))
 #define ARRAY_SIZE(x)   (sizeof(x)/sizeof(x[0]))
 
@@ -88,24 +90,36 @@ int32_t         lut_red[256], lut_green[256], lut_blue[256];
 int             dither = FALSE, pcd_res = 3;
 int             v_steps = 50;
 int             h_steps = 50;
-int             text_steps;
 int             textreading = 0, redraw = 0, statusline = 1;
-int             new_image;
-int             left, top;
-int             show_top;
-int             show_bottom;
 int             fitwidth;
 
 /* file list */
 struct flist {
+    /* file list */
     int               nr;
     int               tag;
     char              *name;
     struct list_head  list;
+
+    /* image cache */
+    int               seen;
+    int               top;
+    int               left;
+    int               text_steps;
+    float             scale;
+    struct ida_image  *fimg;
+    struct ida_image  *simg;
+    struct list_head  lru;
 };
 static LIST_HEAD(flist);
+static LIST_HEAD(flru);
 static int           fcount;
 static struct flist  *fcurrent;
+static struct ida_image *img;
+
+/* accounting */
+static int img_cnt, min_cnt = 2, max_cnt = 16;
+static int img_mem, max_mem_mb;
 
 /* framebuffer */
 char                       *fbdev = NULL;
@@ -120,13 +134,25 @@ static float fbgamma = 1;
 /* Command line options. */
 int autodown;
 int autoup;
-int autofirst;
 int comments;
 int transparency = 40;
+int timeout;
+int backup;
+int preserve;
+int read_ahead;
+int editable;
+int once;
 
 /* font handling */
 static char *fontname = NULL;
 static FT_Face face;
+
+/* ---------------------------------------------------------------------- */
+/* fwd declarations                                                       */
+
+static struct ida_image *flist_img_get(struct flist *f);
+static void *flist_malloc(size_t size);
+static void flist_img_load(struct flist *f, int prefetch);
 
 /* ---------------------------------------------------------------------- */
 
@@ -135,7 +161,7 @@ version(void)
 {
     fprintf(stderr,
 	    "fbi version " VERSION ", compiled on %s\n"
-	    "(c) 1999-2004 Gerd Hoffmann <kraxel@bytesex.org> [SUSE Labs]\n",
+	    "(c) 1999-2006 Gerd Hoffmann <kraxel@bytesex.org> [SUSE Labs]\n",
 	    __DATE__ );
 }
 
@@ -179,6 +205,7 @@ static int flist_add(char *filename)
     memset(f,0,sizeof(*f));
     f->name = strdup(filename);
     list_add_tail(&f->list,&flist);
+    INIT_LIST_HEAD(&f->lru);
     return 0;
 }
 
@@ -340,13 +367,14 @@ shadow_draw_image(struct ida_image *img, int xoff, int yoff,
     }
 }
 
-static void status_prepare(struct ida_image *img)
+static void status_prepare(void)
 {
+    struct ida_image *img = flist_img_get(fcurrent);
     int y1 = fb_var.yres - (face->size->metrics.height >> 6);
     int y2 = fb_var.yres - 1;
 
     if (img) {
-	shadow_draw_image(img, left, top, y1, y2);
+	shadow_draw_image(img, fcurrent->left, fcurrent->top, y1, y2);
 	shadow_darkify(0, fb_var.xres-1, y1, y2, transparency);
     } else {
 	shadow_clear_lines(y1, y2);
@@ -354,14 +382,14 @@ static void status_prepare(struct ida_image *img)
     shadow_draw_line(0, fb_var.xres-1, y1-1, y1-1);
 }
 
-static void status_update(struct ida_image *img, unsigned char *desc, char *info)
+static void status_update(unsigned char *desc, char *info)
 {
     int yt = fb_var.yres + (face->size->metrics.descender >> 6);
     wchar_t str[128];
     
     if (!statusline)
 	return;
-    status_prepare(img);
+    status_prepare();
 
     swprintf(str,sizeof(str),L"%s",desc);
     shadow_draw_string(face, 0, yt, str, -1);
@@ -380,7 +408,7 @@ static void status_error(unsigned char *msg)
     int yt = fb_var.yres + (face->size->metrics.descender >> 6);
     wchar_t str[128];
 
-    status_prepare(NULL);
+    status_prepare();
 
     swprintf(str,sizeof(str), L"%s", msg);
     shadow_draw_string(face, 0, yt, str, -1);
@@ -389,12 +417,12 @@ static void status_error(unsigned char *msg)
     sleep(2);
 }
 
-static void status_edit(struct ida_image *img, unsigned char *msg, int pos)
+static void status_edit(unsigned char *msg, int pos)
 {
     int yt = fb_var.yres + (face->size->metrics.descender >> 6);
     wchar_t str[128];
 
-    status_prepare(img);
+    status_prepare();
 
     swprintf(str,sizeof(str), L"%s", msg);
     shadow_draw_string_cursor(face, 0, yt, str, pos);
@@ -556,7 +584,7 @@ static void debug_key(char *key)
 			"%s%c",
 			key[i] < 0x20 ? "^" : "",
 			key[i] < 0x20 ? key[i] + 0x40 : key[i]);
-    status_update(NULL, linebuffer, NULL);
+    status_update(linebuffer, NULL);
 }
 
 static void
@@ -589,8 +617,10 @@ console_switch(void)
 static void free_image(struct ida_image *img)
 {
     if (img) {
-	if (img->data)
+	if (img->data) {
+	    img_mem -= img->i.width * img->i.height * 3;
 	    free(img->data);
+	}
 	free(img);
     }
 }
@@ -607,8 +637,6 @@ read_image(char *filename)
     unsigned int y;
     void *data;
     
-    new_image = 1;
-
     /* open file */
     if (NULL == (fp = fopen(filename, "r"))) {
 	fprintf(stderr,"open %s: %s\n",filename,strerror(errno));
@@ -645,7 +673,8 @@ read_image(char *filename)
 	free_image(img);
 	return NULL;
     }
-    img->data = malloc(img->i.width * img->i.height * 3);
+    img->data = flist_malloc(img->i.width * img->i.height * 3);
+    img_mem += img->i.width * img->i.height * 3;
     for (y = 0; y < img->i.height; y++) {
         if (switch_last != fb_switch_state)
 	    console_switch();
@@ -678,7 +707,8 @@ scale_image(struct ida_image *src, float scale)
 	p.height = 1;
     
     data = desc_resize.init(src,&rect,&dest->i,&p);
-    dest->data = malloc(dest->i.width * dest->i.height * 3);
+    dest->data = flist_malloc(dest->i.width * dest->i.height * 3);
+    img_mem += dest->i.width * dest->i.height * 3;
     for (y = 0; y < dest->i.height; y++) {
 	if (switch_last != fb_switch_state)
 	    console_switch();
@@ -705,62 +735,54 @@ static float auto_scale(struct ida_image *img)
 /* ---------------------------------------------------------------------- */
 
 static int
-svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
+svga_show(struct flist *f, int timeout, char *desc, char *info, int *nr)
 {
-    static int      paused = 0, skip = KEY_SPACE;
-    int             exif = 0, help = 0;
-    int             rc;
-    char            key[11];
-    fd_set          set;
-    struct timeval  limit;
-    char            linebuffer[80];
-    int             fdmax;
+    static int        paused = 0, skip = KEY_SPACE;
+
+    struct ida_image  *img = flist_img_get(f);
+    int               exif = 0, help = 0;
+    int               rc;
+    char              key[11];
+    fd_set            set;
+    struct timeval    limit;
+    char              linebuffer[80];
+    int               fdmax;
 
     *nr = 0;
     if (NULL == img)
 	return skip;
     
-    if (new_image) {
-	/* start with centered image, if larger than screen */
-	if (img->i.width > fb_var.xres)
-	    left = (img->i.width - fb_var.xres) / 2;
-	if (img->i.height > fb_var.yres) {
-	    top = (img->i.height - fb_var.yres) / 2;
-	    if (show_top) {
-		show_top = 0;
-		top = 0;
-	    }
-	    if (show_bottom) {
-		show_bottom = 0;
-		top = img->i.height - fb_var.yres;
-	    }
-	}
-	new_image = 0;
-    }
-
     redraw = 1;
     for (;;) {
 	if (redraw) {
 	    redraw = 0;
 	    if (img->i.height <= fb_var.yres) {
-		top = 0;
+		f->top = 0;
 	    } else {
-		if (top < 0)
-		    top = 0;
-		if (top + fb_var.yres > img->i.height)
-		    top = img->i.height - fb_var.yres;
+		if (f->top < 0)
+		    f->top = 0;
+		if (f->top + fb_var.yres > img->i.height)
+		    f->top = img->i.height - fb_var.yres;
 	    }
 	    if (img->i.width <= fb_var.xres) {
-		left = 0;
+		f->left = 0;
 	    } else {
-		if (left < 0)
-		    left = 0;
-		if (left + fb_var.xres > img->i.width)
-		    left = img->i.width - fb_var.xres;
+		if (f->left < 0)
+		    f->left = 0;
+		if (f->left + fb_var.xres > img->i.width)
+		    f->left = img->i.width - fb_var.xres;
 	    }
-	    shadow_draw_image(img, left, top, 0, fb_var.yres-1);
-	    status_update(img, desc, info);
+	    shadow_draw_image(img, f->left, f->top, 0, fb_var.yres-1);
+	    status_update(desc, info);
 	    shadow_render();
+
+	    if (read_ahead) {
+		struct flist *f = flist_next(fcurrent,1,0);
+		if (f && !f->fimg)
+		    flist_img_load(f,1);
+		status_update(desc, info);
+		shadow_render();
+	    }
 	}
         if (switch_last != fb_switch_state) {
 	    console_switch();
@@ -817,9 +839,9 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 	    return KEY_Q;
 
 	} else if (0 == strcmp(key, " ")) {
-	    if (textreading && top < (int)(img->i.height - fb_var.yres)) {
+	    if (textreading && f->top < (int)(img->i.height - fb_var.yres)) {
 		redraw = 1;
-		top += text_steps;
+		f->top += f->text_steps;
 	    } else {
 		skip = KEY_SPACE;
 		return KEY_SPACE;
@@ -827,29 +849,29 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 
 	} else if (0 == strcmp(key, "\x1b[A") && img->i.height > fb_var.yres) {
 	    redraw = 1;
-	    top -= v_steps;
+	    f->top -= v_steps;
 	} else if (0 == strcmp(key, "\x1b[B") && img->i.height > fb_var.yres) {
 	    redraw = 1;
-	    top += v_steps;
+	    f->top += v_steps;
 	} else if (0 == strcmp(key, "\x1b[1~") && img->i.height > fb_var.yres) {
 	    redraw = 1;
-	    top = 0;
+	    f->top = 0;
 	} else if (0 == strcmp(key, "\x1b[4~")) {
 	    redraw = 1;
-	    top = img->i.height - fb_var.yres;
+	    f->top = img->i.height - fb_var.yres;
 	} else if (0 == strcmp(key, "\x1b[D") && img->i.width > fb_var.xres) {
 	    redraw = 1;
-	    left -= h_steps;
+	    f->left -= h_steps;
 	} else if (0 == strcmp(key, "\x1b[C") && img->i.width > fb_var.xres) {
 	    redraw = 1;
-	    left += h_steps;
+	    f->left += h_steps;
 
 	} else if (0 == strcmp(key, "\x1b[5~") ||
 		   0 == strcmp(key, "j")       ||
 		   0 == strcmp(key, "J")) {
-	    if (textreading && top > 0) {
+	    if (textreading && f->top > 0) {
 		redraw = 1;
-		top -= text_steps;
+		f->top -= f->text_steps;
 	    } else {
 		skip = KEY_PGUP;
 		return KEY_PGUP;
@@ -860,9 +882,9 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 		   0 == strcmp(key, "K")       ||
 		   0 == strcmp(key, "n")       ||
 		   0 == strcmp(key, "N")) {
-	    if (textreading && top < (int)(img->i.height - fb_var.yres)) {
+	    if (textreading && f->top < (int)(img->i.height - fb_var.yres)) {
 		redraw = 1;
-		top += text_steps;
+		f->top += f->text_steps;
 	    } else {
 		skip = KEY_PGDN;
 		return KEY_PGDN;
@@ -880,7 +902,7 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 		   0 == strcmp(key, "P")) {
 	    if (0 != timeout) {
 		paused = !paused;
-		status_update(img, paused ? "pause on " : "pause off", NULL);
+		status_update(paused ? "pause on " : "pause off", NULL);
 	    }
 
 	} else if (0 == strcmp(key, "D")) {
@@ -931,7 +953,7 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
 	} else if (rc == 1 && *key >= '0' && *key <= '9') {
 	    *nr = *nr * 10 + (*key - '0');
 	    snprintf(linebuffer, sizeof(linebuffer), "> %d",*nr);
-	    status_update(img, linebuffer, NULL);
+	    status_update(linebuffer, NULL);
 	} else {
 	    *nr = 0;
 #if 0
@@ -941,18 +963,19 @@ svga_show(struct ida_image *img, int timeout, char *desc, char *info, int *nr)
     }
 }
 
-static void scale_fix_top_left(float old, float new, struct ida_image *img)
+static void scale_fix_top_left(struct flist *f, float old, float new)
 {
+    struct ida_image *img = flist_img_get(f);
     unsigned int width, height;
     float cx,cy;
 
-    cx = (float)(left + fb_var.xres/2) / (img->i.width  * old);
-    cy = (float)(top  + fb_var.yres/2) / (img->i.height * old);
+    cx = (float)(f->left + fb_var.xres/2) / (img->i.width  * old);
+    cy = (float)(f->top  + fb_var.yres/2) / (img->i.height * old);
 
-    width  = img->i.width  * new;
-    height = img->i.height * new;
-    left   = cx * width  - fb_var.xres/2;
-    top    = cy * height - fb_var.yres/2;
+    width   = img->i.width  * new;
+    height  = img->i.height * new;
+    f->left = cx * width  - fb_var.xres/2;
+    f->top  = cy * height - fb_var.yres/2;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -1030,7 +1053,7 @@ static char edit_line(struct ida_image *img, char *line, int max)
     fd_set  set;
 
     do {
-	status_edit(img,line,pos);
+	status_edit(line,pos);
 	
 	FD_SET(0, &set);
 	rc = select(1, &set, NULL, NULL, NULL);
@@ -1122,6 +1145,160 @@ static void edit_desc(struct ida_image *img, char *filename)
 
 /* ---------------------------------------------------------------------- */
 
+static struct ida_image *flist_img_get(struct flist *f)
+{
+    if (1 != f->scale)
+	return f->simg;
+    else
+	return f->fimg;
+}
+
+static void flist_img_free(struct flist *f)
+{
+    if (!f->fimg)
+	return;
+
+    free_image(f->fimg);
+    if (f->simg)
+	free_image(f->simg);
+    f->fimg = NULL;
+    f->simg = NULL;
+    list_del(&f->lru);
+    img_cnt--;
+}
+
+static int flist_img_free_lru(void)
+{
+    struct flist *f;
+
+    if (img_cnt <= min_cnt)
+	return -1;
+    f = list_entry(flru.next, struct flist, lru);
+    flist_img_free(f);
+    return 0;
+}
+
+static void flist_img_release_memory(void)
+{
+    int try_release;
+
+    for (;;) {
+	try_release = 0;
+	if (img_cnt > max_cnt)
+	    try_release = 1;
+	if (img_mem > max_mem_mb * 1024 * 1024)
+	    try_release = 1;
+	if (!try_release)
+	    break;
+	if (0 != flist_img_free_lru())
+	    break;
+    }
+    return;
+}
+
+static void *flist_malloc(size_t size)
+{
+    void *ptr;
+
+    for (;;) {
+	ptr = malloc(size);
+	if (ptr)
+	    return ptr;
+	if (0 != flist_img_free_lru()) {
+	    status_error("Oops: out of memory, exiting");
+	    exit(1);
+	}
+    }
+}
+
+static void flist_img_scale(struct flist *f, float scale, int prefetch)
+{
+    char linebuffer[128];
+
+    if (!f->fimg)
+	return;
+    if (f->simg && f->scale == scale)
+	return;
+
+    if (f->simg) {
+	free_image(f->simg);
+	f->simg = NULL;
+    }
+    if (scale != 1) {
+	if (!prefetch) {
+	    snprintf(linebuffer, sizeof(linebuffer),
+		     "scaling (%.0f%%) %s ...",
+		     scale*100, f->name);
+	    status_update(linebuffer, NULL);
+	}
+	f->simg = scale_image(f->fimg,scale);
+	if (!f->simg) {
+	    snprintf(linebuffer,sizeof(linebuffer),
+		     "%s: scaling FAILED",f->name);
+	    status_error(linebuffer);
+	}
+    }
+    f->scale = scale;
+}
+
+static void flist_img_load(struct flist *f, int prefetch)
+{
+    char linebuffer[128];
+    float scale = 1;
+
+    if (f->fimg) {
+	/* touch */
+	list_del(&f->lru);
+	list_add_tail(&f->lru, &flru);
+	return;
+    }
+
+    snprintf(linebuffer,sizeof(linebuffer),"%s %s ...",
+	     prefetch ? "prefetch" : "loading", f->name);
+    status_update(linebuffer, NULL);
+    f->fimg = read_image(f->name);
+    if (!f->fimg) {
+	snprintf(linebuffer,sizeof(linebuffer),
+		 "%s: loading FAILED",f->name);
+	status_error(linebuffer);
+	return;
+    }
+
+    if (!f->seen) {
+	scale = 1;
+	if (autoup || autodown) {
+	    scale = auto_scale(f->fimg);
+	    if (scale < 1 && !autodown)
+		scale = 1;
+	    if (scale > 1 && !autoup)
+		scale = 1;
+	}
+    } else {
+	scale = f->scale;
+    }
+    flist_img_scale(f, scale, prefetch);
+
+    if (!f->seen) {
+ 	struct ida_image *img = flist_img_get(f);
+	if (img->i.width > fb_var.xres)
+	    f->left = (img->i.width - fb_var.xres) / 2;
+	if (img->i.height > fb_var.yres) {
+	    f->top = (img->i.height - fb_var.yres) / 2;
+	    if (textreading) {
+		int pages = ceil((float)img->i.height / fb_var.yres);
+		f->text_steps = ceil((float)img->i.height / pages);
+		f->top = 0;
+	    }
+	}
+    }
+
+    list_add_tail(&f->lru, &flru);
+    f->seen = 1;
+    img_cnt++;
+}
+
+/* ---------------------------------------------------------------------- */
+
 static void cleanup_and_exit(int code)
 {
     shadow_fini();
@@ -1135,20 +1312,7 @@ static void cleanup_and_exit(int code)
 int
 main(int argc, char *argv[])
 {
-    int              timeout = 0;
-    int              backup = 0;
-    int              preserve = 0;
-
-    struct ida_image *fimg    = NULL;
-    struct ida_image *simg    = NULL;
-    struct ida_image *img     = NULL;
-    float            scale    = 1;
-    float            newscale = 1;
-
-    int              editable = 0, once = 0;
-    int              need_read;
     int              i, arg, key;
-
     char             *info, *desc, *filelist;
     char             linebuffer[128];
 
@@ -1185,14 +1349,15 @@ main(int argc, char *argv[])
     once        = GET_ONCE();
     autoup      = GET_AUTO_UP();
     autodown    = GET_AUTO_DOWN();
-    autofirst   = GET_AUTO_FIRST();
     fitwidth    = GET_FIT_WIDTH();
     statusline  = GET_VERBOSE();
     textreading = GET_TEXT_MODE();
     editable    = GET_EDIT();
     backup      = GET_BACKUP();
     preserve    = GET_PRESERVE();
+    read_ahead  = GET_READ_AHEAD();
 
+    max_mem_mb  = GET_CACHE_MEM();
     v_steps     = GET_SCROLL();
     h_steps     = GET_SCROLL();
     timeout     = GET_TIMEOUT();
@@ -1217,7 +1382,6 @@ main(int argc, char *argv[])
     if (GET_RANDOM())
 	flist_randomize();
     fcurrent = flist_first();
-    need_read = 1;
 
     font_init();
     if (NULL == fontname)
@@ -1236,61 +1400,20 @@ main(int argc, char *argv[])
     shadow_set_palette(fd);
     signal(SIGTSTP,SIG_IGN);
     
-    if (textreading) {
-	show_top = 1;
-	text_steps = fb_var.yres - 100;
-    }
-
     /* svga main loop */
     tty_raw();
     desc = NULL;
     info = NULL;
-    scale = 1;
     for (;;) {
-	if (need_read) {
-	    need_read = 0;
-	    free_image(fimg);
-	    free_image(simg);
-	    fimg = NULL;
-	    simg = NULL;
-	    img  = NULL;
-	    snprintf(linebuffer,sizeof(linebuffer),"loading %s ...",fcurrent->name);
-	    status_update(img,linebuffer, NULL);
-	    fimg = read_image(fcurrent->name);
-	    if (fimg) {
-		if (autoup || autodown) {
-		    scale = auto_scale(fimg);
-		    if (scale < 1 && !autodown)
-			scale = 1;
-		    if (scale > 1 && !autoup)
-			scale = 1;
-		    if (autofirst)
-			autoup = autodown = 0;
-		}
-		if (scale != 1) {
-		    snprintf(linebuffer, sizeof(linebuffer),
-			     "scaling (%.0f%%) %s ...",
-			     scale*100, fcurrent->name);
-		    status_update(img,linebuffer, NULL);
-		    simg = scale_image(fimg,scale);
-		    img = simg;
-		} else {
-		    img = fimg;
-		}
-		desc = make_desc(&fimg->i,fcurrent->name);
-	    }
-	    if (!img) {
-		snprintf(linebuffer,sizeof(linebuffer),
-			 "%s: FAILED",fcurrent->name);
-		status_error(linebuffer);
-	    }
-	}
+	flist_img_load(fcurrent, 0);
+	flist_img_release_memory();
+	img = flist_img_get(fcurrent);
 	if (img) {
-	    int pages = ceil((float)img->i.height / fb_var.yres);
-	    text_steps = ceil((float)img->i.height / pages);
-	    info = make_info(fimg,scale);
+	    desc = make_desc(&fcurrent->fimg->i, fcurrent->name);
+	    info = make_info(fcurrent->fimg, fcurrent->scale);
 	}
-	switch (key = svga_show(img, timeout, desc, info, &arg)) {
+
+	switch (key = svga_show(fcurrent, timeout, desc, info, &arg)) {
 	case KEY_DELETE:
 	    if (editable) {
 		struct flist *fdel = fcurrent;
@@ -1299,9 +1422,9 @@ main(int argc, char *argv[])
 		else
 		    fcurrent = flist_next(fcurrent,0,0);
 		unlink(fdel->name);
+		flist_img_free(fdel);
 		flist_del(fdel);
 		flist_renumber();
-		need_read = 1;
 		if (list_empty(&flist)) {
 		    /* deleted last one */
 		    cleanup_and_exit(0);
@@ -1316,7 +1439,7 @@ main(int argc, char *argv[])
 	    if (editable) {
 		snprintf(linebuffer,sizeof(linebuffer),
 			 "rotating %s ...",fcurrent->name);
-		status_update(img, linebuffer, NULL);
+		status_update(linebuffer, NULL);
 		jpeg_transform_inplace
 		    (fcurrent->name,
 		     (key == KEY_ROT_CW) ? JXFORM_ROT_90 : JXFORM_ROT_270,
@@ -1327,7 +1450,7 @@ main(int argc, char *argv[])
 		     JFLAG_TRANSFORM_IMAGE     |
 		     JFLAG_TRANSFORM_THUMBNAIL |
 		     JFLAG_UPDATE_ORIENTATION);
-		need_read = 1;
+		flist_img_free(fcurrent);
 	    } else {
 		status_error("readonly mode, sorry [start with --edit?]");
 	    }
@@ -1337,10 +1460,7 @@ main(int argc, char *argv[])
 	    fcurrent->tag = !fcurrent->tag;
 	    /* fall throuth */
 	case KEY_SPACE:
-	    need_read = 1;
 	    fcurrent = flist_next(fcurrent,1,0);
-	    if (textreading)
-		show_top = 1;
 	    if (NULL != fcurrent)
 		break;
 	    /* else fall */
@@ -1350,19 +1470,12 @@ main(int argc, char *argv[])
 	    cleanup_and_exit(0);
 	    break;
 	case KEY_PGDN:
-	    need_read = 1;
 	    fcurrent = flist_next(fcurrent,0,1);
-	    if (textreading)
-		show_top = 1;
 	    break;
 	case KEY_PGUP:
-	    need_read = 1;
 	    fcurrent = flist_prev(fcurrent,1);
-	    if (textreading)
-		show_bottom = 1;
 	    break;
 	case KEY_TIMEOUT:
-	    need_read = 1;
 	    fcurrent = flist_next(fcurrent,once,1);
 	    if (NULL == fcurrent) {
 		cleanup_and_exit(0);
@@ -1373,34 +1486,29 @@ main(int argc, char *argv[])
 	case KEY_MINUS:
 	case KEY_ASCALE:
 	case KEY_SCALE:
-	    if (key == KEY_PLUS) {
-		newscale = scale * 1.6;
-	    } else if (key == KEY_MINUS) {
-		newscale = scale / 1.6;
-	    } else if (key == KEY_ASCALE) {
-		newscale = auto_scale(fimg);
-	    } else {
-		newscale = arg / 100.0;
+	    {
+		float newscale;
+
+		if (key == KEY_PLUS) {
+		    newscale = fcurrent->scale * 1.6;
+		} else if (key == KEY_MINUS) {
+		    newscale = fcurrent->scale / 1.6;
+		} else if (key == KEY_ASCALE) {
+		    newscale = auto_scale(fcurrent->fimg);
+		} else {
+		    newscale = arg / 100.0;
+		}
+		if (newscale < 0.1)
+		    newscale = 0.1;
+		if (newscale > 10)
+		    newscale = 10;
+		scale_fix_top_left(fcurrent, fcurrent->scale, newscale);
+		flist_img_scale(fcurrent, newscale, 0);
+		break;
 	    }
-	    if (newscale < 0.1)
-		newscale = 0.1;
-	    if (newscale > 10)
-		newscale = 10;
-	    scale_fix_top_left(scale, newscale, img);
-	    scale = newscale;
-	    snprintf(linebuffer,sizeof(linebuffer),
-		     "scaling (%.0f%%) %s ...",
-		     scale*100, fcurrent->name);
-	    status_update(NULL, linebuffer, NULL);
-	    free_image(simg);
-	    simg = scale_image(fimg,scale);
-	    img = simg;
-	    break;
 	case KEY_GOTO:
-	    if (arg > 0 && arg <= fcount) {
-		need_read = 1;
+	    if (arg > 0 && arg <= fcount)
 		fcurrent = flist_goto(arg);
-	    }
 	    break;
 	case KEY_DELAY:
 	    timeout = arg;
@@ -1418,7 +1526,7 @@ main(int argc, char *argv[])
 	case KEY_DESC:
 	    if (!comments) {
 		edit_desc(img, fcurrent->name);
-		desc = make_desc(&fimg->i,fcurrent->name);
+		desc = make_desc(&fcurrent->fimg->i,fcurrent->name);
 	    }
 	    break;
 	}
