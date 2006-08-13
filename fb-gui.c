@@ -350,8 +350,10 @@ void shadow_merge_rgbdata(int x, int y, int pixels, int weight,
     unsigned char *dest = shadow[y] + 3*x;
     int i = 3*pixels;
 
+    weight = weight * 256 / 100;
+
     while (i-- > 0)
-	*(dest++) += *(rgb++) * weight / 100;
+	*(dest++) += *(rgb++) * weight >> 8;
     sdirty[y]++;
 }
 
@@ -376,13 +378,15 @@ void shadow_darkify(int x1, int x2, int y1,int y2, int percent)
     if (y2 >= sheight)
 	y2 = sheight;
 
+    percent = percent * 256 / 100;
+
     for (y = y1; y <= y2; y++) {
 	sdirty[y]++;
 	ptr = shadow[y];
 	ptr += 3*x1;
 	x = 3*(x2-x1+1);
 	while (x-- > 0) {
-	    *ptr = *ptr * percent / 100;
+	    *ptr = (*ptr * percent) >> 8;
 	    ptr++;
 	}
     }

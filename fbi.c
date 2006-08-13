@@ -142,6 +142,8 @@ int preserve;
 int read_ahead;
 int editable;
 int once;
+int blending_msecs = 1000;
+int perfmon = 1;
 
 /* font handling */
 static char *fontname = NULL;
@@ -744,21 +746,18 @@ static float auto_scale(struct ida_image *img)
 
 static void effect_blend(struct flist *f, struct flist *t)
 {
-    static int duration = 300; /* msecs */
     struct timeval start, now;
     int msecs, weight = 0;
-
-#if 0
     char linebuffer[80];
     int pos = 0;
-#endif
+    int count = 0;
 
     gettimeofday(&start, NULL);
     do {
 	gettimeofday(&now, NULL);
 	msecs  = (now.tv_sec  - start.tv_sec)  * 1000;
 	msecs += (now.tv_usec - start.tv_usec) / 1000;
-	weight = msecs * 100 / duration;
+	weight = msecs * 100 / blending_msecs;
 	if (weight > 100)
 	    weight = 100;
 	shadow_draw_image(flist_img_get(f), f->left, f->top,
@@ -766,18 +765,27 @@ static void effect_blend(struct flist *f, struct flist *t)
 	shadow_draw_image(flist_img_get(t), t->left, t->top,
 			  0, fb_var.yres-1, weight);
 
-#if 0
-	pos += snprintf(linebuffer+pos, sizeof(linebuffer)-pos,
-			" %d%%", weight);
-	status_update(linebuffer, NULL);
-#endif
+	if (perfmon) {
+	    pos += snprintf(linebuffer+pos, sizeof(linebuffer)-pos,
+			    " %d%%", weight);
+	    status_update(linebuffer, NULL);
+	    count++;
+	}
 
 	shadow_render();
     } while (weight < 100);
 
-#if 0
-     sleep(1);
-#endif
+    if (perfmon) {
+	gettimeofday(&now, NULL);
+	msecs  = (now.tv_sec  - start.tv_sec)  * 1000;
+	msecs += (now.tv_usec - start.tv_usec) / 1000;
+	pos += snprintf(linebuffer+pos, sizeof(linebuffer)-pos,
+			" | %d/%d -> %d msec",
+			msecs, count, msecs/count);
+	status_update(linebuffer, NULL);
+	shadow_render();
+	sleep(2);
+    }
 }
 
 static int
@@ -819,7 +827,8 @@ svga_show(struct flist *f, struct flist *prev,
 		if (f->left + fb_var.xres > img->i.width)
 		    f->left = img->i.width - fb_var.xres;
 	    }
-	    if (prev && prev != f) {
+	    if (blending_msecs && prev && prev != f &&
+		flist_img_get(prev) && flist_img_get(f)) {
 		effect_blend(prev, f);
 		prev = NULL;
 	    } else {
