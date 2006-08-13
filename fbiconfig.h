@@ -56,7 +56,7 @@
 #define GET_READ_AHEAD()       	cfg_get_bool(O_READ_AHEAD,    0)
 
 #define GET_CACHE_MEM()         cfg_get_int(O_CACHE_MEM,    256)
-#define GET_BLEND_MSECS()       cfg_get_int(O_BLEND_MSECS,     0)
+#define GET_BLEND_MSECS()       cfg_get_int(O_BLEND_MSECS,    0)
 #define GET_VT()                cfg_get_int(O_VT,             0)
 #define GET_SCROLL()            cfg_get_int(O_SCROLL,        50)
 #define GET_TIMEOUT()           cfg_get_int(O_TIMEOUT,        0)
