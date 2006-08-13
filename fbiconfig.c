@@ -117,6 +117,11 @@ struct cfg_cmdline fbi_cfg[] = {
 	.needsarg = 1,
 	.desc     = "image cache size in megabytes",
     },{
+	.cmdline  = "blend",
+	.option   = { O_BLEND_MSECS },
+	.needsarg = 1,
+	.desc     = "image blend time in miliseconds",
+    },{
 	.letter   = 'T',
 	.cmdline  = "vt",
 	.option   = { O_VT },

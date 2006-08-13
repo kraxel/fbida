@@ -142,8 +142,8 @@ int preserve;
 int read_ahead;
 int editable;
 int once;
-int blending_msecs = 1000;
-int perfmon = 1;
+int blend_msecs;
+int perfmon = 0;
 
 /* font handling */
 static char *fontname = NULL;
@@ -757,7 +757,7 @@ static void effect_blend(struct flist *f, struct flist *t)
 	gettimeofday(&now, NULL);
 	msecs  = (now.tv_sec  - start.tv_sec)  * 1000;
 	msecs += (now.tv_usec - start.tv_usec) / 1000;
-	weight = msecs * 100 / blending_msecs;
+	weight = msecs * 100 / blend_msecs;
 	if (weight > 100)
 	    weight = 100;
 	shadow_draw_image(flist_img_get(f), f->left, f->top,
@@ -827,7 +827,7 @@ svga_show(struct flist *f, struct flist *prev,
 		if (f->left + fb_var.xres > img->i.width)
 		    f->left = img->i.width - fb_var.xres;
 	    }
-	    if (blending_msecs && prev && prev != f &&
+	    if (blend_msecs && prev && prev != f &&
 		flist_img_get(prev) && flist_img_get(f)) {
 		effect_blend(prev, f);
 		prev = NULL;
@@ -1420,6 +1420,7 @@ main(int argc, char *argv[])
     read_ahead  = GET_READ_AHEAD();
 
     max_mem_mb  = GET_CACHE_MEM();
+    blend_msecs = GET_BLEND_MSECS();
     v_steps     = GET_SCROLL();
     h_steps     = GET_SCROLL();
     timeout     = GET_TIMEOUT();
