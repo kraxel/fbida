@@ -340,6 +340,7 @@ fb_init(char *device, char *mode, int vt)
 	device = getenv("FRAMEBUFFER");
 	if (NULL == device) {
 	    struct fb_con2fbmap c2m;
+	    memset(&c2m, 0, sizeof(c2m));
 	    if (-1 == (fb = open(devices->fb0,O_RDWR /* O_WRONLY */,0))) {
 		fprintf(stderr,"open %s: %s\n",devices->fb0,strerror(errno));
 		exit(1);
@@ -351,7 +352,7 @@ fb_init(char *device, char *mode, int vt)
 	    }
 	    close(fb);
 	    fprintf(stderr,"map: vt%02d => fb%d\n",
-		    c2m.console,c2m.framebuffer);
+		    c2m.console, c2m.framebuffer);
 	    sprintf(fbdev,devices->fbnr,c2m.framebuffer);
 	    device = fbdev;
 	}

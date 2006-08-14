@@ -231,6 +231,7 @@ void shadow_init(void)
     sheight = fb_var.yres;
     shadow  = malloc(sizeof(unsigned char*) * sheight);
     sdirty  = malloc(sizeof(unsigned int)   * sheight);
+    memset(sdirty,0, sizeof(unsigned int)   * sheight);
     for (i = 0; i < sheight; i++)
 	shadow[i] = malloc(swidth*3);
     shadow_clear();

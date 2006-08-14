@@ -347,7 +347,7 @@ shadow_draw_image(struct ida_image *img, int xoff, int yoff,
     if (100 == weight)
 	shadow_clear_lines(first, last);
     else
-	shadow_darkify(0, fb_var.xres, first, last, 100 - weight);
+	shadow_darkify(0, fb_var.xres-1, first, last, 100 - weight);
     
     /* offset for image data (image > screen, select visible area) */
     offset = (yoff * img->i.width + xoff) * 3;
