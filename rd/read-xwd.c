@@ -20,12 +20,12 @@
 # define be16_to_cpu(x) (x)
 # define be32_to_cpu(x) (x)
 #elif BYTE_ORDER == LITTLE_ENDIAN
-# define be16_to_cpu(x) (((x>>8) & 0x00ff) |\
-                         ((x<<8) & 0xff00))
-# define be32_to_cpu(x) (((x>>24) & 0x000000ff) |\
-                         ((x>>8)  & 0x0000ff00) |\
-                         ((x<<8)  & 0x00ff0000) |\
-                         ((x<<24) & 0xff000000))
+# define be16_to_cpu(x) ((((uint16_t)x>>8)  &     0x00ff) |\
+                         (((uint16_t)x<<8)  &     0xff00))
+# define be32_to_cpu(x) ((((uint32_t)x>>24) & 0x000000ff) |\
+                         (((uint32_t)x>>8)  & 0x0000ff00) |\
+                         (((uint32_t)x<<8)  & 0x00ff0000) |\
+                         (((uint32_t)x<<24) & 0xff000000))
 #else
 # error "Oops: unknown byte order"
 #endif
