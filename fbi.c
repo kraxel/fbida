@@ -141,7 +141,6 @@ int backup;
 int preserve;
 int read_ahead;
 int editable;
-int once;
 int blend_msecs;
 int perfmon = 0;
 
@@ -1373,6 +1372,7 @@ static void cleanup_and_exit(int code)
 int
 main(int argc, char *argv[])
 {
+    int              once;
     int              i, arg, key;
     char             *info, *desc, *filelist;
     char             linebuffer[128];
