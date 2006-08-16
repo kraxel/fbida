@@ -106,8 +106,13 @@ ac_lib64 = $(shell \
 # check for x11 ressource dir prefix
 ac_resdir = $(shell \
 	$(call ac_init,for X11 app-defaults prefix);\
-	$(call ac_s_cmd, test -d /etc/X11/app-defaults &&\
-		echo "/etc/X11" || echo "/usr/X11R6/lib/X11");\
+	$(call ac_s_cmd, for dir in \
+		/etc/X11/app-defaults \
+		/usr/X11R6/lib/X11/app-defaults \
+		/usr/share/X11/app-defaults \
+		/usr/lib/X11/app-defaults \
+		; do test -d "$$dir" || continue;\
+		dirname "$$dir"; break; done);\
 	$(call ac_fini))
 
 # check if package is installed, via pkg-config
