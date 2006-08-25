@@ -1552,7 +1552,7 @@ main(int argc, char *argv[])
 	case KEY_ASCALE:
 	case KEY_SCALE:
 	    {
-		float newscale;
+		float newscale, oldscale = fcurrent->scale;
 
 		if (key == KEY_PLUS) {
 		    newscale = fcurrent->scale * 1.6;
@@ -1567,8 +1567,8 @@ main(int argc, char *argv[])
 		    newscale = 0.1;
 		if (newscale > 10)
 		    newscale = 10;
-		scale_fix_top_left(fcurrent, fcurrent->scale, newscale);
 		flist_img_scale(fcurrent, newscale, 0);
+		scale_fix_top_left(fcurrent, oldscale, newscale);
 		break;
 	    }
 	case KEY_GOTO:
