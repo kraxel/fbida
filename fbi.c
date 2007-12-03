@@ -637,7 +637,6 @@ static void free_image(struct ida_image *img)
 static struct ida_image*
 read_image(char *filename)
 {
-    char command[1024];
     struct ida_loader *loader = NULL;
     struct ida_image *img;
     struct list_head *item;
@@ -675,17 +674,17 @@ read_image(char *filename)
 	    perror("fork");
 	    close(p[0]);
 	    close(p[1]);
-	    return(NULL);
+	    return NULL;
 	case 0: /* child */
 	    dup2(p[1], 1 /* stdout */);
 	    close(p[0]);
 	    close(p[1]);
-	    execl("convert", "convert", "-depth", "8", filename, "ppm:-", NULL);
+	    execlp("convert", "convert", "-depth", "8", filename, "ppm:-", NULL);
 	    exit(1);
 	default: /* parent */
 	    close(p[1]);
 	    fp = fdopen(p[0], "r");
-	    if (NULL == (fp = popen(command,"r")))
+	    if (NULL == fp)
 		return NULL;
 	    loader = &ppm_loader;
 	}
