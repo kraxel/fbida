@@ -666,11 +666,29 @@ read_image(char *filename)
     }
     if (NULL == loader) {
 	/* no loader found, try to use ImageMagick's convert */
-	snprintf(command,sizeof(command),
-		 "convert -depth 8 \"%s\" ppm:-",filename);
-	if (NULL == (fp = popen(command,"r")))
+	int p[2];
+
+	if (0 != pipe(p))
 	    return NULL;
-	loader = &ppm_loader;
+	switch (fork()) {
+	case -1: /* error */
+	    perror("fork");
+	    close(p[0]);
+	    close(p[1]);
+	    return(NULL);
+	case 0: /* child */
+	    dup2(p[1], 1 /* stdout */);
+	    close(p[0]);
+	    close(p[1]);
+	    execl("convert", "convert", "-depth", "8", filename, "ppm:-", NULL);
+	    exit(1);
+	default: /* parent */
+	    close(p[1]);
+	    fp = fdopen(p[0], "r");
+	    if (NULL == (fp = popen(command,"r")))
+		return NULL;
+	    loader = &ppm_loader;
+	}
     }
 
     /* load image */
