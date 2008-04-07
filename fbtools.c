@@ -21,8 +21,6 @@
 #include <linux/vt.h>
 #include <linux/fb.h>
 
-#include <asm/page.h>
-
 #include "fbtools.h"
 
 /* -------------------------------------------------------------------- */
