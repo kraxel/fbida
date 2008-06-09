@@ -21,6 +21,7 @@ depfile		= mk/$(subst /,_,$*).dep
 depfiles	= mk/*.dep
 
 compile_c	= $(CC) $(CFLAGS) -Wp,-MD,$(tmpdep) -c -o $@ $<
+compile_c_pic	= $(CC) $(CFLAGS) -fPIC -Wp,-MD,$(tmpdep) -c -o $@ $<
 compile_cc	= $(CXX) $(CXXFLAGS) -Wp,-MD,$(tmpdep) -c -o $@ $<
 fixup_deps	= sed -e "s|.*\.o:|$@:|" < $(tmpdep) > $(depfile) && rm -f $(tmpdep)
 cc_makedirs	= mkdir -p $(dir $@) $(dir $(depfile))
@@ -35,6 +36,7 @@ msgfmt_po	= msgfmt -o $@ $<
 # non-verbose output
 ifeq ($(verbose),no)
   echo_compile_c	= echo "  CC	 " $@
+  echo_compile_c_pic	= echo "  CC	 " $@
   echo_compile_cc	= echo "  CXX	 " $@
   echo_link_app		= echo "  LD	 " $@
   echo_link_so		= echo "  LD	 " $@
@@ -43,6 +45,7 @@ ifeq ($(verbose),no)
   echo_msgfmt_po        = echo "  MSGFMT " $@
 else
   echo_compile_c	= echo $(compile_c)
+  echo_compile_c	= echo $(compile_c_pic)
   echo_compile_cc	= echo $(compile_cc)
   echo_link_app		= echo $(link_app)
   echo_link_so		= echo $(link_so)
@@ -55,6 +58,12 @@ endif
 	@$(cc_makedirs)
 	@$(echo_compile_c)
 	@$(compile_c)
+	@$(fixup_deps)
+
+%.opic: %.c
+	@$(cc_makedirs)
+	@$(echo_compile_c_pic)
+	@$(compile_c_pic)
 	@$(fixup_deps)
 
 %.o: %.cc
@@ -70,13 +79,18 @@ endif
 	@$(fixup_deps)
 
 
+%: %.o
+	@$(echo_link_app)
+	@$(link_app)
+
 %.so: %.o
 	@$(echo_link_so)
 	@$(link_so)
 
-%: %.o
-	@$(echo_link_app)
-	@$(link_app)
+%.a: %.o
+	@$(echo_ar_lib)
+	@$(ar_lib)
+
 
 %.moc : %.h
 	@$(echo_moc_h)

@@ -47,6 +47,11 @@ ac_uname = $(shell \
 	$(call ac_s_cmd,uname -s | tr 'A-Z' 'a-z');\
 	$(call ac_fini))
 
+ac_uname_arch = $(shell \
+	$(call ac_init,for arch);\
+	$(call ac_s_cmd,uname -m | tr 'A-Z' 'a-z');\
+	$(call ac_fini))
+
 # check for some header file
 # args: header file
 ac_header = $(shell \
@@ -97,9 +102,14 @@ ac_binary = $(shell \
 	$(call ac_fini))
 
 # check if lib64 is used
+#ac_lib64 = $(shell \
+#	$(call ac_init,for libdir name);\
+#	$(call ac_s_cmd,$(CC) -print-search-dirs | grep -q lib64 &&\
+#		echo "lib64" || echo "lib");\
+#	$(call ac_fini))
 ac_lib64 = $(shell \
 	$(call ac_init,for libdir name);\
-	$(call ac_s_cmd,$(CC) -print-search-dirs | grep -q lib64 &&\
+	$(call ac_s_cmd,/sbin/ldconfig -p | grep -q lib64 &&\
 		echo "lib64" || echo "lib");\
 	$(call ac_fini))
 
@@ -120,6 +130,13 @@ ac_resdir = $(shell \
 ac_pkg_config = $(shell \
 	$(call ac_init,for $(1) (using pkg-config));\
 	$(call ac_b_cmd, pkg-config $(1));\
+	$(call ac_fini))
+
+# grep some file
+# args: regex, file
+ac_grep = $(shell \
+	$(call ac_init,for $(1) in $(2));\
+	$(call ac_b_cmd, grep -q $(1) $(2));\
 	$(call ac_fini))
 
 

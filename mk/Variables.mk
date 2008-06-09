@@ -6,8 +6,12 @@ DESTDIR	=
 srcdir	?= .
 prefix	?= /usr/local
 bindir	=  $(DESTDIR)$(prefix)/bin
-mandir	=  $(DESTDIR)$(prefix)/share/man
-locdir  =  $(DESTDIR)$(prefix)/share/locale
+sbindir	=  $(DESTDIR)$(prefix)/sbin
+libdir  =  $(DESTDIR)$(prefix)/$(LIB)
+shrdir  =  $(DESTDIR)$(prefix)/share
+mandir	=  $(shrdir)/man
+locdir  =  $(shrdir)/locale
+appdir  =  $(shrdir)/applications
 
 # package + version
 empty	:=
@@ -17,13 +21,16 @@ ifneq ($(wildcard $(srcdir)/VERSION),)
 else
   VERSION := 42
 endif
+RELTAG	:= v$(subst .,_,$(VERSION))
 
 # programs
 CC		?= gcc
 CXX		?= g++
 MOC             ?= $(if $(QTDIR),$(QTDIR)/bin/moc,moc)
+
+STRIP		?= -s
 INSTALL		?= install
-INSTALL_BINARY  := $(INSTALL) -s
+INSTALL_BINARY  := $(INSTALL) $(STRIP)
 INSTALL_SCRIPT  := $(INSTALL)
 INSTALL_DATA	:= $(INSTALL) -m 644
 INSTALL_DIR	:= $(INSTALL) -d
