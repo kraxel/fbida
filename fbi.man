@@ -78,7 +78,7 @@ create backup files (when editing images).
 preserve timestamps (when editing images).
 .TP
 .B --comments
-Display comment tags (if present) instead of the filename.  Probaby
+Display comment tags (if present) instead of the filename.  Probably
 only useful if you added reasonable comments yourself (using wrjpgcom
 for example), otherwise you likely just find texts pointing to the
 software which created the image.

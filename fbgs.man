@@ -8,9 +8,9 @@ framebuffer console
 .B fbgs
 is a simple wrapper script which takes a PostScript or pdf
 file as input, renders the pages using ghostscript into a
-temporarely directory and finally calls fbi to display them.
+temporary directory and finally calls fbi to display them.
 .SH OPTIONS
-fbps understands all fbi options (they are passed throuth).
+fbps understands all fbi options (they are passed through).
 Additionally you can specify -l, -xl or -xxl to get the pages
 rendered with 100, 120 or 150 dpi (default is 75). You can
 use option -p <password> if your PDF file requires password.
