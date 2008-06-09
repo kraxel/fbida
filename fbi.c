@@ -400,12 +400,12 @@ static void status_update(unsigned char *desc, char *info)
 	return;
     status_prepare();
 
-    swprintf(str,sizeof(str),L"%s",desc);
+    swprintf(str,ARRAY_SIZE(str),L"%s",desc);
     shadow_draw_string(face, 0, yt, str, -1);
     if (info) {
-	swprintf(str,sizeof(str), L"[ %s ] H - Help", info);
+	swprintf(str,ARRAY_SIZE(str), L"[ %s ] H - Help", info);
     } else {
-	swprintf(str,sizeof(str), L"| H - Help");
+	swprintf(str,ARRAY_SIZE(str), L"| H - Help");
     }
     shadow_draw_string(face, fb_var.xres, yt, str, 1);
 
@@ -419,7 +419,7 @@ static void status_error(unsigned char *msg)
 
     status_prepare();
 
-    swprintf(str,sizeof(str), L"%s", msg);
+    swprintf(str,ARRAY_SIZE(str), L"%s", msg);
     shadow_draw_string(face, 0, yt, str, -1);
 
     shadow_render();
@@ -433,7 +433,7 @@ static void status_edit(unsigned char *msg, int pos)
 
     status_prepare();
 
-    swprintf(str,sizeof(str), L"%s", msg);
+    swprintf(str,ARRAY_SIZE(str), L"%s", msg);
     shadow_draw_string_cursor(face, 0, yt, str, pos);
 
     shadow_render();
