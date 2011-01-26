@@ -61,7 +61,7 @@ static int dump_file(FILE *out, char *filename)
     fprintf(out,"%s\n",filename);
     dump_exif(out,ed);
     fprintf(out,"--\n");
-    
+
     exif_data_unref (ed);
     return 0;
 }
@@ -171,7 +171,7 @@ int main(int argc, char *argv[])
 		exit(1);
 	    }
 	    break;
-	    
+
 	case 'c':
 	    flags |= JFLAG_UPDATE_COMMENT;
 	    comment = optarg;
