@@ -69,7 +69,7 @@ png_init(FILE *fp, char *filename, unsigned int page,
     if (h->color_type == PNG_COLOR_TYPE_PALETTE)
 	png_set_palette_to_rgb(h->png);
     if (h->color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
-	png_set_gray_1_2_4_to_8(h->png);
+	png_set_expand_gray_1_2_4_to_8(h->png);
 
     if (png_get_bKGD(h->png, h->info, &file_bg)) {
 	png_set_background(h->png,file_bg,PNG_BACKGROUND_GAMMA_FILE,1,1.0);
