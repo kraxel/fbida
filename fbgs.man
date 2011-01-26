@@ -1,21 +1,51 @@
-.TH fbps 1 "(c) 1999-2003 Gerd Knorr"
+.TH FBGS 1 "(c) 1999\-2003 Gerd Knorr" "FBGS 2.07" "PostScript/pdf viewer for the linux framebuffer console"
+\#
+\#
 .SH NAME
-fbgs - poor man's PostScript/pdf viewer for the linux
-framebuffer console
+fbgs \- Poor man's PostScript/pdf viewer for the linux framebuffer console.
+\#
+\#
 .SH SYNOPSIS
-.B fbgs [ options ] file
+\fBfbgs\fP\ [\fB\-l\fP|\fB\-xl\fP|\fB\-xxl\fP]\ [\fB\-c\fP]\ [\fB\-p\fP\ \fIpassword\fP]\ [\fIfbi\ options\fP]\ \fIfile\fP
+\#
+\#
 .SH DESCRIPTION
-.B fbgs
-is a simple wrapper script which takes a PostScript or pdf
-file as input, renders the pages using ghostscript into a
-temporary directory and finally calls fbi to display them.
+.BR Fbgs
+is a simple wrapper script which takes a \fIPostScript\fP (PS) or
+\fIPortable Document Format\fP (PDF) file as input, renders the pages
+using
+.BR gs (1) 
+\- GhostScript \- into a temporary directory and finally calls
+.BR fbi (1)
+to display them.
 .SH OPTIONS
-fbps understands all fbi options (they are passed through).
-Additionally you can specify -l, -xl or -xxl to get the pages
-rendered with 100, 120 or 150 dpi (default is 75). You can
-use option -p <password> if your PDF file requires password.
-With -c you can ask fbgs to render the pages in color.
-.SH SEE ALSO
-fbi(1), gs(1)
+.BR Fbgs
+understands all
+.BR fbi (1)
+options (they are passed through).
+Additionally you can specify:
+.TP
+\fB\-l\fP
+To get the pages rendered with 100 dpi (default is 75).
+.TP
+\fB\-xl\fP
+To get the pages rendered with 120 dpi.
+.TP
+\fB\-xxl\fP
+To get the pages rendered with 150 dpi.
+.TP
+\fB\-c\fP
+To render the pages in color (default is N&B).
+.TP
+\fB\-p\fP \fIpassword\fP
+You can use on if your PDF file requires password.
+\#
+\#
 .SH AUTHOR
-Gerd Knorr <kraxel@bytesex.org>
+Gerd Knorr
+.BR <kraxel@bytesex.org>
+\#
+\#
+.SH SEE ALSO
+.BR fbi (1),
+.BR gs (1)
