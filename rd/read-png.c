@@ -36,7 +36,7 @@ png_init(FILE *fp, char *filename, unsigned int page,
 	.gray  = 192,
     };
     int unit;
-    
+
     h = malloc(sizeof(*h));
     memset(h,0,sizeof(*h));
 
@@ -62,7 +62,7 @@ png_init(FILE *fp, char *filename, unsigned int page,
     if (debug)
 	fprintf(stderr,"png: color_type=%s #1\n",ct[h->color_type]);
     i->npages = 1;
-    
+
     png_set_packing(h->png);
     if (bit_depth == 16)
 	png_set_strip_16(h->png);
@@ -83,9 +83,9 @@ png_init(FILE *fp, char *filename, unsigned int page,
     h->color_type = png_get_color_type(h->png, h->info);
     if (debug)
 	fprintf(stderr,"png: color_type=%s #2\n",ct[h->color_type]);
-    
+
     h->image = malloc(i->width * i->height * 4);
-    
+
     for (pass = 0; pass < number_passes-1; pass++) {
 	if (debug)
 	    fprintf(stderr,"png: pass #%d\n",pass);

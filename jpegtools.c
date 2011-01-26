@@ -4,7 +4,7 @@
  * Copyright (C) 1995-1997, Thomas G. Lane.
  * This file is part of the Independent JPEG Group's software.
  * For conditions of distribution and use, see the accompanying README file.
- * 
+ *
  * plenty of changes by Gerd Hoffmann <kraxel@bytesex.org>, with focus on
  * digital image processing and sane exif handling:
  *
@@ -95,7 +95,7 @@ static long get_int(ExifData *ed, ExifEntry *ee)
 {
     ExifByteOrder o = exif_data_get_byte_order(ed);
     long value;
-    
+
     switch (ee->format) {
     case EXIF_FORMAT_SHORT:
 	value = exif_get_short (ee->data, o);
@@ -278,16 +278,16 @@ static void do_thumbnail(ExifData *ed, JXFORM_CODE transform)
 
     if (JXFORM_NONE == transform)
 	return;
-    
+
     memset(&th,0,sizeof(th));
     th.in    = ed->data;
     th.isize = ed->size;
-    
+
     /* setup src */
     th.src.err = jpeg_std_error(&th.jsrcerr);
     jpeg_create_decompress(&th.src);
     th.src.src = &thumbnail_src;
-    
+
     /* setup dst */
     th.dst.err = jpeg_std_error(&th.jdsterr);
     jpeg_create_compress(&th.dst);
@@ -315,7 +315,7 @@ static void do_exif(struct jpeg_decompress_struct *src,
     ExifData *ed = NULL;
     unsigned char *data;
     unsigned int  size;
-    
+
     for (mark = src->marker_list; NULL != mark; mark = mark->next) {
 	if (mark->marker != JPEG_APP0 +1)
 	    continue;
@@ -441,18 +441,18 @@ static int do_transform(struct jpeg_decompress_struct *src,
     jpeg_copy_critical_parameters(src, dst);
     dst_coef_arrays = jtransform_adjust_parameters
 	(src, dst, src_coef_arrays, &transformoption);
-    
+
     /* Start compressor (note no image data is actually written here) */
     jpeg_write_coefficients(dst, dst_coef_arrays);
-    
+
     /* Copy to the output file any extra markers that we want to preserve */
     jcopy_markers_execute(src, dst, JCOPYOPT_ALL);
-    
+
     /* Execute image transformation, if any */
     jtransform_execute_transformation(src, dst,
 				      src_coef_arrays,
 				      &transformoption);
-    
+
     /* Finish compression and release memory */
     jpeg_finish_compress(dst);
     jpeg_finish_decompress(src);
@@ -472,7 +472,7 @@ int jpeg_transform_fp(FILE *in, FILE *out,
     struct jpeg_compress_struct   dst;
     struct jpeg_error_mgr jdsterr;
     struct longjmp_error_mgr jsrcerr;
-    
+
     /* setup src */
     src.err = jpeg_std_error(&jsrcerr.jpeg);
     jsrcerr.jpeg.error_exit = longjmp_error_exit;
@@ -481,7 +481,7 @@ int jpeg_transform_fp(FILE *in, FILE *out,
 	goto oops;
     jpeg_create_decompress(&src);
     jpeg_stdio_src(&src, in);
-    
+
     /* setup dst */
     dst.err = jpeg_std_error(&jdsterr);
     jpeg_create_compress(&dst);
@@ -510,14 +510,14 @@ int jpeg_transform_files(char *infile, char *outfile,
     int rc;
     FILE *in;
     FILE *out;
-    
+
     /* open infile */
     in = fopen(infile,"r");
     if (NULL == in) {
 	fprintf(stderr,"open %s: %s\n",infile,strerror(errno));
 	return -1;
     }
-    
+
     /* open outfile */
     out = fopen(outfile,"w");
     if (NULL == out) {
@@ -559,7 +559,7 @@ int jpeg_transform_inplace(char *file,
 	fprintf(stderr,"open %s: %s\n",file,strerror(errno));
 	return -1;
     }
-    
+
     /* open tmpfile */
     tmpfile = malloc(strlen(file)+10);
     sprintf(tmpfile,"%s.XXXXXX",file);
@@ -604,7 +604,7 @@ int jpeg_transform_inplace(char *file,
 	u.modtime = st.st_mtime;
 	utime(file,&u);
     }
-        
+
     /* cleanup & return */
     free(tmpfile);
     return 0;
