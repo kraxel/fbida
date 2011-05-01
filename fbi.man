@@ -13,8 +13,8 @@ fbi - Linux framebuffer imageviewer
 .BR fbi
 displays the specified file(s) on the linux console using the
 framebuffer device.
-\fIPhotoCD\fP, \fIjpeg\fP, \fIppm\fP,  \fIgif\fP, \fItiff\fP, \fIxwd\fP,
-\fIbmp\fP and \fIpng\fP are supported directly.
+\fIPhotoCD\fP, \fIjpeg\fP, \fIppm\fP, \fIgif\fP, \fItiff\fP, \fIxwd\fP,
+\fIbmp\fP, \fIpng\fP and \fIwebp\fP are supported directly.
 For other formats
 .BR fbi
 tries to use

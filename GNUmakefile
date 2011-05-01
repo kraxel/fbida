@@ -46,6 +46,7 @@ HAVE_LIBPCD	:= $(call ac_lib,pcd_open,pcd)
 HAVE_LIBUNGIF	:= $(call ac_lib,DGifOpenFileName,ungif)
 HAVE_LIBPNG	:= $(call ac_lib,png_read_info,png,-lz)
 HAVE_LIBTIFF	:= $(call ac_lib,TIFFOpen,tiff)
+HAVE_LIBWEBP	:= $(call ac_lib,WebPDecodeRGBA,webp)
 #HAVE_LIBMAGICK	:= $(call ac_binary,Magick-config)
 HAVE_LIBSANE	:= $(call ac_lib,sane_init,sane)
 HAVE_LIBCURL	:= $(call ac_lib,curl_easy_init,curl)
@@ -73,9 +74,9 @@ endif
 # conditional stuff
 
 includes        = ENDIAN_H STRCASESTR NEW_EXIF
-libraries       = PCD UNGIF PNG TIFF CURL SANE LIRC
-ida_libs	= PCD UNGIF PNG TIFF CURL SANE
-fbi_libs	= PCD UNGIF PNG TIFF CURL LIRC
+libraries       = PCD UNGIF PNG TIFF WEBP CURL SANE LIRC
+ida_libs	= PCD UNGIF PNG TIFF WEBP CURL SANE
+fbi_libs	= PCD UNGIF PNG TIFF WEBP CURL LIRC
 
 #MAGICK_CFLAGS	= $(shell Magick-config --cflags)
 #MAGICK_LDFLAGS	= $(shell Magick-config --ldflags)
@@ -84,6 +85,7 @@ fbi_libs	= PCD UNGIF PNG TIFF CURL LIRC
 
 PNG_LDLIBS	:= -lpng -lz
 TIFF_LDLIBS	:= -ltiff
+WEBP_LDLIBS	:= -lwebp
 PCD_LDLIBS	:= -lpcd
 UNGIF_LDLIBS	:= -lungif
 SANE_LDLIBS	:= -lsane
@@ -92,6 +94,7 @@ LIRC_LDLIBS     := -llirc_client
 
 PNG_OBJS	:= rd/read-png.o  wr/write-png.o
 TIFF_OBJS	:= rd/read-tiff.o wr/write-tiff.o
+WEBP_OBJS	:= rd/read-webp.o
 PCD_OBJS	:= rd/read-pcd.o
 UNGIF_OBJS	:= rd/read-gif.o
 SANE_OBJS	:= sane.o
