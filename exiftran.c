@@ -12,7 +12,7 @@
 #include <libexif/exif-data.h>
 
 #include <jpeglib.h>
-#include "jpeg/transupp.h"		/* Support routines for jpegtran */
+#include "transupp.h"		/* Support routines for jpegtran */
 #include "jpegtools.h"
 #include "genthumbnail.h"
 

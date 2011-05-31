@@ -6,7 +6,7 @@
 #include <string.h>
 
 #include <jpeglib.h>
-#include "jpeg/transupp.h"		/* Support routines for jpegtran */
+#include "transupp.h"		/* Support routines for jpegtran */
 #include "jpegtools.h"
 
 #include "misc.h"
@@ -24,7 +24,7 @@ read_jpeg(char *filename)
     FILE *fp;
     unsigned int y;
     void *data;
-    
+
     /* open file */
     if (NULL == (fp = fopen(filename, "r"))) {
 	fprintf(stderr,"open %s: %s\n",filename,strerror(errno));

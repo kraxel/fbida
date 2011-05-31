@@ -43,7 +43,7 @@
 #include "list.h"
 #include "fbiconfig.h"
 
-#include "jpeg/transupp.h"		/* Support routines for jpegtran */
+#include "transupp.h"		/* Support routines for jpegtran */
 #include "jpegtools.h"
 
 #define TRUE            1

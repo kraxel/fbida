@@ -33,7 +33,7 @@
 #include <sys/types.h>
 
 #include <jpeglib.h>
-#include "jpeg/transupp.h"		/* Support routines for jpegtran */
+#include "transupp.h"		/* Support routines for jpegtran */
 #include "jpegtools.h"
 
 #include "misc.h"
