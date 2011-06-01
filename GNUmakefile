@@ -186,8 +186,12 @@ fbi: $(OBJS_FBI) $(OBJS_READER)
 ########################################################################
 # general rules
 
-.PHONY: build install clean distclean realclean
-build: $(TARGETS)
+.PHONY: check-libjpeg build install clean distclean realclean
+build: check-libjpeg $(TARGETS)
+
+check-libjpeg:
+	@test -d jpeg/$(JPEG_VER) || \
+		( echo "Need files from libjpeg $(JPEG_VER) in jpeg/"; false)
 
 install: build
 	$(INSTALL_DIR) $(bindir)

@@ -1,2 +1,5 @@
 some source files copyed over from
 The Independent JPEG Group's JPEG software
+
+There is a subdirectory for each JPEG_LIB_VERSION to handle
+incompatible data structures of the jpeg library versions.
