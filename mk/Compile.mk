@@ -45,7 +45,7 @@ ifeq ($(verbose),no)
   echo_msgfmt_po        = echo "  MSGFMT " $@
 else
   echo_compile_c	= echo $(compile_c)
-  echo_compile_c	= echo $(compile_c_pic)
+  echo_compile_c_pic	= echo $(compile_c_pic)
   echo_compile_cc	= echo $(compile_cc)
   echo_link_app		= echo $(link_app)
   echo_link_so		= echo $(link_so)

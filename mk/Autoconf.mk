@@ -85,11 +85,12 @@ ac_lib = $(shell \
 # check if some compiler flag works
 # args: compiler flag
 ac_cflag = $(shell \
-	$(call ac_init,if $(CC) supports $(1));\
+	$(call ac_init,for $(CC) cflags);\
 	echo 'int main() {return 0;}' > __actest.c;\
 	$(call ac_b_cmd,$(CC) $(CFLAGS) $(1) $(LDFLAGS) -o \
 		__actest __actest.c);\
 	rm -f __actest __actest.c;\
+	if test "$${rc}" = "yes"; then rc="$(1)"; else rc="$(2)"; fi;\
 	$(call ac_fini))
 
 # check for some binary
