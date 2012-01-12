@@ -944,8 +944,8 @@ svga_show(struct flist *f, struct flist *prev,
 	    f->left += h_steps;
 
 	} else if (0 == strcmp(key, "\x1b[5~") ||
-		   0 == strcmp(key, "j")       ||
-		   0 == strcmp(key, "J")) {
+		   0 == strcmp(key, "k")       ||
+		   0 == strcmp(key, "K")) {
 	    if (textreading && f->top > 0) {
 		redraw = 1;
 		f->top -= f->text_steps;
@@ -955,8 +955,8 @@ svga_show(struct flist *f, struct flist *prev,
 	    }
 
 	} else if (0 == strcmp(key, "\x1b[6~") ||
-		   0 == strcmp(key, "k")       ||
-		   0 == strcmp(key, "K")       ||
+		   0 == strcmp(key, "j")       ||
+		   0 == strcmp(key, "J")       ||
 		   0 == strcmp(key, "n")       ||
 		   0 == strcmp(key, "N")) {
 	    if (textreading && f->top < (int)(img->i.height - fb_var.yres)) {

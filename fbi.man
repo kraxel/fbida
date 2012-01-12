@@ -1,4 +1,4 @@
-.TH FBI 1 "(c) 1999-2004 Gerd Knorr" "FBI 2.07" "Linux framebuffer imageviewer"
+.TH FBI 1 "(c) 1999-2012 Gerd Knorr" "FBI 2.08" "Linux framebuffer imageviewer"
 \#
 \#
 .SH NAME
@@ -152,10 +152,10 @@ In the following commands, \fIi\fP is a numerical argument.
 \fBLEFT_ARROW\fP, \fBRIGHT_ARROW\fP, \fBUP_ARROW\fP, \fBDOWN_ARROW\fP
 Scroll large images.
 .TP
-\fBPREV_SCREEN\fP
+\fBPREV_SCREEN\fP, \fBk\fP
 Previous image.
 .TP
-\fBNEXT_SCREEN\fP, \fBSPACE\fP
+\fBNEXT_SCREEN\fP, \fBSPACE\fP, \fBj\fP
 Next image.
 .TP
 \fBRETURN\fP
@@ -234,7 +234,7 @@ It does a lossless transformation of the image.
 \#
 \#
 .SH BUGS
-.BR fbi
+.BR Fbi
 needs rw access to the framebuffer devices (\fI/dev/fbN\fP), i.e you (our
 your admin) have to make sure
 .BR fbi
@@ -273,7 +273,7 @@ Gerd Knorr
 \#
 \#
 .SH COPYRIGHT
-Copyright (c) 1999-2004 Gerd Knorr <kraxel@bytesex.org>
+Copyright (c) 1999-2012 Gerd Knorr <kraxel@bytesex.org>
 .P
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
