@@ -11,8 +11,54 @@ gsopts=""
 passwd=""
 device="tiffpack"
 opt=1
+bell="off"
+helptext="
+This program displays PostScript/pdf files using the linux framebuffer device.
+It is a simple wrapper script for GhostScript and fbi.
+
+usage: fbgs [fbgs options] [fbi options] file
+
+   -b    --bell              emit a beep when the document is ready
+   -h    --help              print this help text
+   -p    --password <arg>    a <password> passed to the PDF
+   -fp   --firstpage <arg>   begins on the <arg> page
+   -lp	 --lastpage <arg>    stops on the <arg> page
+   -c    --color             pages in color
+   -l                        pages rendered with 100 dpi
+   -xl                       pages rendered with 120 dpi
+   -xxl                      pages rendered with 150 dpi
+   -r    --resolution <arg>  choose resolution of <arg> dpi
+
+Read the fbgs(1) and fbi(1) manpages for more details.
+"
+
 while test "$opt" = "1"; do
 	case "$1" in
+		# fbgs options
+		-b | --bell)
+			bell="on"
+			shift
+			;;
+		-h | --help)
+			printf "$helptext"
+			exit 1
+			;;
+		-p | --password)
+			password="$2"
+			shift; shift
+			;;
+		-fp | --firstpage)
+			gsopts="$gsopts -dFirstPage=$2"
+			shift; shift
+			;;
+		-lp | --lastpage)
+			gsopts="$gsopts -dLastPage=$2"
+			shift; shift
+			;;
+		-c | --color)
+			device="png16m"
+			shift
+			;;
 		-l)	gsopts="$gsopts -r100x100"
 			shift
 			;;
@@ -22,23 +68,33 @@ while test "$opt" = "1"; do
 		-xxl)	gsopts="$gsopts -r150x150"
 			shift
 			;;
-		-q | -a | --fitwidth)
+		-r | --resolution)
+			gsopts="$gsopts -r$2x$2"
+			shift; shift
+			;;
+		# fbi options without argument
+		-a | --autozoom | \
+		--autoup | --noautoup | \
+		--autodown | --noautodown | \
+		--fitwidth | --nofitwidth | \
+		-v | --verbose | --noverbose | \
+		-u | --random | --norandom | \
+		-1 | --once | --noonce)
 			fbiopts="$fbiopts $1"
 			shift
 			;;
-		-d | -m | -t | -g | -f)
+		# fbi options with one argument
+		-T | --vt | \
+		-s | --scroll | \
+		-t | --timeout  | \
+		-g | --gamma | \
+		-f | --font | \
+		-d | --device | \
+		-m | --mode)
 			fbiopts="$fbiopts $1 $2"
 			shift; shift
 			;;
-		-p)	password="$2"
-			shift; shift
-			;;
-		-h)	echo fixme: help text
-			exit 1
-			;;
-		-c)	device="png16m"
-			shift
-			;;
+		# others options
 		-*)	echo "unknown option: $1"
 			exit 1
 			;;
@@ -58,7 +114,9 @@ gs	-dSAFER -dNOPAUSE -dBATCH			\
 	"$1"
 
 # tell the user we are done :-)
-echo -ne "\\007"
+if test "$bell" = "on"; then
+	printf "\a"
+fi
 
 # sanity check
 pages=`ls $DIR/ps*.tiff 2>/dev/null | wc -l`

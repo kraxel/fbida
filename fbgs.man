@@ -1,4 +1,4 @@
-.TH FBGS 1 "(c) 1999\-2003 Gerd Knorr" "FBGS 2.07" "PostScript/pdf viewer for the linux framebuffer console"
+.TH FBGS 1 "(c) 1999\-2012 Gerd Knorr" "FBGS 2.08" "PostScript/pdf viewer for the linux framebuffer console"
 \#
 \#
 .SH NAME
@@ -6,7 +6,15 @@ fbgs \- Poor man's PostScript/pdf viewer for the linux framebuffer console.
 \#
 \#
 .SH SYNOPSIS
-\fBfbgs\fP\ [\fB\-l\fP|\fB\-xl\fP|\fB\-xxl\fP]\ [\fB\-c\fP]\ [\fB\-p\fP\ \fIpassword\fP]\ [\fIfbi\ options\fP]\ \fIfile\fP
+\fBfbgs\fP\
+ [\fB\-l\fP|\fB\-xl\fP|\fB\-xxl\fP|\fB\-r\fP \fIn\fP]\
+ [\fB\-c\fP]\
+ [\fB\-b\fP]\
+ [\fB\-p\fP\ \fIpassword\fP]\
+ [\fB\--fp\fP\ \fInumber\fP]\
+ [\fB\--lp\fP\ \fInumber\fP]\
+ [\fIfbi\ options\fP]\
+ \fIfile\fP
 \#
 \#
 .SH DESCRIPTION
@@ -22,23 +30,40 @@ to display them.
 .BR Fbgs
 understands all
 .BR fbi (1)
-options (they are passed through).
+options (they are passed through), except: store, list, text, (no)comments, e,
+(no)edit, (no)backup, (no)preserve, (no)readahead, cachemem, blend.
+.P
 Additionally you can specify:
 .TP
-\fB\-l\fP
-To get the pages rendered with 100 dpi (default is 75).
+.B -h, --help
+Print usage info (overwrites fbi option).
 .TP
-\fB\-xl\fP
-To get the pages rendered with 120 dpi.
+.B -b, --bell
+Emit a beep when the document is ready.
 .TP
-\fB\-xxl\fP
-To get the pages rendered with 150 dpi.
-.TP
-\fB\-c\fP
+.B -c, --color
 To render the pages in color (default is N&B).
 .TP
-\fB\-p\fP \fIpassword\fP
-You can use on if your PDF file requires password.
+.B -l
+To get the pages rendered with 100 dpi (default is 75).
+.TP
+.B -xl
+To get the pages rendered with 120 dpi.
+.TP
+.B -xxl
+To get the pages rendered with 150 dpi.
+.TP
+.BI "-r" "\ n" ", --resolution" "\ n"
+To get the pages rendered with \fIn\fP dpi (overwrites fbi option).
+.TP
+.BI "-fp" "\ number" ", --firstpage" "\ number"
+Begins interpreting on the designated page of the document.
+.TP
+.BI "-lp" "\ number" ", --lastpage" "\ number"
+Stops interpreting after the designated page of the document.
+.TP
+.BI "-p" "\ password" ", --password" "\ password"
+You can use this option if your PDF file requires a \fIpassword\fP.
 \#
 \#
 .SH AUTHOR
@@ -49,3 +74,21 @@ Gerd Knorr
 .SH SEE ALSO
 .BR fbi (1),
 .BR gs (1)
+\#
+\#
+.SH COPYRIGHT
+Copyright (c) 1999-2012 Gerd Knorr <kraxel@bytesex.org>
+.P
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+.P
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+.P
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
