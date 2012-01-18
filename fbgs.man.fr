@@ -1,0 +1,101 @@
+\# Traduction de la version du commit f66d5fd21f83b3c041cd032effcccec20de52184
+\# du manuel fbgs.man 
+.TH FBGS 1 "(c) 1999\-2012 Gerd Knorr" "FBGS 2.08" "Visionneuse PostScript/pdf pour la console framebuffer de Linux"
+\#
+\#
+.SH NOM
+fbgs \- Visionneuse PostScript/pdf du pauvre pour la console framebuffer de Linux.
+\#
+\#
+.SH SYNOPSIS
+\fBfbgs\fP\
+ [\fB\-l\fP|\fB\-xl\fP|\fB\-xxl\fP|\fB\-r\fP \fIn\fP]\
+ [\fB\-c\fP]\
+ [\fB\-b\fP]\
+ [\fB\-p\fP\ \fImotdepasse\fP]\
+ [\fB\--fp\fP\ \fInuméro\fP]\
+ [\fB\--lp\fP\ \fInuméro\fP]\
+ [\fIfbi\ options\fP]\
+ \fIfichier\fP
+\#
+\#
+.SH DESCRIPTION
+.BR Fbgs
+est un simple script qui prend un fichier \fIPostScript\fP (PS) ou
+\fIPortable Document Format\fP (PDF) en entrée,
+rend les pages en utilisant
+.BR gs (1)
+\- GhostScript \- dans un répertoire temporaire et enfin appelle
+.BR fbi (1)
+pour les afficher.
+.SH OPTIONS
+.BR Fbgs
+accepte toutes les options de
+.BR fbi (1)
+(qu'il lui passe), à l'exception de : store, list, text, (no)comments, e,
+(no)edit, (no)backup, (no)preserve, (no)readahead, cachemem, blend.
+.P
+En plus vous pouvez spécifier :
+.TP
+.B -h, --help
+Afficher le résumé des commandes (remplace l'option fbi).
+.TP
+.B -b, --bell
+Émettre un bip lorsque le document est prêt.
+.TP
+.B -c, --color
+Pour rendre les pages en couleur (Noir et blanc par défaut).
+.TP
+.B -l
+Pour rendre les pages avec une résolution de 100 dpi (75 par défaut).
+.TP
+.B -xl
+Pour rendre les pages avec une résolution de 120 dpi.
+.TP
+.B -xxl
+Pour rendre les pages avec une résolution de 150 dpi.
+.TP
+.BI "-r" "\ n" ", --resolution" "\ n"
+Pour rendre les pages avec une résolution de \fIn\fP dpi (remplace l'option fbi).
+.TP
+.BI "-fp" "\ numéro" ", --firstpage" "\ numéro"
+Commencer à interpréter après la page du document désigné par le \fInuméro\fP.
+.TP
+.BI "-lp" "\ numéro" ", --lastpage" "\ numéro"
+Arrêter d'interpréter après la page du document désigné par le \fInuméro\fP.
+.TP
+.BI "-p" "\ motdepasse" ", --password" "\ motdepasse"
+Vous pouvez utiliser cette option si votre fichier PDF nécessite un \fImotdepasse\fP.
+\#
+\#
+.SH AUTEUR
+Gerd Knorr
+.BR <kraxel@bytesex.org>
+\#
+\#
+.SH TRADUCTEUR
+Stéphane Aulery
+.BR <lkppo@free.fr>
+\#
+\#
+.SH VOIR AUSSI
+.BR fbi (1),
+.BR gs (1)
+\#
+\#
+.SH COPYRIGHT
+Copyright (c) 1999-2012 Gerd Knorr <kraxel@bytesex.org>
+.P
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+.P
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+.P
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
