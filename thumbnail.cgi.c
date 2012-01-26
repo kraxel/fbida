@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
     char *path_info;
     
     if (NULL == getenv("GATEWAY_INTERFACE")) {
-	fprintf(stderr,shellhelp);
+	fprintf(stderr,"%s", shellhelp);
 	fprintf(stderr,description,"$DOCUMENT_ROOT");
 	exit(1);
     }
