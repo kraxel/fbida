@@ -162,7 +162,7 @@ version(void)
 {
     fprintf(stderr,
 	    "fbi version " VERSION ", compiled on %s\n"
-	    "(c) 1999-2006 Gerd Hoffmann <kraxel@bytesex.org> [SUSE Labs]\n",
+	    "(c) 1999-2012 Gerd Hoffmann <kraxel@bytesex.org> [SUSE Labs]\n",
 	    __DATE__ );
 }
 
@@ -176,8 +176,8 @@ usage(char *name)
     fprintf(stderr,
 	    "\n"
 	    "This program displays images using the Linux framebuffer device.\n"
-	    "Supported formats: PhotoCD, jpeg, ppm, gif, tiff, xwd, bmp, png.\n"
-	    "It tries to use ImageMagick's convert for unknown file formats.\n"
+	    "Supported formats: PhotoCD, jpeg, ppm, gif, tiff, xwd, bmp, png,\n"
+	    "webp. It tries to use ImageMagick's convert for unknown file formats.\n"
 	    "\n"
 	    "usage: %s [ options ] file1 file2 ... fileN\n"
 	    "\n",
@@ -191,7 +191,7 @@ usage(char *name)
 	    "Large images can be scrolled using the cursor keys.  Zoom in/out\n"
 	    "works with '+' and '-'.  Use ESC or 'q' to quit.  Space and PgDn\n"
 	    "show the next, PgUp shows the previous image. Jumping to a image\n"
-	    "works with <number>g.  Return acts like Space but additionally\n"
+	    "works with <i>g.  Return acts like Space but additionally prints\n"
 	    "prints the filename of the currently displayed image to stdout.\n"
 	    "\n");
 }
@@ -529,23 +529,26 @@ static void show_help(void)
     static wchar_t *help[] = {
 	L"keyboard commands",
 	L"~~~~~~~~~~~~~~~~~",
-	L"  ESC, Q      - quit",
-	L"  pgdn, space - next image",
-	L"  pgup        - previous image",
-	L"  +/-         - zoom in/out",
-	L"  A           - autozoom image",
-	L"  cursor keys - scroll image",
+	L"  cursor keys    - scroll image",
+	L"  PgUp, k        - previous image",
+	L"  PgDn, SPACE, j - next image",
+	L"  <i>g           - jump to image #i",
 	L"",
-	L"  H           - show this help text",
-	L"  I           - show EXIF info",
-	L"  P           - pause slideshow",
-	L"  V           - toggle statusline",
+	L"  a              - autozoom image",
+	L"  +/-            - zoom in/out",
+	L"  <i>s           - set zoom to <i>%",
+	L"",
+	L"  ESC, q         - quit",
+	L"  v              - toggle statusline",
+	L"  h              - show this help text",
+	L"  i              - show EXIF info",
+	L"  p              - pause slideshow",
 	L"",
 	L"available if started with --edit switch,",
 	L"rotation works for jpeg images only:",
-	L"  shift+D     - delete image",
-	L"  R           - rotate clockwise",
-	L"  L           - rotate counter-clockwise",
+	L"  D, Shift+d     - delete image",
+	L"  r              - rotate clockwise",
+	L"  l              - rotate counter-clockwise",
     };
 
     shadow_draw_text_box(face, 24, 16, transparency,

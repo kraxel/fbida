@@ -1,0 +1,298 @@
+\# Traduction de la version du commit 92744db63979c75138779e816a9290057fa92f11
+\# du manuel fbi.man
+.TH FBI 1 "(c) 1999-2012 Gerd Knorr" "FBI 2.08" "Visionneuse d'image pour le framebuffer Linux"
+\#
+\#
+.SH NOM
+\#
+\#
+fbi - Visionneuse d'image pour le framebuffer Linux
+.SH SYNOPSIS
+\fBfbi\fP [\fIoptions\fP] \fIfichier …\fP
+\#
+\#
+.SH DESCRIPTION
+.BR Fbi
+affiche les fichiers indiqués dans une console linux en utilisant le
+framebuffer. Les formats \fIPhotoCD\fP, \fIjpeg\fP, \fIppm\fP, \fIgif\fP,
+\fItiff\fP, \fIxwd\fP, \fIbmp\fP, \fIpng\fP and \fIwebp\fP sont pris en charge
+nativement. Pour les autres,
+.BR fbi
+essaye d'utiliser l'utilitaire
+.BR "convert" "(1)"
+.BR "" "d'" "ImageMagick" "(1)."
+\#
+\#
+.SH OPTIONS
+.TP
+.B -h, --help
+Afficher le résumé des commandes
+.TP
+.B -V, --version
+Afficher le numéro de version de \fBfbi\fP.
+.TP
+.B --store
+Sauvegader les arguments de la ligne de commande dans le fichier de
+configuration.
+.TP
+.BI "-l" "\ fichier" ", --list" "\ fichier"
+Lit une liste de fichiers image depuis un \fIfichier\fP.
+.TP
+.B -P, --text
+Activer le mode de rendu de texte. Dans ce mode
+.BR fbi
+affichera les images de grande taille sans marge vertical (par défaut l'image
+est centrée). La commande \fBESPACE\fP essayera d'abord de faire défiler
+l'écran vers le bas et ira à l'image suivante seulement s'il est déjà en
+bas de la page. Très utile pour visualiser des images qui sont des pages de
+texte, tout ce dont vous avez besoin pour lire la suite du texte est de presser
+espace…
+.TP
+.B -a, --autozoom
+Activer le zoom autommatique.
+.BR Fbi
+choisira automatiquement le facteur de zoom le plus adapté lors du argement
+chd'une nouvelle image.
+.TP
+.B --(no)autoup
+Comme autozoom, mais n'accepte que l'agrandissement.
+.TP
+.B --(no)autodown
+Comme autozoom, mais n'accepte que la réduction.
+.TP
+.B --(no)fitwidth
+Utiliser seulement la largeur pour la mise à l'échelle automatique.
+.TP
+.B -v, --(no)verbose
+Être loquace : activer la barre d'état en bas de l'écran.
+.TP
+.B -u, --(no)random
+Mélanger l'ordre des noms de fichier.
+.TP
+.B --(no)comments
+Afficher les balises de commentaire (s'il en existe) au lieu du nom de fichier.
+Probablement utile si vous avez ajouté des commentaires raisonnables par
+vous-même (en utilisant
+.BR "wrjpgcom" "(1)"
+par exemple), autrement \fIa priori\fP vous verrez seulement les noms des
+logiciels qui ont servi à créer l'image.
+.TP
+.B -e, --(no)edit
+Activer les commandes d'édition.
+.TP
+.B --(no)backup
+Créer une sauvegarde des fichiers (lors de la modification des images).
+.TP
+.B -p, --(no)preserve
+Conserver l'horodatage (lors de la modification des images).
+.TP
+.B --(no)readahead
+Mettre en cache les entêtes des images.
+.TP
+.BI "--cachemem" "\ taille"
+\fITaille\fP du cache des images en mégaoctets (Mo)
+.TP
+.BI "--blend" "\ durée"
+\fIDurée\fP de mélange des images en millisecondes.
+.TP
+.BI "-T" "\ n" ", --vt" "\ n"
+Démarrer dans la console virtuelle \fIn\fP.
+.TP
+.BI "-s" "\ n" ", --scroll" "\ n"
+Définir un pas de défilement de \fIn\fP pixels (50 par défaut).
+.TP
+.BI "-t" "\ n" ", --timeout" "\ n"
+Charger l'image suivante après \fIn\fP secondes sans presser aucune
+touche (c-à-d un diaporama).
+.TP
+.B -1, --(no)once
+Ne pas boucler (utiliser seulement avec \fB-t\fP).
+.TP
+.BI "-r" "\ n" ", --resolution" "\ n"
+Sélectionner la résolution, \fIn = 1..5\fP (seulement pour \fIPhotoCD\fP).
+.TP
+.BI "-g" "\ n" ", --gamma" "\ n"
+Correction gamma. La valeur par défaut est 1.0. Nécessite un visuel en
+\fIPseudocolor\fP ou \fIDirectcolor\fP, ne fonctionne pas en \fITruecolor\fP.
+.TP
+.BI "-f" "\ <arg>" ", --font" "\ <arg>"
+Sélectionner une police. \fI<arg>\fP peut prendre n'importe quelle valeur
+acceptée par fontconfig (voir
+.BR "fonts\-conf" "(5))."
+Essayez
+.BR "fc\-list" "(1)"
+pour obtenir une liste des polices connues du système. Le fichier de
+configuration de fontconfig est évalué autant que possible, de sorte que
+toutes les définitions génériques (tel que mono, sans) fonctionneront
+parfaitement. Il est recommandé d'utiliser des polices à espacement fixe, les
+zones de texte (aide, données exif) n'en seront que plus agréables à lire.
+.TP
+.BI "-d" "\ /dev/fbN" ", --device" "\ /dev/fbN"
+Utiliser le framebuffer \fI/dev/fbN\fP. Par défaut, celui sur lequel la console
+virtuelle est attachée.
+.TP
+.BI "-m" "\ videomode" ", --mode" "\ videomode"
+Nom du mode vidéo à utiliser (le mode vidéo doit être présent dans
+\fI/etc/fb.modes\fP). Par défaut le mode vidéo reste inchangé.
+\#
+\#
+.SH ENVIRONMENT
+.BR Fbi
+utilise les variables d'environnement suivantes :
+.TP
+.BR FBGAMMA
+Cette variable peut être utilisée pour définir une correction gamma par
+défaut.
+\#
+\#
+.SH "USAGE DES COMMANDES"
+Les commandes prennent effet immédiatement ; il n'est pas nécessaire de taper
+entrée.
+.PP
+Pour les commandes suivantes, \fIi\fP est un argument numérique.
+.SS Défilement
+.TP
+\fBFLÈCHE_GAUCHE\fP, \fBFLÈCHE_DROITE\fP, \fBFLÈCHE_HAUT\fP, \fBFLÈCHE_BAS\fP
+Faire défiler les grandes images.
+.TP
+\fBÉCRAN_PRÉCÉDENT\fP, \fBk\fP
+Image précédente.
+.TP
+\fBÉCRAN_SUIVANT\fP, \fBSPACE\fP, \fBj\fP
+Image suivante.
+.TP
+\fIi\fP\fBg\fP
+Atteindre l'image n°\fIi\fP.
+.TP
+\fBENTRÉE\fP
+Écrire le nom du fichier de l'image courante vers
+.BR "stdout" "(3),"
+puis aller à l'image suivante.
+.P
+Les touches \fBENTRÉE\fP et \fBESPACE\fP peuvent être utilisées pour créer
+une liste de fichiers pendant la visualisation des images et utiliser plus tard
+cette liste pour un traitement par lot :
+.P
+.in +4n
+\fIfbi\ fichier1.gif\ fichier2.jpg\ fichier3.jpg >\ listefichierimage.lst\fP
+.in
+.P
+.in +4n
+quelques \fBENTRÉE\fP et \fBESPACE\fP…
+.P
+.in +4n
+\fIfbi\ -l\ listefichierimage.lst\fP
+.in
+.SS Zoom
+.TP
+\fBa\fP
+Zoom autommatique.
+.TP
+\fB+\fP
+Avant.
+.TP
+\fB-\fP
+Arrière.
+.TP
+\fIi\fP\fBs\fP
+Positionner le facteur de zoom à \fIi\fP%.
+.SS Autres
+.TP
+\fBESQ\fP, \fBq\fP
+Quitter.
+.TP
+\fBv\fP
+Basculer l'affichage de la barre d'état.
+.TP
+\fBh\fP
+Afficher une zone de texte contenant un bref message d'aide.
+.TP
+\fBi\fP
+Afficher une zone de texte avec quelques informations \fIEXIF\fP.
+.TP
+\fBp\fP
+Mettre en pause le diaporama (si démarré avec \fB-t\fP, basculer).
+.SS Mode Édition
+.BR Fbi
+offre aussi quelques fonctionnalités très basiques de modification d'image.
+Vous devez lancer
+.BR fbi
+avec l'option \fI-e\fP pour pouvoir les utiliser.
+.TP
+\fBD\fP, \fBShift+d\fP
+Supprimer l'image.
+.TP
+\fBr\fP
+Rotation de 90 degrés dans le sens des aiguilles d'une montre.
+.TP
+\fBl\fP
+Rotation de 90 degrés dans le sens contraire des aiguilles d'une montre.
+.P
+La fonction de suppression actuelle nécessite une lettre \fBD\fP en capitale, ainsi
+vous devez taper \fBShift+d\fP. Ceci évite de supprimer des images par erreur
+en l'absence d'un système d'alerte correcte : Si vous demander à
+.BR fbi
+de supprimer une image, il la supprimera sans confirmation.
+.P
+La fonction de rotation actuelle marche pour les images \fIJPEG\fP uniquement.
+Elle effectue une transformation sans perte de données de l'image.
+\#
+\#
+.SH BOGUES
+.BR Fbi
+nécessite un accès en lecture/écriture aux framebuffers (\fI/dev/fbN\fP),
+c-à-d que vous devez vous assurer que
+.BR fbi
+peut ouvrir les périphériques en mode lecture/écriture. À mon humble avis,
+la manière la plus élégante consiste à utiliser
+.BR PAM (7)
+pour affecter la propriété des périphériques à l'utilisateur connecté sur
+la console. Une alternative est de créer un groupe, affecter la propriété
+des fichiers spéciaux de ce groupe et ajouter les utilisateurs autorisés
+à utiliser le framebuffer dans ce groupe. Vous pouvez également rendre
+les fichiers spéciaux accessibles en écriture au monde entier, mais soyez
+conscient des implications pour la sécurité. Toutefois, sur un ordinateur
+personnel, c'est peut-être la meilleure solution.
+.P
+.BR Fbi
+doit également pouvoir accéder à la console linux (\fI/dev/ttyN\fP) pour
+manipuler correctement les commutateurs de console. Ce n'est évidemment pas un
+problème pour les consoles de connexion, mais il \fBne\fP fonctionnera avec
+aucun des pseudo-terminaux (xterm, ssh, screen, …).
+\#
+\#
+.SH "VOIR AUSSI"
+.BR convert (1),
+.BR fbset (1),
+.BR fc-list (1),
+.BR imagemagick (1),
+.BR wrjpgcom (1),
+.BR fonts-conf (5),
+.BR PAM (7)
+\#
+\#
+.SH TRADUCTEUR
+Stéphane Aulery
+.BR <lkppo@free.fr>
+\#
+\#
+.SH AUTEUR
+Gerd Knorr
+.BR <kraxel@bytesex.org>
+\#
+\#
+.SH COPYRIGHT
+Copyright (c) 1999-2012 Gerd Knorr <kraxel@bytesex.org>
+.P
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any later
+version.
+.P
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+.P
+You should have received a copy of the GNU General Public License along with
+this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave,
+Cambridge, MA 02139, USA.
