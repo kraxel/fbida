@@ -476,7 +476,6 @@ selection_xfer(Widget widget, XtPointer ignore, XtPointer call_data)
 
     if (scs->target == XA_PIXMAP) {
 	/* beaming pixmaps between apps */
-	Screen *scr;
 	Window root;
 	Pixmap pix;
 	int x,y,w,h,bw,depth;
@@ -486,7 +485,6 @@ selection_xfer(Widget widget, XtPointer ignore, XtPointer call_data)
 	pix = ldata[0];
 	if (debug)
 	    fprintf(stderr,"xfer: => id=0x%lx\n",pix);
-	scr = XtScreen(widget);
 	XGetGeometry(dpy,pix,&root,&x,&y,&w,&h,&bw,&depth);
 	ximage = XGetImage(dpy,pix,0,0,w,h,-1,ZPixmap);
 	parse_ximage(&img, ximage);
