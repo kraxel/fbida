@@ -234,7 +234,7 @@ color_mouse(Widget widget, XtPointer client_data,
 	    XEvent *ev, Boolean *cont)
 {
     struct ida_hist *me = client_data;
-    int x,y;
+    int x;
 
     switch (ev->type) {
     case ButtonPress:
@@ -243,7 +243,6 @@ color_mouse(Widget widget, XtPointer client_data,
 	XButtonEvent *e = (XButtonEvent*)ev;
 
 	x = e->x;
-	y = e->y;
 	break;
     }
     case MotionNotify:
@@ -251,7 +250,6 @@ color_mouse(Widget widget, XtPointer client_data,
 	XMotionEvent *e = (XMotionEvent*)ev;
 
 	x = e->x;
-	y = e->y;
 	break;
     default:
 	return;
