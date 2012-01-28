@@ -455,6 +455,9 @@ static void show_exif(struct flist *f)
 	0xa40c, // Subject Distance Range
 	0xa405, // Focal Length In 35mm Film
 	0x9209, // Flash
+
+	0xa002, // Pixel X Dimension
+	0xa003, // Pixel Y Dimension
     };
     ExifData   *ed;
     ExifEntry  *ee;
