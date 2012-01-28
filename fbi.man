@@ -215,6 +215,12 @@ Rotate 90 degrees clockwise.
 .TP
 \fBl\fP
 Rotate 90 degrees counter-clock wise.
+.TP
+\fBx\fP
+Mirror image vertically (top / bottom).
+.TP
+\fBy\fP
+Mirror image horizontally (left to right).
 .P
 The delete function actually wants a capital letter \fBD\fP, thus you have to type
 \fBShift+d\fP. This is done to avoid deleting images by mistake because there

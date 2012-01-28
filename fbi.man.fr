@@ -227,6 +227,12 @@ Rotation de 90 degrés dans le sens des aiguilles d'une montre.
 .TP
 \fBl\fP
 Rotation de 90 degrés dans le sens contraire des aiguilles d'une montre.
+.TP
+\fBx\fP
+Rotation d'axe horizontal (haut / bas).
+.TP
+\fBy\fP
+Rotation d'axe vertical (gauche / droite).
 .P
 La fonction de suppression actuelle nécessite une lettre \fBD\fP en capitale, ainsi
 vous devez taper \fBShift+d\fP. Ceci évite de supprimer des images par erreur

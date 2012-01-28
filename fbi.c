@@ -77,6 +77,8 @@
 #define KEY_DELETE   -200
 #define KEY_ROT_CW   -201
 #define KEY_ROT_CCW  -202
+#define KEY_FLIP_V   -203
+#define KEY_FLIP_H   -204
 
 #define DEFAULT_DEVICE  "/dev/fb0"
 
@@ -552,6 +554,8 @@ static void show_help(void)
 	L"  D, Shift+d     - delete image",
 	L"  r              - rotate 90 degrees clockwise",
 	L"  l              - rotate 90 degrees counter-clockwise",
+	L"  x              - mirror image vertically (top / bottom)",
+	L"  y              - mirror image horizontally (left to right)",
     };
 
     shadow_draw_text_box(face, 24, 16, transparency,
@@ -996,7 +1000,13 @@ svga_show(struct flist *f, struct flist *prev,
 	} else if (0 == strcmp(key, "l") ||
 		   0 == strcmp(key, "L")) {
 	    return KEY_ROT_CCW;
-	    
+	} else if (0 == strcmp(key, "x") ||
+		   0 == strcmp(key, "X")) {
+	    return KEY_FLIP_V;
+	} else if (0 == strcmp(key, "y") ||
+		   0 == strcmp(key, "Y")) {
+	    return KEY_FLIP_H;
+
 	} else if (0 == strcmp(key, "h") ||
 		   0 == strcmp(key, "H")) {
 	    if (!help) {
@@ -1531,6 +1541,29 @@ main(int argc, char *argv[])
 		jpeg_transform_inplace
 		    (fcurrent->name,
 		     (key == KEY_ROT_CW) ? JXFORM_ROT_90 : JXFORM_ROT_270,
+		     NULL,
+		     NULL,0,
+		     (backup   ? JFLAG_FILE_BACKUP    : 0) | 
+		     (preserve ? JFLAG_FILE_KEEP_TIME : 0) | 
+		     JFLAG_TRANSFORM_IMAGE     |
+		     JFLAG_TRANSFORM_THUMBNAIL |
+		     JFLAG_UPDATE_ORIENTATION);
+		flist_img_free(fcurrent);
+	    } else {
+		status_error("readonly mode, sorry [start with --edit?]");
+	    }
+	    break;
+	}
+	case KEY_FLIP_V:
+	case KEY_FLIP_H:
+	{
+	    if (editable) {
+		snprintf(linebuffer,sizeof(linebuffer),
+			 "mirroring %s ...",fcurrent->name);
+		status_update(linebuffer, NULL);
+		jpeg_transform_inplace
+		    (fcurrent->name,
+		     (key == KEY_FLIP_V) ? JXFORM_FLIP_V : JXFORM_FLIP_H,
 		     NULL,
 		     NULL,0,
 		     (backup   ? JFLAG_FILE_BACKUP    : 0) | 
