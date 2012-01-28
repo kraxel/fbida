@@ -487,14 +487,13 @@ int shadow_draw_string(FT_Face face, int x, int y, wchar_t *str, int align)
     FT_BitmapGlyph bit;
     size_t         len;
     int            i,ng,pos;
-    int            kerning,scalable;
+    int            kerning;
 
     len = wcslen(str);
     glyphs = malloc(sizeof(*glyphs) * len);
     memset(glyphs,0,sizeof(*glyphs) * len);
 
     kerning  = FT_HAS_KERNING(face);
-    scalable = FT_IS_SCALABLE(face);
     pgi = 0;
     
     for (ng = 0, pos = 0, i = 0; str[i] != 0; i++) {
