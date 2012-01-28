@@ -547,8 +547,8 @@ static void show_help(void)
 	L"available if started with --edit switch,",
 	L"rotation works for jpeg images only:",
 	L"  D, Shift+d     - delete image",
-	L"  r              - rotate clockwise",
-	L"  l              - rotate counter-clockwise",
+	L"  r              - rotate 90 degrees clockwise",
+	L"  l              - rotate 90 degrees counter-clockwise",
     };
 
     shadow_draw_text_box(face, 24, 16, transparency,
