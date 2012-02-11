@@ -1,0 +1,152 @@
+.TH IDA 1 "(c) 2001-2012 Gerd Knorr" "IDA 2.08" "Programme de visualisation et de modification d'image"
+\#
+\#
+.SH NOM
+ida - programme de visualisation et de modification d'image
+\#
+\#
+.SH SYNOPSIS
+\fBida\fP [\fIoptions\fP] \fIfichier …\fP
+\#
+\#
+.SH DESCRIPTION
+.BR Ida
+est une application petit et rapide pour visualiser des images. Quelques
+fonctions rudimentaires d'édition sont aussi disponibles.
+.P
+Vous pouvez spécifier un nombre quelconque de fichiers image en argument sur la
+ligne de commande. Ou vous pouvez lire un unique fichier image depuis l'entrée
+standard en spécifiant "-" comme seul argument ("\fIxwd | ida -\fP" fonctionne
+bien pour les copies d'écran).
+\#
+\#
+.SH OPTIONS
+.BR Ida
+comprend les options habituelles (-geometry et autres). Les options
+supplémentaires sont :
+.TP
+.B -help
+Afficher un court message d'aide.
+.TP
+.BI "-pcd" "\ n"
+Définir la taille pour les images PhotoCD (\fIn = 1 .. 5\fP, par défaut 3).
+.TP
+.B -debug
+Activer les messages d'erreur. Avec pour effet indésirable d'afficher les
+messages d'erreur seulement sur la sortie d'erreur standard et \fBnon\fP dans
+une boîte de dialogue.
+\#
+\#
+.SH "POUR DÉMARRER"
+.SS Fonctions de la souris
+.P
+Avec le bouton gauche de la souris vous pouvez créer et modifier un rectangle
+de sélection Le bouton du milieu est utilisé pour démarrer les opérations de
+glisser-déposer. Le bouton droit fait apparaître la fenêtre de contrôle avec
+les menus, la barre d'outils et la liste de fichier.
+.SS Racourcis clavier
+.P
+De nombreux racourcis clavier utilisés par
+.BR xv
+sont aussi disponibles dans
+.BR "ida" "."
+Si vous êtes familier avec
+.BR xv
+il devrait être facile pour vous de démarrer avec
+.BR "ida" "."
+.P
+Tous les racourcis clavier disponibles sont aussi listés dans les menus de la
+fanêtre de contrôle. Les plus importants sont listés ci-dessous :
+.TP
+\fBESPACE\fP
+Fichier suivant.
+.TP
+\fBRETOUR_ARRIÈRE\fP
+Fichier précédent.
+.TP
+\fBFLÉCHE_GAUCHE\fP, \fBFLÉCHE_DROITE\fP, \fBFLÉCHE_HAUT\fP, \fBFLÉCHE_BAS\fP
+Défilement (maintenir enfoncée la touche \fBCtrl\fP pour un grand pas).
+.TP
+\fB+/-\fP
+Zoomer en avant / arrière.
+.TP
+\fBq\fP
+Quitter.
+.SS Formats d'image pris en charge
+.TP
+.B Lecture:
+\fIBMP\fP (sans compression), \fIPhotoCD\fP, \fIPPM\fP, \fIXBM\fP, \fIXPM\fP,
+\fIXWD\fP, \fIGIF\fP, \fIJPEG\fP, \fIPNG\fP, \fITIFF\fP. Les quatre derniers
+sont pris en charge en utilisant les bibliothèques courantes, c-à-d que vous
+devez les avoir installées au moment de la compilation.
+.TP
+.B Écriture:
+\fIJPEG\fP, \fIPNG\fP, \fIPostScript\fP, \fIPPM\fP, \fITIFF\fP.
+.SS Utilisation du glisser-déposer
+.B Ida
+est une application motif et elle prend donc en charge le protocole de
+glisser-déposer de motif dans les deux directions. Le protocole \fBxdnd\fP est
+aussi pris en charge, mais seulement dans une direction (reception du déposer).
+.P
+.BR Ida
+utilise le bouton du milieu de la souris pour démarrer une opération de
+glisser-déposer (tel que le guide de motif le suggère). Ceci fonctionne pour
+la fenêtre principale et les boutons de l'écran de l'explorateur de fichier.
+.P
+Les 
+.B applications Motif
+ne devraient avoir aucune difficulté à dialoguer avec le glisser-déposer
+.BR "" "d'" "ida" "."
+Votre pouvez déposer des images dans une fenêtre netscape 4.x -- Ceci implique
+un certain travail. Mozilla accepte aussi les glisser-déposer.
+.P
+L'interopérabilité avec
+.B gnome / gtk
+est bonne. Je peux déplacer des fichiers
+.BR "" "d'" "ida"
+vers
+.BR eeyes
+et vice versa sans problème. Les déplacement depuis
+.BR gmc
+vers
+.BR ida
+fonctionnent aussi très bien.
+.P
+L'interopérabilité avec
+.B KDE
+est mauvaise. Le copier-coller marche la plupart du temps, mais pas souvent le
+glisser-déposer. La fonction de sélection X11 du Qt toolkit a une conception
+légérement boguée et peu économe. Fondamentalement, les trolleurs ne
+comprennent pas le but de la cible TARGETS et violent les spécifications ICCCM
+en l'ignorant.
+\#
+\#
+.SH "VOIR AUSSI"
+.BR xwd (1)
+\#
+\#
+.SH TRADUCTEUR
+Stéphane Aulery
+.BR <lkppo@free.fr>
+\#
+\#
+.SH AUTEUR
+Gerd Knorr
+.BR <kraxel@bytesex.org>
+\#
+\#
+.SH COPYRIGHT
+Copyright (c) 2002-2012 Gerd Knorr <kraxel@bytesex.org>
+.P
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any later
+version.
+.P
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+.P
+You should have received a copy of the GNU General Public License along with
+this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave,
+Cambridge, MA 02139, USA.
