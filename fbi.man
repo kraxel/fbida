@@ -1,4 +1,4 @@
-.TH FBI 1 "(c) 1999-2012 Gerd Knorr" "FBI 2.08" "Linux framebuffer imageviewer"
+.TH FBI 1 "(c) 1998-2012 Gerd Knorr" "FBI 2.08" "Linux framebuffer imageviewer"
 \#
 \#
 .SH NAME

@@ -1,7 +1,7 @@
 /*
  * image viewer, for framebuffer devices
  *
- *   (c) 1998-2004 Gerd Hoffmann <kraxel@bytesex.org>
+ *   (c) 1998-2012 Gerd Hoffmann <kraxel@bytesex.org>
  *
  */
 
@@ -164,7 +164,7 @@ version(void)
 {
     fprintf(stderr,
 	    "fbi version " VERSION ", compiled on %s\n"
-	    "(c) 1999-2012 Gerd Hoffmann <kraxel@bytesex.org> [SUSE Labs]\n",
+	    "(c) 1998-2012 Gerd Hoffmann <kraxel@bytesex.org> [SUSE Labs]\n",
 	    __DATE__ );
 }
 
