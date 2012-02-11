@@ -1,5 +1,11 @@
 #!/bin/bash
 
+#
+# PostScript/pdf viewer for the linux framebuffer console
+# (c) 1999-2012 Gerd Hoffmann <kraxel@bytesex.org>
+#
+
+
 # tmp dir
 DIR="$(mktemp -dtp ${TMPDIR-/var/tmp} fbgs-XXXXXX)"
 test -d "$DIR" || exit 1
