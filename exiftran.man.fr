@@ -1,0 +1,146 @@
+.TH EXIFTRAN 1 "(c) 2002-2012 Gerd Knorr" "EXIFTRAN 2.08" "Transformation d'images jpeg d'appareil photo numérique"
+\#
+\#
+.SH NOM
+exiftran - transformation d'images jpeg d'appareil photo numérique
+\#
+\#
+.SH SYNOPSIS
+.TP
+\fBexiftran\fP [\fIoptions\fP] \fIfile1 file2 ... fileN\fP
+.TP
+\fBexiftran\fP -i [\fItransformation options\fP] [\fIautres options\fP] \fIfile1 file2 ... fileN\fP
+.TP
+\fBexiftran\fP -o \fIfichiersortie\fP [\fItransformation options\fP] [\fIautres options\fP] \fIfichierentree\fP
+.TP
+\fBexiftran\fP -d \fIfile1 file2 ... fileN\fP > \fIexifinfo\fP
+\#
+\#
+.SH DESCRIPTION
+.BR Exiftran
+est un utilitaire en ligne de commande pour transformer des images \fIjpeg\fP
+d'appareil photo numérique. Il peut faire des rotations sans perte de données
+comme
+.BR "jpegtran" "(1),"
+mais au contraire de
+.BR "jpegtran" "(1)"
+il tient compte des données \fIEXIF\fP : il peut pivoter les images
+automatiquement en vérifiant la propriété exif d'orientation ; il met à jour
+les informations exif si nécessaire (dimension de l'image, orientation) ; il
+pivote aussi la miniature exif. Il peut traiter plusieurs images en une seule
+opération.
+\#
+\#
+.SH "OPTIONS DE TRANSFORMATION"
+.TP
+.B -a
+Automatique (utilise la propriété d'orientation exif).
+.TP
+.B -9
+Rotation de 90 degrés dans le sens des aiguilles d'une montre.
+.TP
+.B -1
+Rotation de 180 degrés dans le sens des aiguilles d'une montre.
+.TP
+.B -2
+Rotation de 270 degrés dans le sens des aiguilles d'une montre.
+.TP
+.B -f
+Rotation d'axe horizontal (haut / bas).
+.TP
+.B -F
+Rotation d'axe vertical (gauche / droite).
+.TP
+.B -t
+Rotation d'axe oblique (sommets HG et BD).
+.TP
+.B -T
+Rotation d'axe oblique (sommets HD et BG).
+.TP
+.B -nt
+Ne pas transformer la miniature exif.
+.TP
+.B -ni
+Ne pas transformer l'image jpeg. Vous pourriez avoir besoin de ceci ou de
+l'option \fB-nt\fP pour faire des corrections dans le cas où vous avez
+transformé une image avec des utilitaires qui ignorent la miniature exif.
+Mettre à jour la miniature seule avec \fB-g\fP est une autre solution.
+.TP
+.B -no
+Ne pas mettre à jour la propriété d'orientation. Par défaut
+.BR exiftran
+positionne l'orientation à "1" (aucune transformation nécessaire) pour
+empêcher d'autres logiciels de manipulation des données exif d'essayer de
+pivoter l'image qui l'est déjà.
+\#
+\#
+.SH "AUTRES OPTIONS"
+.TP
+.B -h
+Afficher un court message d'aide.
+.TP
+.B -d
+Extraire les données exif du ou des fichiers.
+.TP
+.BI "-c" "\ texte"
+Enregistrer un \fItexte\fP dans la propriété commentaire.
+.TP
+.B -g
+Refabriquer la miniature exif.
+.TP
+.BI "-o" "\ fichier"
+Indiquer le \fIfichier\fP de sortie. Ce mode n'autorise qu'un seul fichier en entrée.
+.TP
+.B -i
+Activer la modification directe des images.
+.BR Exiftran
+accepte plusieurs fichiers en entrée. Vous devez indiquer cette option ou
+un fichier de sortie avec \fB-o\fP pour toutes les opérations qui modifient
+l'image (c-à-d toutes sauf \fB-d\fP évidemment).
+.TP
+.B -b
+Créer un fichier de sauvegarde lors des modifications directes (implique \fB-i\fP).
+.TP
+.B -p
+Préserver l'horodatage (atime + mtime) lors des modifications directes (implique \fB-i\fP).
+\#
+\#
+.SH EXEMPLES
+Rotation automatique de tous les fichiers jpeg du répertoire courant :
+.P
+.in +4n
+   \fIexiftran\ -ai\ *.jpeg\fP
+.in
+\#
+\#
+.SH "VOIR AUSSI"
+.BR exif (1),
+.BR exiftags (1),
+.BR jpegtran (1)
+\#
+\#
+.SH TRADUCTEUR
+Stéphane Aulery
+.BR <lkppo@free.fr>
+\#
+\#
+.SH AUTEUR
+Gerd Knorr
+.BR <kraxel@bytesex.org>
+\#
+\#
+.SH COPYRIGHT
+Copyright (c) 2002-2012 Gerd Knorr <kraxel@bytesex.org>
+.P
+This program is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free Software
+Foundation; either version 2 of the License, or (at your option) any later
+version.
+.P
+This program is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE. See the GNU General Public License for more details.
+.P
+You should have received a copy of the GNU General Public License along with
+this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave,
+Cambridge, MA 02139, USA.

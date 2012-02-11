@@ -1,5 +1,7 @@
 /*
+ * Transform digital camera jpeg images
  *
+ * (c) 2002-2012 Gerd Hoffmann <kraxel@bytesex.org>
  */
 
 #include <stdio.h>
@@ -82,30 +84,30 @@ usage(FILE *fp, char *name)
 	    "\n"
 	    "transform options:\n"
 	    "  -a         automatic (using exif orientation tag)\n"
-	    "  -9         rotate by 90 degrees\n"
-	    "  -1         rotate by 180 degrees\n"
-	    "  -2         rotate by 270 degrees\n"
-	    "  -f         flip vertical\n"
-	    "  -F         flip horizontal\n"
-	    "  -t         transpose\n"
-	    "  -T         transverse\n"
+	    "  -9         rotate by 90 degrees clockwise\n"
+	    "  -1         rotate by 180 degrees clockwise\n"
+	    "  -2         rotate by 270 degrees clockwise\n"
+	    "  -f         mirror image vertically (top / bottom)\n"
+	    "  -F         mirror image horizontally (left to right)\n"
+	    "  -t         transpose (across UL-to-LR corner)\n"
+	    "  -T         transverse (across UR-to-LL corner)\n"
 	    "\n"
 	    "  -nt        don't rotate exif thumbnail\n"
 	    "  -ni        don't rotate jpeg image\n"
 	    "  -no        don't update the orientation tag\n"
 	    "\n"
 	    "other options:\n"
-	    "  -h         print this text\n"
+	    "  -h         print this help text\n"
 	    "  -d         dump exif data\n"
 	    "  -c <text>  create/update comment\n"
 	    "  -g         (re)generate thumbnail\n"
 	    "  -o <file>  output file\n"
 	    "  -i         change files inplace\n"
-	    "    -b       create a backup file (with -i)\n"
-	    "    -p       preserve timestamps  (with -i)\n"
+	    "  -b         create a backup file (with -i)\n"
+	    "  -p         preserve timestamps  (with -i)\n"
 	    "\n"
 	    "-- \n"
-	    "Gerd Hoffmann <kraxel@bytesex.org> [SUSE Labs]\n",
+	    "(c) 2002-2012 Gerd Hoffmann <kraxel@bytesex.org> [SUSE Labs]\n",
 	    name);
 }
 
