@@ -231,6 +231,6 @@ include $(srcdir)/mk/Compile.mk
 
 include $(srcdir)/mk/Maintainer.mk
 
-sync::
-	cp $(srcdir)/../xawtv/common/parseconfig.[ch] $(srcdir)
-	cp $(srcdir)/../xawtv/console/fbtools.[ch] $(srcdir)
+#sync::
+#	cp $(srcdir)/../xawtv/common/parseconfig.[ch] $(srcdir)
+#	cp $(srcdir)/../xawtv/console/fbtools.[ch] $(srcdir)

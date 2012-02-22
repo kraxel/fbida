@@ -17,11 +17,14 @@ release-dir ?= $(HOME)/projects/Releases
 release-pub ?= bigendian.kraxel.org:/public/vhosts/www.kraxel.org/releases/$(repository)
 tarball = $(release-dir)/$(repository)-$(VERSION).tar
 
-.PHONY: release
-release:
+$(tarball).gz:
 	git tag -m "release $(VERSION)" "$(VERSION)"
 	git push --tags
 	git archive --format=tar --prefix=$(repository)-$(VERSION)/ \
 		-o $(tarball) $(VERSION)
 	gzip $(tarball)
-	scp $(tarball).gz $(release-pub)
+
+.PHONY: release
+release: $(tarball).gz
+	gpg --detach-sign --armor $(tarball).gz
+	scp $(tarball).gz* $(release-pub)
