@@ -125,7 +125,7 @@ Ida.aboutbox_popup.title:		About ida
 Ida*aboutbox_popup*messageString:	\
 	ida - image viewer & editor	\n\
 	\n\
-	(c) 2001,02 Gerd Hoffmann <kraxel@bytesex.org>
+	(c) 2001,02 Gerd Hoffmann <gerd@kraxel.org>
 
 Ida.sorrybox_popup.deleteResponse:	DESTROY
 

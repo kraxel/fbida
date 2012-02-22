@@ -1,6 +1,6 @@
 /*
  * simple file browser
- * (c) 2001-03 Gerd Hoffmann <kraxel@bytesex.org>
+ * (c) 2001-03 Gerd Hoffmann <gerd@kraxel.org>
  *
  */
 

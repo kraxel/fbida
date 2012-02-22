@@ -1,7 +1,7 @@
 /*
  * Transform digital camera jpeg images
  *
- * (c) 2002-2012 Gerd Hoffmann <kraxel@bytesex.org>
+ * (c) 2002-2012 Gerd Hoffmann <gerd@kraxel.org>
  */
 
 #include <stdio.h>
@@ -107,7 +107,7 @@ usage(FILE *fp, char *name)
 	    "  -p         preserve timestamps  (with -i)\n"
 	    "\n"
 	    "-- \n"
-	    "(c) 2002-2012 Gerd Hoffmann <kraxel@bytesex.org> [SUSE Labs]\n",
+	    "(c) 2002-2012 Gerd Hoffmann <gerd@kraxel.org> [SUSE Labs]\n",
 	    name);
 }
 

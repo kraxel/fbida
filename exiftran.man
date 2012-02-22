@@ -118,11 +118,11 @@ Autorotate all jpeg files in the current directory:
 \#
 .SH AUTHOR
 Gerd Hoffmann
-.BR <kraxel@bytesex.org>
+.BR <gerd@kraxel.org>
 \#
 \#
 .SH COPYRIGHT
-Copyright (c) 2002-2012 Gerd Hoffmann <kraxel@bytesex.org>
+Copyright (c) 2002-2012 Gerd Hoffmann <gerd@kraxel.org>
 .P
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
