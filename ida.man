@@ -1,4 +1,4 @@
-.TH IDA 1 "(c) 2001-2012 Gerd Knorr" "IDA 2.08" "Image viewing and editing program"
+.TH IDA 1 "(c) 2001-2012 Gerd Hoffmann" "IDA 2.08" "Image viewing and editing program"
 \#
 \#
 .SH NAME
@@ -122,12 +122,12 @@ the ICCCM specs by ignoring it.
 \#
 \#
 .SH AUTHOR
-Gerd Knorr
+Gerd Hoffmann
 .BR <kraxel@bytesex.org>
 \#
 \#
 .SH COPYRIGHT
-Copyright (c) 2002-2012 Gerd Knorr <kraxel@bytesex.org>
+Copyright (c) 2002-2012 Gerd Hoffmann <kraxel@bytesex.org>
 .P
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software

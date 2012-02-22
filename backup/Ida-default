@@ -5,7 +5,7 @@ Ida.aboutbox_popup.title:		About ida
 Ida*aboutbox_popup*messageString:	\
 	ida - image viewer & editor	\n\
 	\n\
-	(c) 2001,02 Gerd Knorr <kraxel@bytesex.org>
+	(c) 2001,02 Gerd Hoffmann <kraxel@bytesex.org>
 
 Ida.noundobox_popup.title:		No undo
 Ida*noundobox_popup*messageString:	\

@@ -1,6 +1,6 @@
 \# Traduction de la version du commit f66d5fd21f83b3c041cd032effcccec20de52184
 \# du manuel fbgs.man 
-.TH FBGS 1 "(c) 1999\-2012 Gerd Knorr" "FBGS 2.08" "Visionneuse PostScript/pdf pour la console framebuffer de Linux"
+.TH FBGS 1 "(c) 1999\-2012 Gerd Hoffmann" "FBGS 2.08" "Visionneuse PostScript/pdf pour la console framebuffer de Linux"
 \#
 \#
 .SH NOM
@@ -79,12 +79,12 @@ Stéphane Aulery
 \#
 \#
 .SH AUTEUR
-Gerd Knorr
+Gerd Hoffmann
 .BR <kraxel@bytesex.org>
 \#
 \#
 .SH COPYRIGHT
-Copyright (c) 1999-2012 Gerd Knorr <kraxel@bytesex.org>
+Copyright (c) 1999-2012 Gerd Hoffmann <kraxel@bytesex.org>
 .P
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software

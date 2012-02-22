@@ -1,4 +1,4 @@
-.TH FBGS 1 "(c) 1999\-2012 Gerd Knorr" "FBGS 2.08" "PostScript/pdf viewer for the linux framebuffer console"
+.TH FBGS 1 "(c) 1999\-2012 Gerd Hoffmann" "FBGS 2.08" "PostScript/pdf viewer for the linux framebuffer console"
 \#
 \#
 .SH NAME
@@ -71,12 +71,12 @@ You can use this option if your PDF file requires a \fIpassword\fP.
 \#
 \#
 .SH AUTHOR
-Gerd Knorr
+Gerd Hoffmann
 .BR <kraxel@bytesex.org>
 \#
 \#
 .SH COPYRIGHT
-Copyright (c) 1999-2012 Gerd Knorr <kraxel@bytesex.org>
+Copyright (c) 1999-2012 Gerd Hoffmann <kraxel@bytesex.org>
 .P
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software

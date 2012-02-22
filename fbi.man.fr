@@ -1,6 +1,6 @@
 \# Traduction de la version du commit 92744db63979c75138779e816a9290057fa92f11
 \# du manuel fbi.man
-.TH FBI 1 "(c) 1999-2012 Gerd Knorr" "FBI 2.08" "Visionneuse d'image pour le framebuffer Linux"
+.TH FBI 1 "(c) 1999-2012 Gerd Hoffmann" "FBI 2.08" "Visionneuse d'image pour le framebuffer Linux"
 \#
 \#
 .SH NOM
@@ -283,12 +283,12 @@ Stéphane Aulery
 \#
 \#
 .SH AUTEUR
-Gerd Knorr
+Gerd Hoffmann
 .BR <kraxel@bytesex.org>
 \#
 \#
 .SH COPYRIGHT
-Copyright (c) 1999-2012 Gerd Knorr <kraxel@bytesex.org>
+Copyright (c) 1999-2012 Gerd Hoffmann <kraxel@bytesex.org>
 .P
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software

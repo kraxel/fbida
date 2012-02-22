@@ -1,4 +1,4 @@
-.TH EXIFTRAN 1 "(c) 2002-2012 Gerd Knorr" "EXIFTRAN 2.08" "Transformation d'images jpeg d'appareil photo numérique"
+.TH EXIFTRAN 1 "(c) 2002-2012 Gerd Hoffmann" "EXIFTRAN 2.08" "Transformation d'images jpeg d'appareil photo numérique"
 \#
 \#
 .SH NOM
@@ -125,12 +125,12 @@ Stéphane Aulery
 \#
 \#
 .SH AUTEUR
-Gerd Knorr
+Gerd Hoffmann
 .BR <kraxel@bytesex.org>
 \#
 \#
 .SH COPYRIGHT
-Copyright (c) 2002-2012 Gerd Knorr <kraxel@bytesex.org>
+Copyright (c) 2002-2012 Gerd Hoffmann <kraxel@bytesex.org>
 .P
 This program is free software; you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
