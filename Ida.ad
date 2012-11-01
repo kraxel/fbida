@@ -4,25 +4,18 @@
 *renderTable: small
 *renderTable.fontType: FONT_IS_FONTSET
 *renderTable.fontName: \
-   -*-bitstream vera sans-medium-r-normal-*-*-140-*-*-p-*-iso8859-1, \
-   -*-bitstream vera sans-medium-r-normal-*-*-140-*-*-p-*-iso8859-15, \
-        -microsoft-tahoma-medium-r-normal-*-*-140-*-*-p-*-iso8859-*, \
-         -adobe-helvetica-medium-r-normal-*-*-140-*-*-p-*-iso8859-*, \
-        -cronyx-helvetica-medium-r-normal-*-*-140-*-*-p-*-koi8-r, \
-                -*-lucida-medium-r-normal-*-*-140-*-*-p-*-iso8859-*, \
-             -gnu-unifont-medium-r-normal-*-*-160-*-*-*-*-*-*, \
+             -*-helvetica-medium-r-normal-*-*-140-*-*-p-*-*-*, \
+                -*-lucida-medium-r-normal-*-*-140-*-*-p-*-*-*, \
+       -*-liberation sans-medium-r-normal-*-*-140-*-*-p-*-*-*, \
                      -*-*-medium-r-normal-*-*-140-*-*-p-*-*-*, \
                      -*-*-medium-r-normal-*-*-160-*-*-p-*-*-*, \
                                -*-*-*-*-*-*-*-140-*-*-*-*-*-*, \
                                -*-*-*-*-*-*-*-160-*-*-*-*-*-*, *
 *renderTable.small.fontType: FONT_IS_FONTSET
 *renderTable.small.fontName: \
-   -*-bitstream vera sans-medium-r-normal-*-*-100-*-*-p-*-iso8859-1, \
-   -*-bitstream vera sans-medium-r-normal-*-*-100-*-*-p-*-iso8859-15, \
-        -microsoft-tahoma-medium-r-normal-*-*-100-*-*-p-*-iso8859-*, \
-         -adobe-helvetica-medium-r-normal-*-*-100-*-*-p-*-iso8859-*, \
-        -cronyx-helvetica-medium-r-normal-*-*-100-*-*-p-*-koi8-r, \
-                -*-lucida-medium-r-normal-*-*-100-*-*-p-*-iso8859-*, \
+             -*-helvetica-medium-r-normal-*-*-100-*-*-p-*-*-*, \
+                -*-lucida-medium-r-normal-*-*-100-*-*-p-*-*-*, \
+       -*-liberation sans-medium-r-normal-*-*-100-*-*-p-*-*-*, \
                      -*-*-medium-r-normal-*-*-100-*-*-p-*-*-*, \
                      -*-*-medium-r-normal-*-*-120-*-*-p-*-*-*, \
                                -*-*-*-*-*-*-*-100-*-*-*-*-*-*, \
@@ -31,12 +24,9 @@
 *XmTextField.renderTable: 
 *XmTextField.renderTable.fontType: FONT_IS_FONTSET
 *XmTextField.renderTable.fontName: \
-   -*-bitstream vera sans mono-medium-r-normal-*-*-140-*-*-*-*-iso8859-1, \
-   -*-bitstream vera sans mono-medium-r-normal-*-*-140-*-*-*-*-iso8859-15, \
-         -monotype-andale mono-medium-r-normal-*-*-140-*-*-*-*-iso8859-*, \
-                -adobe-courier-medium-r-normal-*-*-140-*-*-m-*-iso8859-*, \
-               -cronyx-courier-medium-r-normal-*-*-140-*-*-m-*-koi8-r, \
-           -*-lucidatypewriter-medium-r-normal-*-*-140-*-*-m-*-iso8859-*, \
+                    -*-courier-medium-r-normal-*-*-140-*-*-m-*-*-*, \
+           -*-lucidatypewriter-medium-r-normal-*-*-140-*-*-m-*-*-*, \
+            -*-liberation mono-medium-r-normal-*-*-140-*-*-*-*-*-*, \
                           -*-*-medium-r-normal-*-*-140-*-*-m-*-*-*, \
                           -*-*-medium-r-normal-*-*-160-*-*-m-*-*-*, \
                                     -*-*-*-*-*-*-*-140-*-*-*-*-*-*, \
