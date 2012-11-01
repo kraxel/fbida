@@ -1816,6 +1816,7 @@ main(int argc, char *argv[])
     struct stat st;
     Pixel background;
 
+#if 0
     setlocale(LC_ALL,"");
     if (0 == strcasecmp("utf-8", nl_langinfo(CODESET))) {
 	/* ### FIXME ###
@@ -1824,7 +1825,8 @@ main(int argc, char *argv[])
 	setenv("LC_ALL", "POSIX", 1);
 	setlocale(LC_ALL,"");
     }
-    
+#endif
+
     binary = argv[0];
     ida_init_config();
     ida_read_config();
