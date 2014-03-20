@@ -69,6 +69,7 @@ ifeq ($(HAVE_LIBCURL),yes)
   ida fbi : LDFLAGS  += -Wl,--wrap=fopen
 endif
 
+PKG_CONFIG = pkg-config
 
 ########################################################################
 # conditional stuff
@@ -179,8 +180,8 @@ OBJS_FBI := \
 OBJS_FBI += $(filter-out wr/%,$(call ac_lib_mkvar,$(fbi_libs),OBJS))
 
 # jpeg/exif libs
-fbi : CFLAGS += $(shell pkg-config --cflags freetype2 fontconfig)
-fbi : LDLIBS += $(shell pkg-config --libs   freetype2 fontconfig)
+fbi : CFLAGS += $(shell $(PKG_CONFIG) --cflags freetype2 fontconfig)
+fbi : LDLIBS += $(shell $(PKG_CONFIG) --libs   freetype2 fontconfig)
 fbi : LDLIBS += -ljpeg -lexif -lm
 
 fbi: $(OBJS_FBI) $(OBJS_READER)
