@@ -1,6 +1,4 @@
-\# Traduction de la version du commit 92744db63979c75138779e816a9290057fa92f11
-\# du manuel fbi.man
-.TH FBI 1 "(c) 1999-2012 Gerd Hoffmann" "FBI 2.08" "Visionneuse d'image pour le framebuffer Linux"
+.TH FBI 1 "(c) 1999-2012 Gerd Hoffmann" "FBI 2.09" "Visionneuse d'image pour le framebuffer Linux"
 \#
 \#
 .SH NOM
@@ -33,7 +31,7 @@ Afficher le numéro de version de \fBfbi\fP.
 .TP
 .B --store
 Sauvegader les arguments de la ligne de commande dans le fichier de
-configuration.
+configuration \fI~/.fbirc\fP.
 .TP
 .BI "-l" "\ fichier" ", --list" "\ fichier"
 Lit une liste de fichiers image depuis un \fIfichier\fP.
@@ -64,7 +62,7 @@ Comme autozoom, mais n'accepte que la réduction.
 Utiliser seulement la largeur pour la mise à l'échelle automatique.
 .TP
 .B -v, --(no)verbose
-Être loquace : activer la barre d'état en bas de l'écran.
+Être loquace : activer la barre d'état en bas de l'écran (activé par défaut).
 .TP
 .B -u, --(no)random
 Mélanger l'ordre des noms de fichier.
@@ -90,7 +88,7 @@ Conserver l'horodatage (lors de la modification des images).
 Mettre en cache les entêtes des images.
 .TP
 .BI "--cachemem" "\ taille"
-\fITaille\fP du cache des images en mégaoctets (Mo)
+\fITaille\fP du cache des images en mégaoctets (256 par défaut)
 .TP
 .BI "--blend" "\ durée"
 \fIDurée\fP de mélange des images en millisecondes.
@@ -109,11 +107,11 @@ touche (c-à-d un diaporama).
 Ne pas boucler (utiliser seulement avec \fB-t\fP).
 .TP
 .BI "-r" "\ n" ", --resolution" "\ n"
-Sélectionner la résolution, \fIn = 1..5\fP (seulement pour \fIPhotoCD\fP).
+Sélectionner la résolution, \fIn = 1..5\fP (3 par défaut, seulement pour \fIPhotoCD\fP).
 .TP
 .BI "-g" "\ n" ", --gamma" "\ n"
-Correction gamma. La valeur par défaut est 1.0. Nécessite un visuel en
-\fIPseudocolor\fP ou \fIDirectcolor\fP, ne fonctionne pas en \fITruecolor\fP.
+Correction gamma. Nécessite un visuel en \fIPseudocolor\fP ou \fIDirectcolor\fP,
+ne fonctionne pas en \fITruecolor\fP (1 par défaut).
 .TP
 .BI "-f" "\ <arg>" ", --font" "\ <arg>"
 Sélectionner une police. \fI<arg>\fP peut prendre n'importe quelle valeur

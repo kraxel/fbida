@@ -1,4 +1,4 @@
-.TH IDA 1 "(c) 2001-2012 Gerd Hoffmann" "IDA 2.08" "Image viewing and editing program"
+.TH IDA 1 "(c) 2001-2012 Gerd Hoffmann" "IDA 2.09" "Image viewing and editing program"
 \#
 \#
 .SH NAME

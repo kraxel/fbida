@@ -1,4 +1,4 @@
-.TH FBGS 1 "(c) 1999\-2012 Gerd Hoffmann" "FBGS 2.08" "PostScript/pdf viewer for the linux framebuffer console"
+.TH FBGS 1 "(c) 1999\-2012 Gerd Hoffmann" "FBGS 2.09" "PostScript/pdf viewer for the linux framebuffer console"
 \#
 \#
 .SH NAME

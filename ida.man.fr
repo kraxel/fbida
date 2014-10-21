@@ -1,4 +1,4 @@
-.TH IDA 1 "(c) 2001-2012 Gerd Hoffmann" "IDA 2.08" "Programme de visualisation et de modification d'image"
+.TH IDA 1 "(c) 2001-2012 Gerd Hoffmann" "IDA 2.09" "Programme de visualisation et de modification d'image"
 \#
 \#
 .SH NOM

@@ -1,4 +1,4 @@
-.TH EXIFTRAN 1 "(c) 2002-2012 Gerd Hoffmann" "EXIFTRAN 2.08" "Transform digital camera jpeg images"
+.TH EXIFTRAN 1 "(c) 2002-2012 Gerd Hoffmann" "EXIFTRAN 2.09" "Transform digital camera jpeg images"
 \#
 \#
 .SH NAME

@@ -1,4 +1,4 @@
-.TH FBI 1 "(c) 1998-2012 Gerd Hoffmann" "FBI 2.08" "Linux framebuffer imageviewer"
+.TH FBI 1 "(c) 1998-2012 Gerd Hoffmann" "FBI 2.09" "Linux framebuffer imageviewer"
 \#
 \#
 .SH NAME
@@ -29,7 +29,7 @@ Print usage info.
 Print \fBfbi\fP version number.
 .TP
 .B --store
-Write command line arguments to config file.
+Write command line arguments to config file \fI~/.fbirc\fP.
 .TP
 .BI "-l" "\ file" ", --list" "\ file"
 Read image filelist from \fIfile\fP.
@@ -58,7 +58,8 @@ Like autozoom, but scale down only.
 Use width only for autoscaling.
 .TP
 .B -v, --(no)verbose
-Be verbose: enable status line on the bottom of the screen.
+Be verbose: enable status line on the bottom of the screen (enabled by
+default).
 .TP
 .B -u, --(no)random
 Randomize the order of the filenames.
@@ -83,7 +84,7 @@ Preserve timestamps (when editing images).
 Read ahead images into cache.
 .TP
 .BI "--cachemem" "\ size"
-Image cache \fIsize\fP in megabytes (MB).
+Image cache \fIsize\fP in megabytes (default is 256).
 .TP
 .BI "--blend" "\ time"
 Image blend \fItime\fP in miliseconds.
@@ -101,11 +102,11 @@ Load next image after \fIsec\fP seconds without any keypress (i.e. slideshow).
 Don't loop (only use with \fB-t\fP).
 .TP
 .BI "-r" "\ n" ", --resolution" "\ n"
-Select resolution, \fIn = 1..5\fP (only \fIPhotoCD\fP).
+Select resolution, \fIn = 1..5\fP (default is 3, only \fIPhotoCD\fP).
 .TP
 .BI "-g" "\ n" ", --gamma" "\ n"
-Gamma correction. Default is 1.0. Requires \fIPseudocolor\fP or
-\fIDirectcolor\fP visual, doesn't work for \fITruecolor\fP.
+Gamma correction. Requires \fIPseudocolor\fP or \fIDirectcolor\fP visual,
+doesn't work for \fITruecolor\fP (default is 1).
 .TP
 .BI "-f" "\ <arg>" ", --font" "\ <arg>"
 Set font. This \fI<arg>\fP can be anything fontconfig accepts (see
