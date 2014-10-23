@@ -95,6 +95,7 @@ usage(FILE *fp, char *name)
 	    "  -nt        don't rotate exif thumbnail\n"
 	    "  -ni        don't rotate jpeg image\n"
 	    "  -no        don't update the orientation tag\n"
+	    "  -np        don't pare lost edges\n"
 	    "\n"
 	    "other options:\n"
 	    "  -h         print this help text\n"
@@ -122,6 +123,7 @@ int main(int argc, char *argv[])
     unsigned int flags =
 	JFLAG_TRANSFORM_IMAGE     |
 	JFLAG_TRANSFORM_THUMBNAIL |
+	JFLAG_TRANSFORM_TRIM      |
 	JFLAG_UPDATE_ORIENTATION;
     int dump = 0;
     int i, c, rc;
@@ -167,6 +169,9 @@ int main(int argc, char *argv[])
 		break;
 	    case 'o':
 		flags &= ~JFLAG_UPDATE_ORIENTATION;
+		break;
+	    case 'p':
+		flags &= ~JFLAG_TRANSFORM_TRIM;
 		break;
 	    default:
 		fprintf(stderr,"unknown option -n%c\n",optarg[0]);

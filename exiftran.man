@@ -69,6 +69,13 @@ Don't update the orientation tag. By default
 .BR exiftran
 sets the orientation to "1" (no transformation needed) to avoid other exif-aware
 applications try to rotate the already-rotated image again.
+.TP
+.B -np
+Don't pare lost edges. By default
+.BR exiftran
+don't preserve image size of the images that do not meet a
+multiple of 8 pixels. He prefers to cut a strip of a few pixels rather than
+offering a damaged image. Use this option if you want them all the same.
 \#
 \#
 .SH "OTHER OPTIONS"

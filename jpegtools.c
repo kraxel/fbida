@@ -430,7 +430,10 @@ static int do_transform(struct jpeg_decompress_struct *src,
 
     memset(&transformoption,0,sizeof(transformoption));
     transformoption.transform = transform;
-    transformoption.trim      = FALSE;
+    if (!(flags & JFLAG_TRANSFORM_TRIM))
+   transformoption.trim       = TRUE;
+    else
+   transformoption.trim       = FALSE;
     transformoption.force_grayscale = FALSE;
 
     /* Any space needed by a transform option must be requested before
