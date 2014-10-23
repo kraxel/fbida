@@ -1547,6 +1547,7 @@ main(int argc, char *argv[])
 		     (preserve ? JFLAG_FILE_KEEP_TIME : 0) | 
 		     JFLAG_TRANSFORM_IMAGE     |
 		     JFLAG_TRANSFORM_THUMBNAIL |
+		     JFLAG_TRANSFORM_TRIM      |
 		     JFLAG_UPDATE_ORIENTATION);
 		flist_img_free(fcurrent);
 	    } else {
@@ -1570,6 +1571,7 @@ main(int argc, char *argv[])
 		     (preserve ? JFLAG_FILE_KEEP_TIME : 0) | 
 		     JFLAG_TRANSFORM_IMAGE     |
 		     JFLAG_TRANSFORM_THUMBNAIL |
+		     JFLAG_TRANSFORM_TRIM      |
 		     JFLAG_UPDATE_ORIENTATION);
 		flist_img_free(fcurrent);
 	    } else {
