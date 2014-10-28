@@ -34,6 +34,7 @@ static Boolean job_worker(XtPointer clientdata)
     unsigned int flags =
 	JFLAG_TRANSFORM_IMAGE     |
 	JFLAG_TRANSFORM_THUMBNAIL |
+	JFLAG_TRANSFORM_TRIM      |
 	JFLAG_UPDATE_ORIENTATION;
     
     if (list_empty(&jobs)) {
