@@ -96,17 +96,17 @@ Set jpeg comment tag to \fItext\fP.
 Specify output \fIfile\fP. Only one input file is allowed in this mode.
 .TP
 .B -i
-Enable inplace editing of the images.
+Enable in-place editing of the images.
 .BR Exiftran
 allows multiple input files then. You must specify either this option or a
 output file with \fB-o\fP for all operations which modify the image (i.e.
 everything but \fB-d\fP right now).
 .TP
 .B -b
-Create a backup file when doing inplace editing (imply \fB-i\fP).
+Create a backup file when doing in-place editing (imply \fB-i\fP).
 .TP
 .B -p
-Preserve timestamps (atime + mtime) when doing inplace editing (imply \fB-i\fP).
+Preserve timestamps (atime + mtime) when doing in-place editing (imply \fB-i\fP).
 \#
 \#
 .SH EXAMPLES
