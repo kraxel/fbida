@@ -768,6 +768,13 @@ static float auto_scale(struct ida_image *img)
     return scale;
 }
 
+static int calculate_text_steps(int height, int yres)
+{
+    int pages = ceil((float)height / yres);
+    int text_steps = ceil((float)height / pages);
+    return text_steps;
+}
+
 /* ---------------------------------------------------------------------- */
 
 static void effect_blend(struct flist *f, struct flist *t)
@@ -1069,6 +1076,10 @@ static void scale_fix_top_left(struct flist *f, float old, float new)
     height  = img->i.height * new;
     f->left = cx * width  - fb_var.xres/2;
     f->top  = cy * height - fb_var.yres/2;
+
+    if (textreading) {
+        f->text_steps = calculate_text_steps(height, fb_var.yres);
+    }
 }
 
 /* ---------------------------------------------------------------------- */
@@ -1378,8 +1389,7 @@ static void flist_img_load(struct flist *f, int prefetch)
 	if (img->i.height > fb_var.yres) {
 	    f->top = (img->i.height - fb_var.yres) / 2;
 	    if (textreading) {
-		int pages = ceil((float)img->i.height / fb_var.yres);
-		f->text_steps = ceil((float)img->i.height / pages);
+                f->text_steps = calculate_text_steps(img->i.height, fb_var.yres);
 		f->top = 0;
 	    }
 	}
