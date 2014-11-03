@@ -15,7 +15,7 @@ trap "rm -rf $DIR" EXIT
 fbiopts=""
 gsopts=""
 passwd=""
-device="tiffpack"
+device="png16m"
 opt=1
 bell="off"
 helptext="
@@ -29,7 +29,7 @@ usage: fbgs [fbgs options] [fbi options] file
    -p    --password <arg>    a <password> passed to the PDF
    -fp   --firstpage <arg>   begins on the <arg> page
    -lp	 --lastpage <arg>    stops on the <arg> page
-   -c    --color             pages in color
+   -c    --(no)color         pages in color
    -l                        pages rendered with 100 dpi
    -xl                       pages rendered with 120 dpi
    -xxl                      pages rendered with 150 dpi
@@ -65,6 +65,10 @@ while test "$opt" = "1"; do
 			device="png16m"
 			shift
 			;;
+		--nocolor)
+			device="tiffpack"
+			shift
+			;;
 		-l)	gsopts="$gsopts -r100x100"
 			shift
 			;;
@@ -83,6 +87,7 @@ while test "$opt" = "1"; do
 		--autoup | --noautoup | \
 		--autodown | --noautodown | \
 		--fitwidth | --nofitwidth | \
+		--readahead | --noreadahead | \
 		-v | --verbose | --noverbose | \
 		-u | --random | --norandom | \
 		-1 | --once | --noonce)
