@@ -117,10 +117,10 @@ browser_statfiles(XtPointer clientdata)
 
 	/* update status line */
 	if (h->filter) {
-	    snprintf(line, sizeof(line), "%d dirs, %d/%d files [%s]",
+	    snprintf(line, sizeof(line), "%u dirs, %u/%u files [%s]",
 		     h->dirs,h->sfiles,h->afiles,h->filter);
 	} else {
-	    snprintf(line, sizeof(line), "%d dirs, %d files",
+	    snprintf(line, sizeof(line), "%u dirs, %u files",
 		     h->dirs,h->afiles);
 	}
 	str = XmStringGenerate(line, NULL, XmMULTIBYTE_TEXT, NULL);

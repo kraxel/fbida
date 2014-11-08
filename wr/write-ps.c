@@ -415,20 +415,20 @@ ps_write(FILE *fp, struct ida_image *img)
     fprintf(fp,header, /* includes bbox */
 	    xoff,yoff,xoff+width,yoff+height);
     fprintf(fp,"\n"
-	    "/pix %d string def\n"
-	    "/grays %d string def\n"
+	    "/pix %u string def\n"
+	    "/grays %u string def\n"
 	    "/npixls 0 def\n"
 	    "/rgbindx 0 def\n"
 	    "\n",
 	    img->i.width*3,img->i.width);
     fwrite(ColorImage,strlen(ColorImage),1,fp);
 
-    fprintf(fp,"%d %d translate\n",xoff,yoff);
-    fprintf(fp,"%d %d scale\n",width,height);
+    fprintf(fp,"%u %u translate\n",xoff,yoff);
+    fprintf(fp,"%u %u scale\n",width,height);
 
     fprintf(fp,"\n"
-	    "%d %d 8\n"
-	    "[%d 0 0 -%d 0 %d]\n"
+	    "%u %u 8\n"
+	    "[%u 0 0 -%u 0 %u]\n"
 	    "{currentfile pix readhexstring pop}\n"
 	    "false 3 colorimage\n",
 	    iwidth,iheight,iwidth,iheight,iheight);

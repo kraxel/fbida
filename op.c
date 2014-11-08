@@ -215,7 +215,7 @@ op_autocrop_init(struct ida_image *src, struct ida_rect *unused,
 
     free(img.data);
     if (debug)
-	fprintf(stderr,"y: %d-%d/%d  --  x: %d-%d/%d\n",
+	fprintf(stderr,"y: %d-%d/%u  --  x: %d-%d/%u\n",
 		rect.y1, rect.y2, img.i.height,
 		rect.x1, rect.x2, img.i.width);
 

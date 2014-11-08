@@ -233,7 +233,7 @@ fileinfo_loader(XtPointer clientdata)
 	}
 	file->loader->done(file->wdata);
 	if (debug)
-	    fprintf(stderr,"LOADED: %s [%dx%d]\n",
+	    fprintf(stderr,"LOADED: %s [%ux%u]\n",
 		    file->filename, file->wimg.i.width, file->wimg.i.height);
 	
 	/* resize image */
@@ -269,7 +269,7 @@ fileinfo_loader(XtPointer clientdata)
 	}
 	desc_resize.done(file->wdata);
 	if (debug)
-	    fprintf(stderr,"SCALED: %s [%dx%d]\n",
+	    fprintf(stderr,"SCALED: %s [%ux%u]\n",
 		    file->filename,file->simg.i.width,file->simg.i.height);
 
 	/* scale once more (small icon) */

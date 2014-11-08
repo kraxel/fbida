@@ -726,13 +726,13 @@ resize_shell(void)
     else
 	base = ida->file;
     title = malloc(strlen(base)+128);
-    len = sprintf(title,"%s (%dx%d", base,
+    len = sprintf(title,"%s (%ux%u", base,
 		  ida->img.i.width, ida->img.i.height);
     if (ida->img.i.dpi)
-	len += sprintf(title+len," | %d dpi",
+	len += sprintf(title+len," | %u dpi",
 		       ida->img.i.dpi);
     if (ida->img.i.npages > 1)
-        len += sprintf(title+len," | page %d/%d",
+        len += sprintf(title+len," | page %d/%u",
 		       cpage+1, ida->img.i.npages);
     len += sprintf(title+len," | %d%%)", viewer_i2s(ida->zoom,100));
     XtVaSetValues(app_shell, XtNtitle,title,
@@ -1593,7 +1593,7 @@ resize_sync_cb(Widget widget, XtPointer client_data, XtPointer calldata)
     /* radio buttons pressed */
     if (h->size == widget && XmToggleButtonGetState(h->size)) {
 	XmToggleButtonSetState(h->res,0,False);
-	sprintf(buf,"%d", ida->img.i.dpi);
+	sprintf(buf,"%u", ida->img.i.dpi);
 	h->rupdate++;
 	XmTextSetString(h->tr,buf);
 	XtVaSetValues(h->tr,XmNsensitive,False,NULL);
@@ -1671,11 +1671,11 @@ resize_ac(Widget widget, XEvent *event, String *params, Cardinal *num)
     h->label = XtVaCreateManagedWidget("label", xmLabelWidgetClass,
 				       rc, NULL);
 
-    sprintf(buf,"%d",ida->img.i.width);
+    sprintf(buf,"%u",ida->img.i.width);
     XmTextSetString(h->tx,buf);
-    sprintf(buf,"%d",ida->img.i.height);
+    sprintf(buf,"%u",ida->img.i.height);
     XmTextSetString(h->ty,buf);
-    sprintf(buf,"%d",ida->img.i.dpi);
+    sprintf(buf,"%u",ida->img.i.dpi);
     XmTextSetString(h->tr,buf);
     XtVaSetValues(h->tr,XmNsensitive,False,NULL);
     XmToggleButtonSetState(h->lock,1,False);

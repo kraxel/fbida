@@ -1140,7 +1140,7 @@ static char *make_info(struct ida_image *img, float scale)
     static char linebuffer[128];
     
     snprintf(linebuffer, sizeof(linebuffer),
-	     "%s%.0f%% %dx%d %d/%d",
+	     "%s%.0f%% %ux%u %d/%d",
 	     fcurrent->tag ? "* " : "",
 	     scale*100,
 	     img->i.width, img->i.height,
