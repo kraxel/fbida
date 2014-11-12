@@ -226,7 +226,7 @@ Mirror image horizontally (left to right).
 The delete function actually wants a capital letter \fBD\fP, thus you have to type
 \fBShift+d\fP. This is done to avoid deleting images by mistake because there
 are no safety bells: If you ask
-.BR fbi
+.BR fbi
 to delete the image, it will be deleted without questions asked.
 .P
 The rotate function actually works for \fIJPEG\fP images only. It does a

@@ -37,7 +37,7 @@ messages d'erreur seulement sur la sortie d'erreur standard et \fBnon\fP dans
 une boîte de dialogue.
 \#
 \#
-.SH "POUR DÉMARRER"
+.SH "POUR DÉMARRER"
 .SS Fonctions de la souris
 .P
 Avec le bouton gauche de la souris vous pouvez créer et modifier un rectangle
@@ -109,7 +109,7 @@ vers
 et vice versa sans problème. Les déplacement depuis
 .BR gmc
 vers
-.BR ida
+.BR ida
 fonctionnent aussi très bien.
 .P
 L'interopérabilité avec
@@ -121,7 +121,7 @@ comprennent pas le but de la cible TARGETS et violent les spécifications ICCCM
 en l'ignorant.
 \#
 \#
-.SH "VOIR AUSSI"
+.SH "VOIR AUSSI"
 .BR xwd (1)
 \#
 \#

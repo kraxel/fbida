@@ -106,7 +106,7 @@ to
 and visa versa without problems. File drops from
 .BR gmc
 into
-.BR ida
+.BR ida
 work just fine too.
 .P
 Interoperation with
@@ -117,7 +117,7 @@ the troll guys didn't understand what the TARGETS target is good for and violate
 the ICCCM specs by ignoring it.
 \#
 \#
-.SH "SEE ALSO"
+.SH "SEE ALSO"
 .BR xwd (1)
 \#
 \#

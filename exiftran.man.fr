@@ -31,7 +31,7 @@ pivote aussi la miniature exif. Il peut traiter plusieurs images en une seule
 opération.
 \#
 \#
-.SH "OPTIONS DE TRANSFORMATION"
+.SH "OPTIONS DE TRANSFORMATION"
 .TP
 .B -a
 Automatique (utilise la propriété d'orientation exif).
