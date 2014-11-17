@@ -42,7 +42,7 @@ static struct PAPER formats[] = {
 
 static const char *header =
 "%%!PS-Adobe-2.0 EPSF-2.0\n"
-"%%%%Creator: ida " VERSION " (http://bytesex.org/ida/)\n"
+"%%%%Creator: ida " VERSION " (https://www.kraxel.org/blog/linux/fbida/)\n"
 "%%%%Pages: 1\n"
 "%%%%BoundingBox: %d %d %d %d\n"
 "%%%%DocumentFonts: \n"

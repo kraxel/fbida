@@ -15,7 +15,7 @@ ppm_write(FILE *fp, struct ida_image *img)
 {
     fprintf(fp,"P6\n"
 	    "# written by ida " VERSION "\n"
-	    "# http://bytesex.org/ida/\n"
+	    "# https://www.kraxel.org/blog/linux/fbida/\n"
 	    "%d %d\n255\n",
             img->i.width,img->i.height);
     fwrite(img->data, img->i.height, 3*img->i.width, fp);
