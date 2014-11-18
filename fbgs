@@ -86,6 +86,7 @@ while test "$opt" = "1"; do
 		-a | --autozoom | \
 		--autoup | --noautoup | \
 		--autodown | --noautodown | \
+		--autoonce | --noautoonce | \
 		--fitwidth | --nofitwidth | \
 		--readahead | --noreadahead | \
 		-v | --verbose | --noverbose | \

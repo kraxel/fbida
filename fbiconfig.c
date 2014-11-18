@@ -65,6 +65,11 @@ struct cfg_cmdline fbi_cfg[] = {
 	.option   = { O_FIT_WIDTH },
 	.yesno    = 1,
 	.desc     = "  use width only for autoscaling",
+    },{
+	.cmdline  = "autoonce",
+	.option   = { O_AUTO_ONCE },
+	.yesno    = 1,
+	.desc     = "  autoscale only once",
 
     },{
 	.letter   = 'v',

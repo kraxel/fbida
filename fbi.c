@@ -136,6 +136,7 @@ static float fbgamma = 1;
 /* Command line options. */
 int autodown;
 int autoup;
+int autoonce;
 int comments;
 int transparency = 40;
 int timeout;
@@ -149,6 +150,9 @@ int perfmon = 0;
 /* font handling */
 static char *fontname = NULL;
 static FT_Face face;
+
+/* scaling */
+static float globalscale = 0;
 
 /* ---------------------------------------------------------------------- */
 /* fwd declarations                                                       */
@@ -1343,6 +1347,7 @@ static void flist_img_scale(struct flist *f, float scale, int prefetch)
 	}
     }
     f->scale = scale;
+    globalscale = scale;
 }
 
 static void flist_img_load(struct flist *f, int prefetch)
@@ -1370,7 +1375,9 @@ static void flist_img_load(struct flist *f, int prefetch)
 
     if (!f->seen) {
 	scale = 1;
-	if (autoup || autodown) {
+        if (autoonce && globalscale != 0) {
+            scale = globalscale;
+        } else if (autoup || autodown) {
 	    scale = auto_scale(f->fimg);
 	    if (scale < 1 && !autodown)
 		scale = 1;
@@ -1454,6 +1461,7 @@ main(int argc, char *argv[])
     once        = GET_ONCE();
     autoup      = GET_AUTO_UP();
     autodown    = GET_AUTO_DOWN();
+    autoonce    = GET_AUTO_ONCE();
     fitwidth    = GET_FIT_WIDTH();
     statusline  = GET_VERBOSE();
     textreading = GET_TEXT_MODE();
