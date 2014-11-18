@@ -72,10 +72,10 @@ while test "$opt" = "1"; do
 		-l)	gsopts="$gsopts -r100x100"
 			shift
 			;;
-		-xl)	gsopts="$gsopts -r120x120"
+		-xl)	gsopts="$gsopts -r200x200"
 			shift
 			;;
-		-xxl)	gsopts="$gsopts -r150x150"
+		-xxl)	gsopts="$gsopts -r300x300"
 			shift
 			;;
 		-r | --resolution)
