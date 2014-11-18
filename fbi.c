@@ -349,7 +349,7 @@ shadow_draw_image(struct ida_image *img, int xoff, int yoff,
 	shadow_clear_lines(first, last);
     else
 	shadow_darkify(0, fb_var.xres-1, first, last, 100 - weight);
-    
+
     /* offset for image data (image > screen, select visible area) */
     offset = (yoff * img->i.width + xoff) * 3;
 
@@ -397,7 +397,7 @@ static void status_update(unsigned char *desc, char *info)
 {
     int yt = fb_var.yres + (face->size->metrics.descender >> 6);
     wchar_t str[128];
-    
+
     if (!statusline)
 	return;
     status_prepare();
@@ -572,10 +572,10 @@ static void
 tty_raw(void)
 {
     struct termios tattr;
-    
+
     fcntl(0,F_GETFL,&saved_fl);
     tcgetattr (0, &saved_attributes);
-    
+
     fcntl(0,F_SETFL,O_NONBLOCK);
     memcpy(&tattr,&saved_attributes,sizeof(struct termios));
     tattr.c_lflag &= ~(ICANON|ECHO);
@@ -654,7 +654,7 @@ read_image(char *filename)
     FILE *fp;
     unsigned int y;
     void *data;
-    
+
     /* open file */
     if (NULL == (fp = fopen(filename, "r"))) {
 	fprintf(stderr,"open %s: %s\n",filename,strerror(errno));
@@ -733,7 +733,7 @@ scale_image(struct ida_image *src, float scale)
     memset(dest,0,sizeof(*dest));
     memset(&rect,0,sizeof(rect));
     memset(&p,0,sizeof(p));
-    
+
     p.width  = src->i.width  * scale;
     p.height = src->i.height * scale;
     p.dpi    = src->i.dpi;
@@ -741,7 +741,7 @@ scale_image(struct ida_image *src, float scale)
 	p.width = 1;
     if (0 == p.height)
 	p.height = 1;
-    
+
     data = desc_resize.init(src,&rect,&dest->i,&p);
     dest->data = flist_malloc(dest->i.width * dest->i.height * 3);
     img_mem += dest->i.width * dest->i.height * 3;
@@ -759,7 +759,7 @@ scale_image(struct ida_image *src, float scale)
 static float auto_scale(struct ida_image *img)
 {
     float xs,ys,scale;
-    
+
     xs = (float)fb_var.xres / img->i.width;
     if (fitwidth)
 	return xs;
@@ -839,7 +839,7 @@ svga_show(struct flist *f, struct flist *prev,
     *nr = 0;
     if (NULL == img)
 	return skip;
-    
+
     redraw = 1;
     for (;;) {
 	if (redraw) {
@@ -983,7 +983,7 @@ svga_show(struct flist *f, struct flist *prev,
 		skip = KEY_PGDN;
 		return KEY_PGDN;
 	    }
-	    
+
 	} else if (0 == strcmp(key, "+")) {
 	    return KEY_PLUS;
 	} else if (0 == strcmp(key, "-")) {
@@ -991,7 +991,7 @@ svga_show(struct flist *f, struct flist *prev,
 	} else if (0 == strcmp(key, "a") ||
 		   0 == strcmp(key, "A")) {
 	    return KEY_ASCALE;
-	    
+
 	} else if (0 == strcmp(key, "p") ||
 		   0 == strcmp(key, "P")) {
 	    if (0 != timeout) {
@@ -1087,7 +1087,7 @@ static void scale_fix_top_left(struct flist *f, float old, float new)
 static char *my_basename(char *filename)
 {
     char *h;
-    
+
     h = strrchr(filename,'/');
     if (h)
 	return h+1;
@@ -1101,7 +1101,7 @@ static char *file_desktop(char *filename)
 
     strncpy(desc,filename,sizeof(desc)-1);
     if (NULL != (h = strrchr(filename,'/'))) {
-	snprintf(desc,sizeof(desc),"%.*s/%s", 
+	snprintf(desc,sizeof(desc),"%.*s/%s",
 		 (int)(h - filename), filename,
 		 ".directory");
     } else {
@@ -1138,7 +1138,7 @@ static char *make_desc(struct ida_image_info *img, char *filename)
 static char *make_info(struct ida_image *img, float scale)
 {
     static char linebuffer[128];
-    
+
     snprintf(linebuffer, sizeof(linebuffer),
 	     "%s%.0f%% %ux%u %d/%d",
 	     fcurrent->tag ? "* " : "",
@@ -1158,7 +1158,7 @@ static char edit_line(struct ida_image *img, char *line, int max)
 
     do {
 	status_edit(line,pos);
-	
+
 	FD_SET(0, &set);
 	rc = select(1, &set, NULL, NULL, NULL);
         if (switch_last != fb_switch_state) {
@@ -1175,11 +1175,11 @@ static char edit_line(struct ida_image *img, char *line, int max)
 	if (0 == strcmp(key,"\x0a")) {
 	    /* Enter */
 	    return 0;
-	    
+
 	} else if (0 == strcmp(key,"\x1b")) {
 	    /* ESC */
 	    return KEY_ESC;
-	    
+
 	} else if (0 == strcmp(key,"\x1b[C")) {
 	    /* cursor right */
 	    if (pos < len)
@@ -1193,11 +1193,11 @@ static char edit_line(struct ida_image *img, char *line, int max)
 	} else if (0 == strcmp(key,"\x1b[1~")) {
 	    /* home */
 	    pos = 0;
-	    
+
 	} else if (0 == strcmp(key,"\x1b[4~")) {
 	    /* end */
 	    pos = len;
-	    
+
 	} else if (0 == strcmp(key,"\x7f")) {
 	    /* backspace */
 	    if (pos > 0) {
@@ -1422,7 +1422,7 @@ main(int argc, char *argv[])
     struct flist     *fprev = NULL;
 
 #if 0
-    /* debug aid, to attach gdb ... */ 
+    /* debug aid, to attach gdb ... */
     fprintf(stderr,"pid %d\n",getpid());
     sleep(10);
 #endif
@@ -1473,7 +1473,7 @@ main(int argc, char *argv[])
 
     fontname    = cfg_get_str(O_FONT);
     filelist    = cfg_get_str(O_FILE_LIST);
-    
+
     if (filelist)
 	flist_add_list(filelist);
     for (i = optind; i < argc; i++)
@@ -1505,7 +1505,7 @@ main(int argc, char *argv[])
     shadow_init();
     shadow_set_palette(fd);
     signal(SIGTSTP,SIG_IGN);
-    
+
     /* svga main loop */
     tty_raw();
     desc = NULL;
@@ -1553,8 +1553,8 @@ main(int argc, char *argv[])
 		     (key == KEY_ROT_CW) ? JXFORM_ROT_90 : JXFORM_ROT_270,
 		     NULL,
 		     NULL,0,
-		     (backup   ? JFLAG_FILE_BACKUP    : 0) | 
-		     (preserve ? JFLAG_FILE_KEEP_TIME : 0) | 
+		     (backup   ? JFLAG_FILE_BACKUP    : 0) |
+		     (preserve ? JFLAG_FILE_KEEP_TIME : 0) |
 		     JFLAG_TRANSFORM_IMAGE     |
 		     JFLAG_TRANSFORM_THUMBNAIL |
 		     JFLAG_TRANSFORM_TRIM      |
@@ -1577,8 +1577,8 @@ main(int argc, char *argv[])
 		     (key == KEY_FLIP_V) ? JXFORM_FLIP_V : JXFORM_FLIP_H,
 		     NULL,
 		     NULL,0,
-		     (backup   ? JFLAG_FILE_BACKUP    : 0) | 
-		     (preserve ? JFLAG_FILE_KEEP_TIME : 0) | 
+		     (backup   ? JFLAG_FILE_BACKUP    : 0) |
+		     (preserve ? JFLAG_FILE_KEEP_TIME : 0) |
 		     JFLAG_TRANSFORM_IMAGE     |
 		     JFLAG_TRANSFORM_THUMBNAIL |
 		     JFLAG_TRANSFORM_TRIM      |
