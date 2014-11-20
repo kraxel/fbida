@@ -126,7 +126,8 @@ find_window(Widget widget, int wx, int wy, int rx, int ry)
     nchildren = 0;
     XtVaGetValues(widget,XtNchildren,&children,
                   XtNnumChildren,&nchildren,NULL);
-    fprintf(stderr,"findwindow %s\n",XtName(widget));
+    if (xdnd_debug)
+        fprintf(stderr,"findwindow %s\n",XtName(widget));
     for (i = nchildren-1; i >= 0; i--) {
 	XtVaGetValues(children[i],XtNx,&x,XtNy,&y,
 		      XtNwidth,&w,XtNheight,&h,NULL);
@@ -142,10 +143,12 @@ find_window(Widget widget, int wx, int wy, int rx, int ry)
 	break;
     }
     if (found) {
-	fprintf(stderr,"  more: %s\n",XtName(found));
+        if (xdnd_debug)
+            fprintf(stderr,"  more: %s\n",XtName(found));
 	return find_window(found,wx+x,wy+y,rx,ry);
     }
-    fprintf(stderr,"  done: %s\n",XtName(widget));
+    if (xdnd_debug)
+        fprintf(stderr,"  done: %s\n",XtName(widget));
     return widget;
 }
 
