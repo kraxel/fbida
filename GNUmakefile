@@ -154,7 +154,7 @@ ida : LDLIBS	+= -lXm -lXpm -lXt -lXext -lX11
 ida : LDLIBS	+= -ljpeg -lexif -lm
 
 # RegEdit.c is good old K&R ...
-RegEdit.o : CFLAGS += -Wno-missing-prototypes -Wno-strict-prototypes
+RegEdit.o : CFLAGS += -Wno-missing-prototypes -Wno-strict-prototypes -Wno-maybe-uninitialized
 
 ida: $(OBJS_IDA) $(OBJS_READER) $(OBJS_WRITER)
 
