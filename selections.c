@@ -73,9 +73,10 @@ iconify(Widget widget, struct sel_data *data)
     }
 
     /* scale down & create pixmap */
-    dst = small.data = malloc(small.i.width * small.i.height * 3);
+    ida_image_alloc(&small);
     for (y = 0; y < small.i.height; y++) {
-	src = data->img.data + 3 * y * scale * data->img.i.width;
+	src = ida_image_scanline(&data->img, y * scale);
+        dst = ida_image_scanline(&small, y);
 	for (x = 0; x < small.i.width; x++) {
 	    dst[0] = src[0];
 	    dst[1] = src[1];
@@ -95,7 +96,7 @@ iconify(Widget widget, struct sel_data *data)
     XtSetArg(args[n], XmNdepth,  depth); n++;
     data->icon_widget = XmCreateDragIcon(widget,"dragicon",args,n);
     
-    free(small.data);
+    ida_image_free(&small);
 }
 
 static struct sel_data*
@@ -130,8 +131,8 @@ sel_free(Atom selection)
 	XFreePixmap(dpy,sel->icon_pixmap);
     if (sel->pixmap)
 	XFreePixmap(dpy,sel->pixmap);
-    if (sel->img.data)
-	free(sel->img.data);
+    if (sel->img.p)
+	ida_image_free(&sel->img);
 
     list_del(&sel->list);
     free(sel);
@@ -147,10 +148,8 @@ sel_init(Atom selection)
     memset(sel,0,sizeof(*sel));
 
     sel->atom = selection;
-    sel->img  = ida->img;
-    sel->img.data = malloc(ida->img.i.width * ida->img.i.height * 3);
-    memcpy(sel->img.data, ida->img.data,
-	   ida->img.i.width * ida->img.i.height * 3);
+    sel->img.i = ida->img.i;
+    sel->img.p = pixman_image_ref(ida->img.p);
 
     list_add_tail(&sel->list,&selections);
     return sel;
@@ -310,7 +309,8 @@ selection_convert(Widget widget, XtPointer ignore, XtPointer call_data)
 	cdata = XtMalloc(sel->img.i.width * sel->img.i.height * 3 + 32);
 	n = sprintf(cdata,"P6\n%u %u\n255\n",
 		    sel->img.i.width, sel->img.i.height);
-	memcpy(cdata+n, sel->img.data, sel->img.i.width*sel->img.i.height*3);
+	memcpy(cdata+n, pixman_image_get_data(sel->img.p),
+               sel->img.i.width*sel->img.i.height*3);
 	ccs->value  = cdata;
 	ccs->length = n + sel->img.i.width * sel->img.i.height * 3;
 	ccs->type   = MIME_IMAGE_PPM;

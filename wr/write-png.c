@@ -52,7 +52,7 @@ png_write(FILE *fp, struct ida_image *img)
    png_set_packing(png_ptr);
 
    for (y = 0; y < img->i.height; y++) {
-       row = img->data + y * 3 * img->i.width;
+       row = ida_image_scanline(img, y);
        png_write_rows(png_ptr, &row, 1);
    }
    png_write_end(png_ptr, info_ptr);

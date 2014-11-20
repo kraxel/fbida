@@ -40,9 +40,9 @@ read_jpeg(char *filename)
 	free(img);
 	return NULL;
     }
-    img->data = malloc(img->i.width * img->i.height * 3);
+    ida_image_alloc(img);
     for (y = 0; y < img->i.height; y++)
-  	jpeg_loader.read(img->data + img->i.width * 3 * y, y, data);
+  	jpeg_loader.read(ida_image_scanline(img, y), y, data);
     jpeg_loader.done(data);
     return img;
 }
@@ -77,11 +77,9 @@ scale_thumbnail(struct ida_image *src, int max)
 	p.height = 1;
     
     data = desc_resize.init(src,&rect,&dest->i,&p);
-    dest->data = malloc(dest->i.width * dest->i.height * 3);
+    ida_image_alloc(dest);
     for (y = 0; y < dest->i.height; y++)
-	desc_resize.work(src,&rect,
-			 dest->data + 3 * dest->i.width * y,
-			 y, data);
+	desc_resize.work(src, &rect, ida_image_scanline(dest, y), y, data);
     desc_resize.done(data);
     return dest;
 }
@@ -124,7 +122,6 @@ static int
 compress_thumbnail(struct ida_image *img, char *dest, int max)
 {
     struct thc thc;
-    unsigned char *line;
     unsigned int i;
 
     memset(&thc,0,sizeof(thc));
@@ -141,8 +138,8 @@ compress_thumbnail(struct ida_image *img, char *dest, int max)
     jpeg_set_defaults(&thc.dst);
     jpeg_start_compress(&thc.dst, TRUE);
 
-    for (i = 0, line = img->data; i < img->i.height; i++, line += img->i.width*3)
-        jpeg_write_scanlines(&thc.dst, &line, 1);
+    for (i = 0; i < img->i.height; i++)
+        jpeg_write_scanlines(&thc.dst, (void*)ida_image_scanline(img, i), 1);
     
     jpeg_finish_compress(&(thc.dst));
     jpeg_destroy_compress(&(thc.dst));
@@ -167,7 +164,7 @@ int create_thumbnail(char *filename, unsigned char *dest, int max)
     //fprintf(stderr,"scale ");
     thumb = scale_thumbnail(img,160);
     if (!thumb) {
-	free(img->data);
+	ida_image_free(img);
 	free(img);
 	fprintf(stderr,"FAILED\n");
 	return -1;
@@ -177,9 +174,9 @@ int create_thumbnail(char *filename, unsigned char *dest, int max)
     size = compress_thumbnail(thumb,dest,max);
 
     /* cleanup */
-    free(img->data);
+    ida_image_free(img);
     free(img);
-    free(thumb->data);
+    ida_image_free(thumb);
     free(thumb);
     return size;
 }

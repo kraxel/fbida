@@ -18,7 +18,7 @@ op_flip_vert(struct ida_image *src, struct ida_rect *rect,
 {
     char *scanline;
 
-    scanline = src->data + (src->i.height - line - 1) * src->i.width * 3;
+    scanline = ida_image_scanline(src, src->i.height - line - 1);
     memcpy(dst,scanline,src->i.width*3);
 }
 
@@ -29,7 +29,7 @@ op_flip_horz(struct ida_image *src, struct ida_rect *rect,
     char *scanline;
     unsigned int i;
 
-    scanline = src->data + (line+1) * src->i.width * 3;
+    scanline = ida_image_scanline(src, line+1);
     for (i = 0; i < src->i.width; i++) {
 	scanline -= 3;
 	dst[0] = scanline[0];
@@ -57,7 +57,7 @@ op_rotate_cw(struct ida_image *src, struct ida_rect *rect,
     char *pix;
     unsigned int i;
 
-    pix = src->data + src->i.width * src->i.height * 3 + line * 3;
+    pix = ida_image_scanline(src, src->i.height) + line * 3;
     for (i = 0; i < src->i.height; i++) {
 	pix -= src->i.width * 3;
 	dst[0] = pix[0];
@@ -74,7 +74,7 @@ op_rotate_ccw(struct ida_image *src, struct ida_rect *rect,
     char *pix;
     unsigned int i;
 
-    pix = src->data + (src->i.width-line-1) * 3;
+    pix = ida_image_scanline(src, 0) + (src->i.width-line-1) * 3;
     for (i = 0; i < src->i.height; i++) {
 	dst[0] = pix[0];
 	dst[1] = pix[1];
@@ -91,7 +91,7 @@ op_invert(struct ida_image *src, struct ida_rect *rect,
     unsigned char *scanline;
     int i;
 
-    scanline = src->data + line * src->i.width * 3;
+    scanline = ida_image_scanline(src, line);
     memcpy(dst,scanline,src->i.width * 3);
     if (line < rect->y1 || line >= rect->y2)
 	return;
@@ -126,7 +126,7 @@ op_crop_work(struct ida_image *src, struct ida_rect *rect,
     unsigned char *scanline;
     int i;
 
-    scanline = src->data + (line+rect->y1) * src->i.width * 3 + rect->x1 * 3;
+    scanline = ida_image_scanline(src, line+rect->y1) + rect->x1 * 3;
     for (i = rect->x1; i < rect->x2; i++) {
 	dst[0] = scanline[0];
 	dst[1] = scanline[1];
@@ -156,17 +156,18 @@ op_autocrop_init(struct ida_image *src, struct ida_rect *unused,
     rect.x2 = src->i.width;
     rect.y1 = 0;
     rect.y2 = src->i.height;
+    memset(&img, 0, sizeof(img));
     data = desc_3x3.init(src, &rect, &img.i, &filter);
 
-    img.data   = malloc(img.i.width * img.i.height * 3);
+    ida_image_alloc(&img);
     for (y = 0; y < (int)img.i.height; y++)
-	desc_3x3.work(src, &rect, img.data+3*img.i.width*y, y, data);
+	desc_3x3.work(src, &rect, ida_image_scanline(&img, y), y, data);
     desc_3x3.done(data);
     limit = 64;
 
     /* y border */
     for (y = 0; y < (int)img.i.height; y++) {
-	line = img.data + img.i.width*y*3;
+	line = ida_image_scanline(&img, y);
 	for (x = 0; x < (int)img.i.width; x++)
 	    if (line[3*x+0] > limit ||
 		line[3*x+1] > limit ||
@@ -177,7 +178,7 @@ op_autocrop_init(struct ida_image *src, struct ida_rect *unused,
     }
     rect.y1 = y;
     for (y = (int)img.i.height-1; y > rect.y1; y--) {
-	line = img.data + img.i.width*y*3;
+	line = ida_image_scanline(&img, y);
 	for (x = 0; x < (int)img.i.width; x++)
 	    if (line[3*x+0] > limit ||
 		line[3*x+1] > limit ||
@@ -191,7 +192,7 @@ op_autocrop_init(struct ida_image *src, struct ida_rect *unused,
     /* x border */
     for (x = 0; x < (int)img.i.width; x++) {
 	for (y = 0; y < (int)img.i.height; y++) {
-	    line = img.data + (img.i.width*y+x) * 3;
+	    line = ida_image_scanline(&img, y) + x * 3;
 	    if (line[0] > limit ||
 		line[1] > limit ||
 		line[2] > limit)
@@ -203,7 +204,7 @@ op_autocrop_init(struct ida_image *src, struct ida_rect *unused,
     rect.x1 = x;
     for (x = (int)img.i.width-1; x > rect.x1; x--) {
 	for (y = 0; y < (int)img.i.height; y++) {
-	    line = img.data + (img.i.width*y+x) * 3;
+	    line = ida_image_scanline(&img, y) + x * 3;
 	    if (line[0] > limit ||
 		line[1] > limit ||
 		line[2] > limit)
@@ -214,7 +215,7 @@ op_autocrop_init(struct ida_image *src, struct ida_rect *unused,
     }
     rect.x2 = x+1;
 
-    free(img.data);
+    ida_image_free(&img);
     if (debug)
 	fprintf(stderr,"y: %d-%d/%u  --  x: %d-%d/%u\n",
 		rect.y1, rect.y2, img.i.height,

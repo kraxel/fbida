@@ -107,13 +107,11 @@ fileinfo_cleanup(struct file_button *file)
     }
     file->state = 0;
 
-    if (file->wimg.data) {
-	free(file->wimg.data);
-	file->wimg.data = NULL;
+    if (file->wimg.p) {
+        ida_image_free(&file->wimg);
     }
-    if (file->simg.data) {
-	free(file->simg.data);
-	file->simg.data = NULL;
+    if (file->simg.p) {
+        ida_image_free(&file->simg);
     }
     if (!list_empty(&file->queue)) {
 	list_del_init(&file->queue);
@@ -218,7 +216,7 @@ fileinfo_loader(XtPointer clientdata)
 	    goto unknown;
 	}
 
-	file->wimg.data = malloc(file->wimg.i.width * file->wimg.i.height * 3);
+        ida_image_alloc(&file->wimg);
 	file->state = 1;
 	file->y     = 0;
 	return FALSE;
@@ -226,8 +224,7 @@ fileinfo_loader(XtPointer clientdata)
     case 1:
 	/* ------------------- loading file -------------------- */
 	if (file->y < file->wimg.i.height) {
-	    file->loader->read(file->wimg.data
-			       + 3 * file->y * file->wimg.i.width,
+	    file->loader->read(ida_image_scanline(&file->wimg, file->y),
 			       file->y, file->wdata);
 	    file->y++;
 	    return FALSE;
@@ -253,7 +250,7 @@ fileinfo_loader(XtPointer clientdata)
 	rect.y1 = 0;
 	rect.y2 = file->wimg.i.height;
 	file->wdata = desc_resize.init(&file->wimg,&rect,&file->simg.i,&resize);
-	file->simg.data = malloc(file->simg.i.width * file->simg.i.height * 3);
+        ida_image_alloc(&file->simg);
 
 	file->state = 2;
 	file->y     = 0;
@@ -262,8 +259,8 @@ fileinfo_loader(XtPointer clientdata)
     case 2:
 	/* ------------------- scaling file -------------------- */
 	if (file->y < file->simg.i.height) {
-	    desc_resize.work(&file->wimg,&rect, file->simg.data
-			     + 3 * file->simg.i.width * file->y,
+	    desc_resize.work(&file->wimg,&rect,
+                             ida_image_scanline(&file->simg, file->y),
 			     file->y, file->wdata);
 	    file->y++;
 	    return FALSE;
@@ -288,12 +285,13 @@ fileinfo_loader(XtPointer clientdata)
 	rect.x2 = file->simg.i.width;
 	rect.y1 = 0;
 	rect.y2 = file->simg.i.height;
+        memset(&timg, 0, sizeof(timg));
 	data = desc_resize.init(&file->simg,&rect,&timg.i,&resize);
-	timg.data = malloc(timg.i.width * timg.i.height * 3);
+	ida_image_alloc(&timg);
 
 	for (file->y = 0; file->y < timg.i.height; file->y++)
 	    desc_resize.work(&file->simg,&rect,
-			     timg.data + 3 * timg.i.width * file->y,
+                             ida_image_scanline(&timg, file->y),
 			     file->y, data);
 	desc_resize.done(data);
 
@@ -302,7 +300,7 @@ fileinfo_loader(XtPointer clientdata)
 				  image_to_pixmap(&timg),
 				  image_to_pixmap(&file->simg));
 	file_set_info(file,info);
-	free(timg.data);
+	ida_image_free(&timg);
 	file->state = 0;
 	goto next;
 

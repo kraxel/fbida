@@ -1,3 +1,4 @@
+#include <pixman.h>
 #include "list.h"
 
 enum ida_extype {
@@ -27,7 +28,7 @@ struct ida_image_info {
 
 struct ida_image {
     struct ida_image_info  i;
-    unsigned char          *data;
+    pixman_image_t         *p;
 };
 struct ida_rect {
     int x1,y1,x2,y2;
@@ -85,6 +86,10 @@ int load_add_extra(struct ida_image_info *info, enum ida_extype type,
 struct ida_extra* load_find_extra(struct ida_image_info *info,
 				  enum ida_extype type);
 int load_free_extras(struct ida_image_info *info);
+
+void ida_image_alloc(struct ida_image *img);
+uint8_t *ida_image_scanline(struct ida_image *img, int y);
+void ida_image_free(struct ida_image *img);
 
 /* ----------------------------------------------------------------------- */
 

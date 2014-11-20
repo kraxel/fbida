@@ -17,7 +17,7 @@ op_grayscale(struct ida_image *src, struct ida_rect *rect,
     unsigned char *scanline;
     int i,g;
 
-    scanline = src->data + line * src->i.width * 3;
+    scanline = ida_image_scanline(src, line);
     memcpy(dst,scanline,src->i.width * 3);
     if (line < rect->y1 || line >= rect->y2)
 	return;
@@ -84,13 +84,9 @@ op_3x3_calc_line(struct ida_image *src, struct ida_rect *rect,
     unsigned char *s1,*s2,*s3;
     unsigned int i,left,right;
 
-    s1 = src->data + (line-1) * src->i.width * 3;
-    s2 = src->data +  line    * src->i.width * 3;
-    s3 = src->data + (line+1) * src->i.width * 3;
-    if (0 == line)
-	s1 = src->data + line * src->i.width * 3;
-    if (src->i.height-1 == line)
-	s3 = src->data + line * src->i.width * 3;
+    s1 = ida_image_scanline(src, (0 == line) ? line : line - 1);
+    s2 = ida_image_scanline(src, line);
+    s3 = ida_image_scanline(src, (src->i.height-1 == line) ? line : line + 1 );
 
     left  = rect->x1;
     right = rect->x2;
@@ -157,7 +153,7 @@ op_3x3_work(struct ida_image *src, struct ida_rect *rect,
     struct op_3x3_handle *h = data;
     unsigned char *scanline;
 
-    scanline = src->data + line * src->i.width * 3;
+    scanline = ida_image_scanline(src, line);
     memcpy(dst,scanline,src->i.width * 3);
     if (line < rect->y1 || line >= rect->y2)
 	return;
@@ -210,7 +206,7 @@ op_sharpe_work(struct ida_image *src, struct ida_rect *rect,
     unsigned char *scanline;
     int i;
 
-    scanline = src->data + line * src->i.width * 3;
+    scanline = ida_image_scanline(src, line);
     memcpy(dst,scanline,src->i.width * 3);
     if (line < rect->y1 || line >= rect->y2)
 	return;
@@ -289,7 +285,7 @@ op_resize_work(struct ida_image *src, struct ida_rect *rect,
 	    fprintf(stderr,"y:  %6.2f%%: %d/%d => %d/%d\n",
 		    weight*100,h->srcrow,src->height,line,h->height);
 #endif
-	csrcline = src->data + h->srcrow * src->i.width * 3;
+	csrcline = ida_image_scanline(src, h->srcrow);
 	for (i = 0; i < src->i.width * 3; i++)
 	    h->rowbuf[i] += (float)csrcline[i] * weight;
 	if (0 == h->inleft) {
@@ -396,10 +392,10 @@ unsigned char* op_rotate_getpixel(struct ida_image *src, struct ida_rect *rect,
 	sy < rect->y1 || sy >= rect->y2) {
 	if (dx < rect->x1 || dx >= rect->x2 ||
 	    dy < rect->y1 || dy >= rect->y2)
-	    return src->data + dy * src->i.width * 3 + dx * 3;
+	    return ida_image_scanline(src, dy) + dx * 3;
 	return black;
     }
-    return src->data + sy * src->i.width * 3 + sx * 3;
+    return ida_image_scanline(src, sy) + sx * 3;
 }
 
 static void
@@ -411,7 +407,7 @@ op_rotate_work(struct ida_image *src, struct ida_rect *rect,
     float fx,fy,w;
     int x,sx,sy;
 
-    pix = src->data + y * src->i.width * 3;
+    pix = ida_image_scanline(src, y);
     memcpy(dst,pix,src->i.width * 3);
     if (y < h->calc.y1 || y >= h->calc.y2)
 	return;

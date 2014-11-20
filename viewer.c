@@ -55,7 +55,7 @@ Pixmap image_to_pixmap(struct ida_image *img)
 
     ximage = x11_create_ximage(app_shell, img->i.width, img->i.height, &shm);
     for (y = 0; y < img->i.height; y++) {
-	src = img->data + 3*y*img->i.width;
+	src = ida_image_scanline(img, y);
 	if (display_type == PSEUDOCOLOR) {
 	    dither_line(src, line, y, img->i.width);
 	    for (x = 0; x < img->i.width; x++)
@@ -219,10 +219,10 @@ viewer_cleanup(struct ida_viewer *ida)
 	ida->op_work = NULL;
 	ida->op_done = NULL;
 	ida->op_data = NULL;
-	if (ida->op_src.data) {
-	    if (ida->undo.data) {
+	if (ida->op_src.p) {
+	    if (ida->undo.p) {
 		fprintf(stderr,"have undo buffer /* shouldn't happen */");
-		free(ida->undo.data);
+		ida_image_free(&ida->undo);
 	    }
 	    ida->undo = ida->op_src;
 	    memset(&ida->op_src,0,sizeof(ida->op_src));
@@ -247,7 +247,7 @@ viewer_workproc(XtPointer client_data)
 	for (ida->line = start; ida->line < end; ida->line++) {
 	    if (ida->load_line > ida->line)
 		continue;
-	    scanline = ida->img.data + ida->img.i.width * ida->load_line * 3;
+	    scanline = ida_image_scanline(&ida->img, ida->load_line);
 	    ida->load_read(scanline,ida->load_line,ida->load_data);
 	    ida->load_line++;
 	}
@@ -258,7 +258,7 @@ viewer_workproc(XtPointer client_data)
 	for (ida->line = start; ida->line < end; ida->line++) {
 	    if (ida->op_line > ida->line)
 		continue;
-	    scanline = ida->img.data + ida->img.i.width * ida->op_line * 3;
+	    scanline = ida_image_scanline(&ida->img, ida->op_line);
 	    ida->op_work(&ida->op_src,&ida->op_rect,
 			scanline,ida->op_line,ida->op_data);
 	    ida->op_line++;
@@ -275,7 +275,7 @@ viewer_workproc(XtPointer client_data)
 	}
     } else {
 	for (ida->line = start; ida->line < end; ida->line++) {
-	    scanline = ida->img.data + ida->img.i.width * ida->line * 3;
+	    scanline = ida_image_scanline(&ida->img, ida->line);
 	    viewer_renderline(ida,scanline);
 	}
     }
@@ -322,7 +322,7 @@ static void viewer_workfinish(struct ida_viewer *ida)
 
     if (ida->load_read) {
 	for (ida->line = ida->load_line; ida->line < ida->img.i.height;) {
-	    scanline = ida->img.data + ida->img.i.width * ida->line * 3;
+	    scanline = ida_image_scanline(&ida->img, ida->line);
 	    ida->load_read(scanline,ida->load_line,ida->load_data);
 	    ida->line++;
 	    ida->load_line++;
@@ -330,7 +330,7 @@ static void viewer_workfinish(struct ida_viewer *ida)
     }
     if (ida->op_work && 0 == ida->op_preview) {
 	for (ida->line = ida->op_line; ida->line < ida->img.i.height;) {
-	    scanline = ida->img.data + ida->img.i.width * ida->line * 3;
+	    scanline = ida_image_scanline(&ida->img, ida->line);
 	    ida->op_work(&ida->op_src,&ida->op_rect,
 			scanline,ida->op_line,ida->op_data);
 	    ida->line++;
@@ -531,7 +531,7 @@ viewer_mouse(Widget widget, XtPointer client_data,
 	case POINTER_PICK:
 	    x = viewer_i2s(-ida->zoom,eb->x);
 	    y = viewer_i2s(-ida->zoom,eb->y);
-	    pix = ida->img.data + ida->img.i.width*y*3 + x*3;
+            pix = ida_image_scanline(&ida->img, y) + x * 3;
 	    ida->pick_cb(x,y,pix,ida->pick_data);
 	    ida->pick_cb = NULL;
 	    ida->pick_data = NULL;
@@ -740,20 +740,21 @@ viewer_start_op(struct ida_viewer *ida, struct ida_op *op, void *parm)
     viewer_op_rect(ida);
     if (debug)
 	fprintf(stderr,"viewer_start_op: init %s(%p)\n",op->name,parm);
+    memset(&dst, 0, sizeof(dst));
     ida->op_data = op->init(&ida->img,&ida->op_rect,&dst.i,parm);
     ptr_idle();
     if (NULL == ida->op_data)
 	return -1;
-    dst.data = malloc(dst.i.width * dst.i.height * 3);
+    ida_image_alloc(&dst);
 
     /* prepare background processing */
-    if (ida->undo.data) {
-	free(ida->undo.data);
+    if (ida->undo.p) {
+	ida_image_free(&ida->undo);
 	memset(&ida->undo,0,sizeof(ida->undo));
     }
-    if (ida->op_src.data) {
+    if (ida->op_src.p) {
 	fprintf(stderr,"have op_src buffer /* shouldn't happen */");
-	free(ida->op_src.data);
+	ida_image_free(&ida->op_src);
     }
     ida->op_src = ida->img;
     ida->img = dst;
@@ -777,14 +778,14 @@ viewer_undo(struct ida_viewer *ida)
     int resize;
 
     viewer_workfinish(ida);
-    if (NULL == ida->undo.data)
+    if (NULL == ida->undo.p)
 	return -1;
     viewer_rubber_off(ida);
     memset(&ida->current,0,sizeof(ida->current));
-    
+
     resize = (ida->undo.i.width  != ida->img.i.width ||
 	      ida->undo.i.height != ida->img.i.height);
-    free(ida->img.data);
+    ida_image_free(&ida->img);
     ida->img = ida->undo;
     memset(&ida->undo,0,sizeof(ida->undo));
 
@@ -849,22 +850,22 @@ viewer_loader_start(struct ida_viewer *ida, struct ida_loader *loader,
     viewer_workstop(ida);
     viewer_rubber_off(ida);
     memset(&ida->current,0,sizeof(ida->current));
-    if (ida->undo.data) {
-	free(ida->undo.data);
+    if (ida->undo.p) {
+	ida_image_free(&ida->undo);
 	memset(&ida->undo,0,sizeof(ida->undo));
     }
-    if (NULL != ida->img.data)
-	free(ida->img.data);
+    if (NULL != ida->img.p)
+        ida_image_free(&ida->img);
     ida->file       = filename;
     ida->img.i      = info;
-    ida->img.data   = malloc(ida->img.i.width * ida->img.i.height * 3);
-    
+    ida_image_alloc(&ida->img);
+
     /* prepare background loading */
     ida->load_line = 0;
     ida->load_read = loader->read;
     ida->load_done = loader->done;
     ida->load_data = data;
-    
+
     viewer_autozoom(ida);
     return info.npages;
 }
@@ -913,13 +914,13 @@ viewer_setimage(struct ida_viewer *ida, struct ida_image *img, char *name)
     viewer_workstop(ida);
     viewer_rubber_off(ida);
     memset(&ida->current,0,sizeof(ida->current));
-    if (ida->undo.data) {
-	free(ida->undo.data);
+    if (ida->undo.p) {
+	ida_image_free(&ida->undo);
 	memset(&ida->undo,0,sizeof(ida->undo));
     }
 
-    if (NULL != ida->img.data)
-	free(ida->img.data);
+    if (NULL != ida->img.p)
+	ida_image_free(&ida->img);
     ida->file       = name;
     ida->img        = *img;
 

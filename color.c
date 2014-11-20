@@ -70,7 +70,7 @@ color_calchist(struct ida_image *img, struct ida_coledit *me)
     unsigned char *pix;
     unsigned int i,x,y,max;
 
-    pix = img->data;
+    pix = (void*)pixman_image_get_data(img->p);
     for (y = 0; y < img->i.height; y++) {
 	for (x = 0; x < img->i.width; x++) {
 	    me->red.data[pix[0]]++;

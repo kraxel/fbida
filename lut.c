@@ -72,7 +72,7 @@ op_map_work(struct ida_image *src, struct ida_rect *rect,
     unsigned char *scanline;
     int i;
 
-    scanline = src->data + line * src->i.width * 3;
+    scanline = ida_image_scanline(src, line);
     memcpy(dst,scanline,src->i.width * 3);
     if (line < rect->y1 || line >= rect->y2)
 	return;

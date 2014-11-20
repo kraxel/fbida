@@ -42,7 +42,7 @@ tiff_write(FILE *fp, struct ida_image *img)
     }
 
     for (y = 0; y < img->i.height; y++) {
-	buf = img->data + 3*img->i.width*y;
+	buf = ida_image_scanline(img, y);
 	TIFFWriteScanline(TiffHndl, buf, y, 0);
     }
     TIFFClose(TiffHndl);

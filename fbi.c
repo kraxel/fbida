@@ -131,7 +131,6 @@ static FT_Face face;
 /* fwd declarations                                                       */
 
 static struct ida_image *flist_img_get(struct flist *f);
-static void *flist_malloc(size_t size);
 static void flist_img_load(struct flist *f, int prefetch);
 
 /* ---------------------------------------------------------------------- */
@@ -348,10 +347,10 @@ shadow_draw_image(struct ida_image *img, int xoff, int yoff,
 	    continue;
 	if (100 == weight)
 	  shadow_draw_rgbdata(xs, ys+y, dwidth,
-			      img->data + data + offset);
+			      ida_image_scanline(img, y) + offset);
 	else
 	  shadow_merge_rgbdata(xs, ys+y, dwidth, weight,
-			       img->data + data + offset);
+                               ida_image_scanline(img, y) + offset);
     }
 }
 
@@ -541,9 +540,9 @@ static void show_help(void)
 static void free_image(struct ida_image *img)
 {
     if (img) {
-	if (img->data) {
+	if (img->p) {
 	    img_mem -= img->i.width * img->i.height * 3;
-	    free(img->data);
+	    ida_image_free(img);
 	}
 	free(img);
     }
@@ -614,11 +613,11 @@ read_image(char *filename)
 	free_image(img);
 	return NULL;
     }
-    img->data = flist_malloc(img->i.width * img->i.height * 3);
+    ida_image_alloc(img);
     img_mem += img->i.width * img->i.height * 3;
     for (y = 0; y < img->i.height; y++) {
         check_console_switch();
-	loader->read(img->data + img->i.width * 3 * y, y, data);
+	loader->read(ida_image_scanline(img, y), y, data);
     }
     loader->done(data);
     return img;
@@ -647,13 +646,11 @@ scale_image(struct ida_image *src, float scale)
 	p.height = 1;
 
     data = desc_resize.init(src,&rect,&dest->i,&p);
-    dest->data = flist_malloc(dest->i.width * dest->i.height * 3);
+    ida_image_alloc(dest);
     img_mem += dest->i.width * dest->i.height * 3;
     for (y = 0; y < dest->i.height; y++) {
         check_console_switch();
-	desc_resize.work(src,&rect,
-			 dest->data + 3 * dest->i.width * y,
-			 y, data);
+	desc_resize.work(src, &rect, ida_image_scanline(dest, y), y, data);
     }
     desc_resize.done(data);
     return dest;
@@ -1167,21 +1164,6 @@ static void flist_img_release_memory(void)
 	    break;
     }
     return;
-}
-
-static void *flist_malloc(size_t size)
-{
-    void *ptr;
-
-    for (;;) {
-	ptr = malloc(size);
-	if (ptr)
-	    return ptr;
-	if (0 != flist_img_free_lru()) {
-	    status_error("Oops: out of memory, exiting");
-	    exit(1);
-	}
-    }
 }
 
 static void flist_img_scale(struct flist *f, float scale, int prefetch)

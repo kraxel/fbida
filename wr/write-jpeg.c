@@ -81,9 +81,11 @@ jpeg_write(FILE *fp, struct ida_image *img)
     jpeg_set_quality(&cinfo, jpeg_quality, TRUE);
     jpeg_start_compress(&cinfo, TRUE);
 
-    for (i = 0, line = img->data; i < img->i.height; i++, line += img->i.width*3)
+    for (i = 0; i < img->i.height; i++) {
+        line = ida_image_scanline(img, i);
         jpeg_write_scanlines(&cinfo, &line, 1);
-    
+    }
+
     jpeg_finish_compress(&(cinfo));
     jpeg_destroy_compress(&(cinfo));
     return 0;

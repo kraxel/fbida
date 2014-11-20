@@ -19,13 +19,14 @@ ppm_write(FILE *fp, struct ida_image *img)
 	    "# https://www.kraxel.org/blog/linux/fbida/\n"
 	    "%d %d\n255\n",
             img->i.width,img->i.height);
-    fwrite(img->data, img->i.height, 3*img->i.width, fp);
+    fwrite(ida_image_scanline(img, 0),
+           img->i.height, 3*img->i.width, fp);
     return 0;
 }
 
 static struct ida_writer ppm_writer = {
     label:  "PPM",
-    ext:    { "ppm", NULL},
+    ext:    { "ppm", NULL },
     write:  ppm_write,
 };
 

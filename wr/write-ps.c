@@ -436,7 +436,7 @@ ps_write(FILE *fp, struct ida_image *img)
 
     /* image data + ps footer */
     if (ps.ori == PORTRAIT) {
-	p = img->data;
+	p = ida_image_scanline(img, 0);
 	for (y = 0; y < img->i.height; y++) {
 	    for (x = 0; x < img->i.width; x++) {
 		if (0 == (x % 10))
@@ -448,7 +448,7 @@ ps_write(FILE *fp, struct ida_image *img)
 	}
     } else {
 	for (x = img->i.width-1; x != -1; x--) {
-	    p = img->data + 3*x;
+            p = ida_image_scanline(img, 0) + 3*x;
 	    for (y = 0; y < img->i.height; y++) {
 		if (0 == (y % 10))
 		    fprintf(fp,"\n");

@@ -344,12 +344,11 @@ parse_ximage(struct ida_image *dest, XImage *src)
     memset(dest,0,sizeof(*dest));
     dest->i.width  = src->width;
     dest->i.height = src->height;
-    dest->data     = malloc(dest->i.width * dest->i.height * 3);
-    memset(dest->data,0,dest->i.width * dest->i.height * 3);
-    
+    ida_image_alloc(dest);
+
     for (y = 0; y < src->height; y++) {
 	h.row = src->data + y*src->bytes_per_line;
-	xwd_parse(dest->data + 3*y*dest->i.width, y, &h);
+	xwd_parse(ida_image_scanline(dest, y), y, &h);
     }
     free(h.pix);
 }
