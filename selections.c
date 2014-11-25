@@ -605,7 +605,7 @@ void ipc_init()
     targets[ntargets++] = MIME_IMAGE_XPM;
     targets[ntargets++] = MIME_IMAGE_BMP;
     targets[ntargets++] = MIME_IMAGE_JPEG;
-#ifdef HAVE_LIBUNGIF
+#ifdef HAVE_LIBGIF
     targets[ntargets++] = MIME_IMAGE_GIF;
 #endif
 #ifdef HAVE_LIBPNG
