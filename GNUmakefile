@@ -42,6 +42,7 @@ HAVE_LINUX_FB_H	:= $(call ac_header,linux/fb.h)
 HAVE_NEW_EXIF	:= $(call ac_header,libexif/exif-log.h)
 HAVE_GLIBC	:= $(call ac_func,fopencookie)
 HAVE_STRCASESTR	:= $(call ac_func,strcasestr)
+HAVE_STRSIGNAL	:= $(call ac_func,strsignal)
 HAVE_LIBPCD	:= $(call ac_lib,pcd_open,pcd)
 HAVE_LIBUNGIF	:= $(call ac_lib,DGifOpenFileName,ungif)
 HAVE_LIBPNG	:= $(call ac_lib,png_read_info,png,-lz)
@@ -74,7 +75,7 @@ PKG_CONFIG = pkg-config
 ########################################################################
 # conditional stuff
 
-includes        = ENDIAN_H STRCASESTR NEW_EXIF
+includes        = ENDIAN_H STRCASESTR STRSIGNAL NEW_EXIF
 libraries       = PCD UNGIF PNG TIFF WEBP CURL SANE LIRC
 ida_libs	= PCD UNGIF PNG TIFF WEBP CURL SANE
 fbi_libs	= PCD UNGIF PNG TIFF WEBP CURL LIRC
