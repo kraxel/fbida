@@ -74,7 +74,7 @@ PKG_CONFIG = pkg-config
 ########################################################################
 # conditional stuff
 
-includes        = ENDIAN_H STRCASESTR STRSIGNAL NEW_EXIF
+includes        = ENDIAN_H STRSIGNAL NEW_EXIF
 libraries       = PCD GIF PNG TIFF WEBP CURL SANE LIRC
 ida_libs	= PCD GIF PNG TIFF WEBP CURL SANE
 fbi_libs	= PCD GIF PNG TIFF WEBP CURL LIRC
