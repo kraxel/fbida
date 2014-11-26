@@ -1,7 +1,3 @@
-#ifndef HAVE_STRCASESTR
-extern char* strcasestr(char *haystack, char *needle);
-#endif
-
 /* config options */
 struct cfg_option {
     char *domain;
