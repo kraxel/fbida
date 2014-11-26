@@ -35,7 +35,6 @@
 #endif
 
 #include "readers.h"
-#include "dither.h"
 #include "fbtools.h"
 #include "fb-gui.h"
 #include "filter.h"
@@ -89,7 +88,7 @@ int lirc = -1;
 
 /* variables for read_image */
 int32_t         lut_red[256], lut_green[256], lut_blue[256];
-int             dither = FALSE, pcd_res = 3;
+int             pcd_res = 3;
 int             v_steps = 50;
 int             h_steps = 50;
 int             textreading = 0, redraw = 0, statusline = 1;
