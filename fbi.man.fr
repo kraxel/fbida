@@ -13,7 +13,7 @@ fbi - Visionneuse d'image pour le framebuffer Linux
 .BR Fbi
 affiche les fichiers indiqués dans une console linux en utilisant le
 framebuffer. Les formats \fIPhotoCD\fP, \fIjpeg\fP, \fIppm\fP, \fIgif\fP,
-\fItiff\fP, \fIxwd\fP, \fIbmp\fP, \fIpng\fP and \fIwebp\fP sont pris en charge
+\fItiff\fP, \fIxpm\fP, \fIxwd\fP, \fIbmp\fP, \fIpng\fP and \fIwebp\fP sont pris en charge
 nativement. Pour les autres,
 .BR fbi
 essaye d'utiliser l'utilitaire
