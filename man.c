@@ -5,6 +5,7 @@
  */
 
 #include <stdio.h>
+#include <stddef.h>
 
 #include <X11/Xlib.h>
 #include <X11/Intrinsic.h>

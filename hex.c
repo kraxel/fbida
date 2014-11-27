@@ -7,6 +7,7 @@
  */
 
 #include <stdio.h>
+#include <stddef.h>
 #include <ctype.h>
 
 #include <X11/Xlib.h>

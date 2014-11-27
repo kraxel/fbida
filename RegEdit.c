@@ -26,6 +26,7 @@
  * HISTORY
  */
 #include <stdio.h>
+#include <stddef.h>
 #include <Xm/XmP.h>		
 #include <X11/ShellP.h>		
 #include "RegEdit.h"
