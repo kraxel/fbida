@@ -3,6 +3,7 @@
 #include <string.h>
 #include <errno.h>
 #include <png.h>
+#include <setjmp.h>
 
 #include "readers.h"
 #include "writers.h"

@@ -14,7 +14,6 @@
 #include <errno.h>
 #include <termios.h>
 #include <math.h>
-#include <setjmp.h>
 #include <signal.h>
 #include <ctype.h>
 #include <locale.h>
