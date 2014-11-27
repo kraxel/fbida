@@ -21,7 +21,6 @@
 #include <wchar.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
-#include <sys/mman.h>
 #include <linux/fb.h>
 
 #include <jpeglib.h>
