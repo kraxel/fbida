@@ -39,7 +39,6 @@
 #include "fb-gui.h"
 #include "filter.h"
 #include "desktop.h"
-#include "list.h"
 #include "fbiconfig.h"
 
 #include "transupp.h"		/* Support routines for jpegtran */
