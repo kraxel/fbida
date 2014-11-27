@@ -11,7 +11,6 @@
 #include <dirent.h>
 #include <errno.h>
 #include <string.h>
-#include <fnmatch.h>
 #include <dirent.h>
 #include <sys/types.h>
 #include <sys/stat.h>
