@@ -13,7 +13,6 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <termios.h>
-#include <getopt.h>
 #include <math.h>
 #include <setjmp.h>
 #include <signal.h>
