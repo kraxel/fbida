@@ -100,8 +100,8 @@ Démarrer dans la console virtuelle \fIn\fP.
 Définir un pas de défilement de \fIn\fP pixels (50 par défaut).
 .TP
 .BI "-t" "\ n" ", --timeout" "\ n"
-Charger l'image suivante après \fIn\fP secondes sans presser aucune
-touche (c-à-d un diaporama).
+Démarre un diaporama perpétuel dont chaque image est chargée avec un
+intervalle de \fIn\fP secondes sans presser aucune touche.
 .TP
 .B -1, --(no)once
 Ne pas boucler (utiliser seulement avec \fB-t\fP).

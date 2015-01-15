@@ -96,7 +96,8 @@ Start on virtual console \fIn\fP.
 Set scroll \fIsteps\fP in pixels (default is 50).
 .TP
 .BI "-t" "\ sec" ", --timeout" "\ sec"
-Load next image after \fIsec\fP seconds without any keypress (i.e. slideshow).
+Start a continuous slideshow where each image is loaded at \fIsec\fP second
+intervals without any keypress.
 .TP
 .B -1, --(no)once
 Don't loop (only use with \fB-t\fP).
