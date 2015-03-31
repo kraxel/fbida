@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 #
 # PostScript/pdf viewer for the linux framebuffer console
@@ -18,7 +18,7 @@ passwd=""
 device="png16m"
 opt=1
 bell="off"
-helptext="
+helptext="\
 This program displays PostScript/pdf files using the linux framebuffer device.
 It is a simple wrapper script for GhostScript and fbi.
 
@@ -38,6 +38,7 @@ usage: fbgs [fbgs options] [fbi options] file
 Read the fbgs(1) and fbi(1) manpages for more details.
 "
 
+[ $# -ne 0 ] ||  set -- -h
 while test "$opt" = "1"; do
 	case "$1" in
 		# fbgs options
@@ -113,6 +114,11 @@ while test "$opt" = "1"; do
 			;;
 	esac
 done
+
+if [ ! -f "$1" ]; then
+	echo "fbgs: cannot stat '$1': No such file or directory"
+	exit 1
+fi
 
 # run ghostscript
 echo
