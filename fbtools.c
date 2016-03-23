@@ -389,6 +389,34 @@ static void fb_restore_display(void)
     fb_set_palette();
 }
 
+static void fb_cleanup_display(void)
+{
+    /* restore console */
+    if (-1 == ioctl(tty,KDSETMODE, kd_mode))
+	perror("ioctl KDSETMODE");
+    if (-1 == ioctl(fb,FBIOPUT_VSCREENINFO,&fb_ovar))
+	perror("ioctl FBIOPUT_VSCREENINFO");
+    if (-1 == ioctl(fb,FBIOGET_FSCREENINFO,&fb_fix))
+	perror("ioctl FBIOGET_FSCREENINFO");
+    if (fb_ovar.bits_per_pixel == 8 ||
+	fb_fix.visual == FB_VISUAL_DIRECTCOLOR) {
+	if (-1 == ioctl(fb,FBIOPUTCMAP,&ocmap))
+	    perror("ioctl FBIOPUTCMAP");
+    }
+    close(fb);
+
+    if (-1 == ioctl(tty,VT_SETMODE, &vt_omode))
+	perror("ioctl VT_SETMODE");
+    if (orig_vt_no && -1 == ioctl(tty, VT_ACTIVATE, orig_vt_no))
+	perror("ioctl VT_ACTIVATE");
+    if (orig_vt_no && -1 == ioctl(tty, VT_WAITACTIVE, orig_vt_no))
+	perror("ioctl VT_WAITACTIVE");
+    tcsetattr(tty, TCSANOW, &term);
+    close(tty);
+}
+
+/* -------------------------------------------------------------------- */
+
 gfxstate* fb_init(char *device, char *mode, int vt)
 {
     char   fbdev[16];
@@ -537,40 +565,14 @@ gfxstate* fb_init(char *device, char *mode, int vt)
     gfx->bits_per_pixel  = fb_var.bits_per_pixel;
 
     gfx->restore_display = fb_restore_display;
+    gfx->cleanup_display = fb_cleanup_display;
 
     gfx->fb_fd           = fb;
     return gfx;
 
  err:
-    fb_cleanup();
+    fb_cleanup_display();
     exit(1);
-}
-
-void
-fb_cleanup(void)
-{
-    /* restore console */
-    if (-1 == ioctl(tty,KDSETMODE, kd_mode))
-	perror("ioctl KDSETMODE");
-    if (-1 == ioctl(fb,FBIOPUT_VSCREENINFO,&fb_ovar))
-	perror("ioctl FBIOPUT_VSCREENINFO");
-    if (-1 == ioctl(fb,FBIOGET_FSCREENINFO,&fb_fix))
-	perror("ioctl FBIOGET_FSCREENINFO");
-    if (fb_ovar.bits_per_pixel == 8 ||
-	fb_fix.visual == FB_VISUAL_DIRECTCOLOR) {
-	if (-1 == ioctl(fb,FBIOPUTCMAP,&ocmap))
-	    perror("ioctl FBIOPUTCMAP");
-    }
-    close(fb);
-
-    if (-1 == ioctl(tty,VT_SETMODE, &vt_omode))
-	perror("ioctl VT_SETMODE");
-    if (orig_vt_no && -1 == ioctl(tty, VT_ACTIVATE, orig_vt_no))
-	perror("ioctl VT_ACTIVATE");
-    if (orig_vt_no && -1 == ioctl(tty, VT_WAITACTIVE, orig_vt_no))
-	perror("ioctl VT_WAITACTIVE");
-    tcsetattr(tty, TCSANOW, &term);
-    close(tty);
 }
 
 /* -------------------------------------------------------------------- */
@@ -608,7 +610,7 @@ fb_catch_exit_signals(void)
 	return;
 
     /* cleanup */
-    fb_cleanup();
+    fb_cleanup_display();
     fprintf(stderr,"Oops: %s\n",strsignal(termsig));
     exit(42);
 }

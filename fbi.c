@@ -1403,7 +1403,7 @@ static void cleanup_and_exit(int code)
     shadow_fini();
     fb_clear_screen(gfx);
     tty_restore();
-    fb_cleanup();
+    gfx->cleanup_display();
     flist_print_tagged(stdout);
     exit(code);
 }

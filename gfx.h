@@ -15,6 +15,7 @@ struct gfxstate {
 
     /* calls */
     void (*restore_display)(void);
+    void (*cleanup_display)(void);
 
     /* FIXME: legacy */
     int fb_fd;
