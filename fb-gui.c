@@ -100,7 +100,7 @@ void shadow_render(gfxstate *gfx)
     for (i = 0; i < sheight; i++, offset += gfx->stride) {
 	if (0 == sdirty[i])
 	    continue;
-	shadow_render_line(gfx, i, fb_mem + offset, shadow[i]);
+	shadow_render_line(gfx, i, gfx->mem + offset, shadow[i]);
 	sdirty[i] = 0;
     }
 }
@@ -566,5 +566,5 @@ FT_Face font_open(char *fcname)
 void fb_clear_screen(gfxstate *gfx)
 {
     if (visible)
-	fb_memset(fb_mem,0,gfx->stride * gfx->vdisplay);
+	fb_memset(gfx->mem, 0, gfx->stride * gfx->vdisplay);
 }

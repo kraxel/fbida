@@ -34,8 +34,6 @@ static const char *strsignal(int signr)
 /* -------------------------------------------------------------------- */
 /* exported stuff                                                       */
 
-unsigned char             *fb_mem;
-int			   fb_mem_offset = 0;
 int                        fb_switch_state = FB_ACTIVE;
 
 /* -------------------------------------------------------------------- */
@@ -43,6 +41,8 @@ int                        fb_switch_state = FB_ACTIVE;
 
 static struct fb_fix_screeninfo  fb_fix;
 static struct fb_var_screeninfo  fb_var;
+static unsigned char             *fb_mem;
+static int			 fb_mem_offset = 0;
 
 static int                       fb,tty;
 
@@ -524,6 +524,8 @@ gfxstate* fb_init(char *device, char *mode, int vt)
     gfx->hdisplay        = fb_var.xres;
     gfx->vdisplay        = fb_var.yres;
     gfx->stride          = fb_fix.line_length;
+    gfx->mem             = fb_mem;
+
     gfx->rlen            = fb_var.red.length;
     gfx->glen            = fb_var.green.length;
     gfx->blen            = fb_var.blue.length;

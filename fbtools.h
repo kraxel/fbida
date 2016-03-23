@@ -6,8 +6,6 @@
 #define FB_ACQ_REQ   3
 
 /* info about videomode - yes I know, quick & dirty... */
-extern unsigned char             *fb_mem;
-extern int			  fb_mem_offset;
 extern int                        fb_switch_state;
 
 /* init + cleanup */
