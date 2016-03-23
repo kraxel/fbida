@@ -34,8 +34,6 @@ static const char *strsignal(int signr)
 /* -------------------------------------------------------------------- */
 /* exported stuff                                                       */
 
-struct fb_fix_screeninfo   fb_fix;
-struct fb_var_screeninfo   fb_var;
 unsigned char             *fb_mem;
 int			   fb_mem_offset = 0;
 int                        fb_switch_state = FB_ACTIVE;
@@ -43,10 +41,10 @@ int                        fb_switch_state = FB_ACTIVE;
 /* -------------------------------------------------------------------- */
 /* internal variables                                                   */
 
+static struct fb_fix_screeninfo  fb_fix;
+static struct fb_var_screeninfo  fb_var;
+
 static int                       fb,tty;
-#if 0
-static int                       bpp,black,white;
-#endif
 
 static int                       orig_vt_no = 0;
 static struct vt_mode            vt_mode;
@@ -57,6 +55,9 @@ static struct termios            term;
 static struct fb_var_screeninfo  fb_ovar;
 static unsigned short            ored[256], ogreen[256], oblue[256];
 static struct fb_cmap            ocmap = { 0, 256, ored, ogreen, oblue };
+
+static unsigned short p_red[256], p_green[256], p_blue[256];
+static struct fb_cmap p_cmap = { 0, 256, p_red, p_green, p_blue };
 
 /* -------------------------------------------------------------------- */
 /* devices                                                              */
@@ -89,6 +90,64 @@ static void dev_init(void)
 	devices = &devs_devfs;
     else
 	devices = &devs_default;
+}
+
+/* -------------------------------------------------------------------- */
+/* palette handling                                                     */
+
+static unsigned short color_scale(int n, int max)
+{
+    int ret = 65535.0 * (float)n/(max);
+    if (ret > 65535) ret = 65535;
+    if (ret <     0) ret =     0;
+    return ret;
+}
+
+static void fb_linear_palette(int r, int g, int b)
+{
+    int i, size;
+
+    size = 256 >> (8 - r);
+    for (i = 0; i < size; i++)
+        p_red[i] = color_scale(i,size);
+    p_cmap.len = size;
+
+    size = 256 >> (8 - g);
+    for (i = 0; i < size; i++)
+        p_green[i] = color_scale(i,size);
+    if (p_cmap.len < size)
+	p_cmap.len = size;
+
+    size = 256 >> (8 - b);
+    for (i = 0; i < size; i++)
+	p_blue[i] = color_scale(i,size);
+    if (p_cmap.len < size)
+	p_cmap.len = size;
+}
+
+static void fb_dither_palette(int r, int g, int b)
+{
+    int rs, gs, bs, i;
+
+    rs = 256 / (r - 1);
+    gs = 256 / (g - 1);
+    bs = 256 / (b - 1);
+    for (i = 0; i < 256; i++) {
+	p_red[i]   = color_scale(rs * ((i / (g * b)) % r), 255);
+	p_green[i] = color_scale(gs * ((i / b) % g),       255);
+	p_blue[i]  = color_scale(bs * ((i) % b),           255);
+    }
+    p_cmap.len = 256;
+}
+
+static void fb_set_palette(void)
+{
+    if (fb_fix.visual != FB_VISUAL_DIRECTCOLOR && fb_var.bits_per_pixel != 8)
+	return;
+    if (-1 == ioctl(fb,FBIOPUTCMAP,&p_cmap)) {
+	perror("ioctl FBIOPUTCMAP");
+	exit(1);
+    }
 }
 
 /* -------------------------------------------------------------------- */
@@ -324,12 +383,18 @@ static int fb_activate_current(int tty)
     return 0;
 }
 
-int
-fb_init(char *device, char *mode, int vt)
+static void fb_restore_display(void)
+{
+    ioctl(fb,FBIOPAN_DISPLAY,&fb_var);
+    fb_set_palette();
+}
+
+gfxstate* fb_init(char *device, char *mode, int vt)
 {
     char   fbdev[16];
     struct vt_stat vts;
     unsigned long page_mask;
+    gfxstate *gfx;
 
     dev_init();
     tty = 0;
@@ -406,32 +471,6 @@ fb_init(char *device, char *mode, int vt)
 	fprintf(stderr,"can handle only packed pixel frame buffers\n");
 	goto err;
     }
-#if 0
-    switch (fb_var.bits_per_pixel) {
-    case 8:
-	white = 255; black = 0; bpp = 1;
-	break;
-    case 15:
-    case 16:
-	if (fb_var.green.length == 6)
-	    white = 0xffff;
-	else
-	    white = 0x7fff;
-	black = 0; bpp = 2;
-	break;
-    case 24:
-	white = 0xffffff; black = 0; bpp = fb_var.bits_per_pixel/8;
-	break;
-    case 32:
-	white = 0xffffff; black = 0; bpp = fb_var.bits_per_pixel/8;
-	fb_setpixels = fb_setpixels4;
-	break;
-    default:
-	fprintf(stderr, "Oops: %i bit/pixel ???\n",
-		fb_var.bits_per_pixel);
-	goto err;
-    }
-#endif
     page_mask = getpagesize()-1;
     fb_mem_offset = (unsigned long)(fb_fix.smem_start) & page_mask;
     fb_mem = mmap(NULL,fb_fix.smem_len+fb_mem_offset,
@@ -457,7 +496,48 @@ fb_init(char *device, char *mode, int vt)
 
     /* cls */
     fb_memset(fb_mem+fb_mem_offset, 0, fb_fix.line_length * fb_var.yres);
-    return fb;
+
+    /* init palette */
+    switch (fb_var.bits_per_pixel) {
+    case 8:
+	fb_dither_palette(8, 8, 4);
+	break;
+    case 15:
+    case 16:
+	if (fb_var.green.length == 5) {
+            fb_linear_palette(5,5,5);
+	} else {
+            fb_linear_palette(5,6,5);
+	}
+	break;
+    case 24:
+    case 32:
+        fb_linear_palette(8,8,8);
+	break;
+    }
+    fb_set_palette();
+
+    /* prepare gfx */
+    gfx = malloc(sizeof(*gfx));
+    memset(gfx, 0, sizeof(*gfx));
+
+    gfx->hdisplay        = fb_var.xres;
+    gfx->vdisplay        = fb_var.yres;
+    gfx->stride          = fb_fix.line_length;
+    gfx->rlen            = fb_var.red.length;
+    gfx->glen            = fb_var.green.length;
+    gfx->blen            = fb_var.blue.length;
+    gfx->tlen            = fb_var.transp.length;
+    gfx->roff            = fb_var.red.offset;
+    gfx->goff            = fb_var.green.offset;
+    gfx->boff            = fb_var.blue.offset;
+    gfx->toff            = fb_var.transp.offset;
+    gfx->bits_per_pixel  = fb_var.bits_per_pixel;
+
+    gfx->restore_display = fb_restore_display;
+
+    gfx->fb_fd           = fb;
+    return gfx;
 
  err:
     fb_cleanup();

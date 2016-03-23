@@ -24,61 +24,10 @@ static int xs = 10;
 /* ---------------------------------------------------------------------- */
 /* shadow framebuffer -- internals                                        */
 
-static float p_gamma = 1;
-static unsigned short p_red[256], p_green[256], p_blue[256];
-static struct fb_cmap p_cmap = { 0, 256, p_red, p_green, p_blue };
-
 static int32_t s_lut_transp[256], s_lut_red[256], s_lut_green[256], s_lut_blue[256];
 
 static unsigned char **shadow;
 static unsigned int  *sdirty,swidth,sheight;
-
-static unsigned short calc_gamma(int n, int max)
-{
-    int ret = 65535.0 * pow((float)n/(max), 1 / p_gamma);
-    if (ret > 65535) ret = 65535;
-    if (ret <     0) ret =     0;
-    return ret;
-}
-
-static void
-linear_palette(int r, int g, int b)
-{
-    int i, size;
-    
-    size = 256 >> (8 - r);
-    for (i = 0; i < size; i++)
-        p_red[i] = calc_gamma(i,size);
-    p_cmap.len = size;
-
-    size = 256 >> (8 - g);
-    for (i = 0; i < size; i++)
-        p_green[i] = calc_gamma(i,size);
-    if (p_cmap.len < size)
-	p_cmap.len = size;
-
-    size = 256 >> (8 - b);
-    for (i = 0; i < size; i++)
-	p_blue[i] = calc_gamma(i,size);
-    if (p_cmap.len < size)
-	p_cmap.len = size;
-}
-
-static void
-dither_palette(int r, int g, int b)
-{
-    int             rs, gs, bs, i;
-
-    rs = 256 / (r - 1);
-    gs = 256 / (g - 1);
-    bs = 256 / (b - 1);
-    for (i = 0; i < 256; i++) {
-	p_red[i]   = calc_gamma(rs * ((i / (g * b)) % r), 255);
-	p_green[i] = calc_gamma(gs * ((i / b) % g),       255);
-	p_blue[i]  = calc_gamma(bs * ((i) % b),           255);
-    }
-    p_cmap.len = 256;
-}
 
 static void shadow_lut_init_one(int32_t *lut, int bits, int shift)
 {
@@ -92,57 +41,23 @@ static void shadow_lut_init_one(int32_t *lut, int bits, int shift)
 	    lut[i] = (i >> (8 - bits)) << shift;
 }
 
-static void shadow_lut_init(int depth)
+static void shadow_lut_init(gfxstate *gfx)
 {
-    if (fb_var.red.length   &&
-	fb_var.green.length &&
-	fb_var.blue.length) {
-	/* fb_var.{red|green|blue} looks sane, use it */
-	shadow_lut_init_one(s_lut_transp, fb_var.transp.length, fb_var.transp.offset);
-	shadow_lut_init_one(s_lut_red,   fb_var.red.length,   fb_var.red.offset);
-	shadow_lut_init_one(s_lut_green, fb_var.green.length, fb_var.green.offset);
-	shadow_lut_init_one(s_lut_blue,  fb_var.blue.length,  fb_var.blue.offset);
-    } else {
-	/* fallback */
-	int i;
-	switch (depth) {
-	case 15:
-	    for (i = 0; i < 256; i++) {
-		s_lut_red[i]   = (i & 0xf8) << 7;	/* bits -rrrrr-- -------- */
-		s_lut_green[i] = (i & 0xf8) << 2;	/* bits ------gg ggg----- */
-		s_lut_blue[i]  = (i & 0xf8) >> 3;	/* bits -------- ---bbbbb */
-	    }
-	    break;
-	case 16:
-	    for (i = 0; i < 256; i++) {
-		s_lut_red[i]   = (i & 0xf8) << 8;	/* bits rrrrr--- -------- */
-		s_lut_green[i] = (i & 0xfc) << 3;	/* bits -----ggg ggg----- */
-		s_lut_blue[i]  = (i & 0xf8) >> 3;	/* bits -------- ---bbbbb */
-	    }
-	    break;
-	case 32:
-	    for (i = 0; i < 256; i++) {
-		s_lut_transp[i] = i << 24;		/* byte a--- */
-	    }
-	case 24:
-	    for (i = 0; i < 256; i++) {
-		s_lut_red[i]   = i << 16;	        /* byte -r-- */
-		s_lut_green[i] = i << 8;                /* byte --g- */
-		s_lut_blue[i]  = i;	                /* byte ---b */
-	    }
-	    break;
-	}
-    }
+    shadow_lut_init_one(s_lut_transp, gfx->tlen, gfx->toff);
+    shadow_lut_init_one(s_lut_red,    gfx->rlen, gfx->roff);
+    shadow_lut_init_one(s_lut_green,  gfx->glen, gfx->goff);
+    shadow_lut_init_one(s_lut_blue,   gfx->blen, gfx->boff);
 }
 
-static void shadow_render_line(int line, unsigned char *dest, char unsigned *buffer)
+static void shadow_render_line(gfxstate *gfx, int line,
+                               unsigned char *dest, char unsigned *buffer)
 {
     uint8_t  *ptr  = (void*)dest;
     uint16_t *ptr2 = (void*)dest;
     uint32_t *ptr4 = (void*)dest;
     int x;
 
-    switch (fb_var.bits_per_pixel) {
+    switch (gfx->bits_per_pixel) {
     case 8:
 	dither_line(buffer, ptr, line, swidth);
 	break;
@@ -175,17 +90,17 @@ static void shadow_render_line(int line, unsigned char *dest, char unsigned *buf
 /* ---------------------------------------------------------------------- */
 /* shadow framebuffer -- management interface                             */
 
-void shadow_render(void)
+void shadow_render(gfxstate *gfx)
 {
     unsigned int offset = 0;
     int i;
 
     if (!visible)
 	return;
-    for (i = 0; i < sheight; i++, offset += fb_fix.line_length) {
+    for (i = 0; i < sheight; i++, offset += gfx->stride) {
 	if (0 == sdirty[i])
 	    continue;
-	shadow_render_line(i, fb_mem + offset, shadow[i]);
+	shadow_render_line(gfx, i, fb_mem + offset, shadow[i]);
 	sdirty[i] = 0;
     }
 }
@@ -213,23 +128,13 @@ void shadow_set_dirty(void)
 	sdirty[i]++;
 }
 
-void shadow_set_palette(int fd)
-{
-    if (fb_fix.visual != FB_VISUAL_DIRECTCOLOR && fb_var.bits_per_pixel != 8)
-	return;
-    if (-1 == ioctl(fd,FBIOPUTCMAP,&p_cmap)) {
-	perror("ioctl FBIOPUTCMAP");
-	exit(1);
-    }
-}
-
-void shadow_init(void)
+void shadow_init(gfxstate *gfx)
 {
     int i;
 
     /* init shadow fb */
-    swidth  = fb_var.xres;
-    sheight = fb_var.yres;
+    swidth  = gfx->hdisplay;
+    sheight = gfx->vdisplay;
     shadow  = malloc(sizeof(unsigned char*) * sheight);
     sdirty  = malloc(sizeof(unsigned int)   * sheight);
     memset(sdirty,0, sizeof(unsigned int)   * sheight);
@@ -238,36 +143,20 @@ void shadow_init(void)
     shadow_clear();
 
     /* init rendering */
-    switch (fb_var.bits_per_pixel) {
+    switch (gfx->bits_per_pixel) {
     case 8:
-	dither_palette(8, 8, 4);
 	init_dither(8, 8, 4, 2);
 	dither_line = dither_line_color;
 	break;
     case 15:
     case 16:
-	if (fb_var.green.length == 5) {
-	    shadow_lut_init(15);
-	    if (fb_fix.visual == FB_VISUAL_DIRECTCOLOR)
-		linear_palette(5,5,5);
-	} else {
-	    shadow_lut_init(16);
-	    if (fb_fix.visual == FB_VISUAL_DIRECTCOLOR)
-		linear_palette(5,6,5);
-	}
-	break;
     case 24:
-        if (fb_fix.visual == FB_VISUAL_DIRECTCOLOR)
-            linear_palette(8,8,8);
-	break;
     case 32:
-        if (fb_fix.visual == FB_VISUAL_DIRECTCOLOR)
-            linear_palette(8,8,8);
-	shadow_lut_init(24);
+        shadow_lut_init(gfx);
 	break;
     default:
 	fprintf(stderr, "Oops: %i bit/pixel ???\n",
-		fb_var.bits_per_pixel);
+		gfx->bits_per_pixel);
 	exit(1);
     }
 }
@@ -674,14 +563,8 @@ FT_Face font_open(char *fcname)
 /* ---------------------------------------------------------------------- */
 /* clear screen (areas)                                                   */
 
-void fb_clear_mem(void)
+void fb_clear_screen(gfxstate *gfx)
 {
     if (visible)
-	fb_memset(fb_mem,0,fb_fix.smem_len);
-}
-
-void fb_clear_screen(void)
-{
-    if (visible)
-	fb_memset(fb_mem,0,fb_fix.line_length * fb_var.yres);
+	fb_memset(fb_mem,0,gfx->stride * gfx->vdisplay);
 }

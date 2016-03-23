@@ -30,8 +30,6 @@
 #define O_TIMEOUT		O_OPTIONS, "timeout"
 #define O_PCD_RES		O_OPTIONS, "photocd-res"
 
-#define O_GAMMA		        O_OPTIONS, "gamma"
-
 #define O_DEVICE                O_OPTIONS, "device"
 #define O_FONT                  O_OPTIONS, "font"
 #define O_VIDEO_MODE            O_OPTIONS, "video-mode"
@@ -61,8 +59,6 @@
 #define GET_SCROLL()            cfg_get_int(O_SCROLL,        50)
 #define GET_TIMEOUT()           cfg_get_int(O_TIMEOUT,        0)
 #define GET_PCD_RES()           cfg_get_int(O_PCD_RES,        3)
-
-#define GET_GAMMA()             cfg_get_float(O_GAMMA,        1)
 
 /* -------------------------------------------------------------------------- */
 

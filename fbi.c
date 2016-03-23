@@ -119,15 +119,16 @@ static struct ida_image *img;
 static int img_cnt, min_cnt = 2, max_cnt = 16;
 static int img_mem, max_mem_mb;
 
+/* graphics interface */
+gfxstate                   *gfx;
+
 /* framebuffer */
 char                       *fbdev = NULL;
 char                       *fbmode  = NULL;
-int                        fd, switch_last, debug;
+int                        switch_last, debug;
 
 unsigned short red[256],  green[256],  blue[256];
 struct fb_cmap cmap  = { 0, 256, red,  green,  blue };
-
-static float fbgamma = 1;
 
 /* Command line options. */
 int autodown;
@@ -337,24 +338,24 @@ static void
 shadow_draw_image(struct ida_image *img, int xoff, int yoff,
 		  unsigned int first, unsigned int last, int weight)
 {
-    unsigned int     dwidth  = MIN(img->i.width,  fb_var.xres);
-    unsigned int     dheight = MIN(img->i.height, fb_var.yres);
+    unsigned int     dwidth  = MIN(img->i.width,  gfx->hdisplay);
+    unsigned int     dheight = MIN(img->i.height, gfx->vdisplay);
     unsigned int     data, offset, y, xs, ys;
 
     if (100 == weight)
 	shadow_clear_lines(first, last);
     else
-	shadow_darkify(0, fb_var.xres-1, first, last, 100 - weight);
+	shadow_darkify(0, gfx->hdisplay-1, first, last, 100 - weight);
 
     /* offset for image data (image > screen, select visible area) */
     offset = (yoff * img->i.width + xoff) * 3;
 
     /* offset for video memory (image < screen, center image) */
     xs = 0, ys = 0;
-    if (img->i.width < fb_var.xres)
-	xs += (fb_var.xres - img->i.width) / 2;
-    if (img->i.height < fb_var.yres)
-	ys += (fb_var.yres - img->i.height) / 2;
+    if (img->i.width < gfx->hdisplay)
+	xs += (gfx->hdisplay - img->i.width) / 2;
+    if (img->i.height < gfx->vdisplay)
+	ys += (gfx->vdisplay - img->i.height) / 2;
 
     /* go ! */
     for (data = 0, y = 0;
@@ -377,21 +378,21 @@ shadow_draw_image(struct ida_image *img, int xoff, int yoff,
 static void status_prepare(void)
 {
     struct ida_image *img = flist_img_get(fcurrent);
-    int y1 = fb_var.yres - (face->size->metrics.height >> 6);
-    int y2 = fb_var.yres - 1;
+    int y1 = gfx->vdisplay - (face->size->metrics.height >> 6);
+    int y2 = gfx->vdisplay - 1;
 
     if (img) {
 	shadow_draw_image(img, fcurrent->left, fcurrent->top, y1, y2, 100);
-	shadow_darkify(0, fb_var.xres-1, y1, y2, transparency);
+	shadow_darkify(0, gfx->hdisplay-1, y1, y2, transparency);
     } else {
 	shadow_clear_lines(y1, y2);
     }
-    shadow_draw_line(0, fb_var.xres-1, y1-1, y1-1);
+    shadow_draw_line(0, gfx->hdisplay-1, y1-1, y1-1);
 }
 
 static void status_update(unsigned char *desc, char *info)
 {
-    int yt = fb_var.yres + (face->size->metrics.descender >> 6);
+    int yt = gfx->vdisplay + (face->size->metrics.descender >> 6);
     wchar_t str[128];
 
     if (!statusline)
@@ -405,14 +406,14 @@ static void status_update(unsigned char *desc, char *info)
     } else {
 	swprintf(str,ARRAY_SIZE(str), L"| H - Help");
     }
-    shadow_draw_string(face, fb_var.xres, yt, str, 1);
+    shadow_draw_string(face, gfx->hdisplay, yt, str, 1);
 
-    shadow_render();
+    shadow_render(gfx);
 }
 
 static void status_error(unsigned char *msg)
 {
-    int yt = fb_var.yres + (face->size->metrics.descender >> 6);
+    int yt = gfx->vdisplay + (face->size->metrics.descender >> 6);
     wchar_t str[128];
 
     status_prepare();
@@ -420,13 +421,13 @@ static void status_error(unsigned char *msg)
     swprintf(str,ARRAY_SIZE(str), L"%s", msg);
     shadow_draw_string(face, 0, yt, str, -1);
 
-    shadow_render();
+    shadow_render(gfx);
     sleep(2);
 }
 
 static void status_edit(unsigned char *msg, int pos)
 {
-    int yt = fb_var.yres + (face->size->metrics.descender >> 6);
+    int yt = gfx->vdisplay + (face->size->metrics.descender >> 6);
     wchar_t str[128];
 
     status_prepare();
@@ -434,7 +435,7 @@ static void status_edit(unsigned char *msg, int pos)
     swprintf(str,ARRAY_SIZE(str), L"%s", msg);
     shadow_draw_string_cursor(face, 0, yt, str, pos);
 
-    shadow_render();
+    shadow_render(gfx);
 }
 
 static void show_exif(struct flist *f)
@@ -514,7 +515,7 @@ static void show_exif(struct flist *f)
     }
     shadow_draw_text_box(face, 24, 16, transparency,
 			 linebuffer, count);
-    shadow_render();
+    shadow_render(gfx);
 
     /* pass three -- free data */
     for (tag = 0; tag < ARRAY_SIZE(tags); tag++)
@@ -556,7 +557,7 @@ static void show_help(void)
 
     shadow_draw_text_box(face, 24, 16, transparency,
 			 help, ARRAY_SIZE(help));
-    shadow_render();
+    shadow_render(gfx);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -615,10 +616,9 @@ console_switch(void)
 	fb_switch_acquire();
     case FB_ACTIVE:
 	visible = 1;
-	ioctl(fd,FBIOPAN_DISPLAY,&fb_var);
-	shadow_set_palette(fd);
+        gfx->restore_display();
 	shadow_set_dirty();
-	shadow_render();
+	shadow_render(gfx);
 	break;
     default:
 	break;
@@ -756,10 +756,10 @@ static float auto_scale(struct ida_image *img)
 {
     float xs,ys,scale;
 
-    xs = (float)fb_var.xres / img->i.width;
+    xs = (float)gfx->hdisplay / img->i.width;
     if (fitwidth)
 	return xs;
-    ys = (float)fb_var.yres / img->i.height;
+    ys = (float)gfx->vdisplay / img->i.height;
     scale = (xs < ys) ? xs : ys;
     return scale;
 }
@@ -790,9 +790,9 @@ static void effect_blend(struct flist *f, struct flist *t)
 	if (weight > 100)
 	    weight = 100;
 	shadow_draw_image(flist_img_get(f), f->left, f->top,
-			  0, fb_var.yres-1, 100);
+			  0, gfx->vdisplay-1, 100);
 	shadow_draw_image(flist_img_get(t), t->left, t->top,
-			  0, fb_var.yres-1, weight);
+			  0, gfx->vdisplay-1, weight);
 
 	if (perfmon) {
 	    pos += snprintf(linebuffer+pos, sizeof(linebuffer)-pos,
@@ -801,7 +801,7 @@ static void effect_blend(struct flist *f, struct flist *t)
 	    count++;
 	}
 
-	shadow_render();
+	shadow_render(gfx);
     } while (weight < 100);
 
     if (perfmon) {
@@ -812,7 +812,7 @@ static void effect_blend(struct flist *f, struct flist *t)
 			" | %d/%d -> %d msec",
 			msecs, count, msecs/count);
 	status_update(linebuffer, NULL);
-	shadow_render();
+	shadow_render(gfx);
 	sleep(2);
     }
 }
@@ -840,38 +840,38 @@ svga_show(struct flist *f, struct flist *prev,
     for (;;) {
 	if (redraw) {
 	    redraw = 0;
-	    if (img->i.height <= fb_var.yres) {
+	    if (img->i.height <= gfx->vdisplay) {
 		f->top = 0;
 	    } else {
 		if (f->top < 0)
 		    f->top = 0;
-		if (f->top + fb_var.yres > img->i.height)
-		    f->top = img->i.height - fb_var.yres;
+		if (f->top + gfx->vdisplay > img->i.height)
+		    f->top = img->i.height - gfx->vdisplay;
 	    }
-	    if (img->i.width <= fb_var.xres) {
+	    if (img->i.width <= gfx->hdisplay) {
 		f->left = 0;
 	    } else {
 		if (f->left < 0)
 		    f->left = 0;
-		if (f->left + fb_var.xres > img->i.width)
-		    f->left = img->i.width - fb_var.xres;
+		if (f->left + gfx->hdisplay > img->i.width)
+		    f->left = img->i.width - gfx->hdisplay;
 	    }
 	    if (blend_msecs && prev && prev != f &&
 		flist_img_get(prev) && flist_img_get(f)) {
 		effect_blend(prev, f);
 		prev = NULL;
 	    } else {
-		shadow_draw_image(img, f->left, f->top, 0, fb_var.yres-1, 100);
+		shadow_draw_image(img, f->left, f->top, 0, gfx->vdisplay-1, 100);
 	    }
 	    status_update(desc, info);
-	    shadow_render();
+	    shadow_render(gfx);
 
 	    if (read_ahead) {
 		struct flist *f = flist_next(fcurrent,1,0);
 		if (f && !f->fimg)
 		    flist_img_load(f,1);
 		status_update(desc, info);
-		shadow_render();
+		shadow_render(gfx);
 	    }
 	}
         if (switch_last != fb_switch_state) {
@@ -929,7 +929,7 @@ svga_show(struct flist *f, struct flist *prev,
 	    return KEY_Q;
 
 	} else if (0 == strcmp(key, " ")) {
-	    if (textreading && f->top < (int)(img->i.height - fb_var.yres)) {
+	    if (textreading && f->top < (int)(img->i.height - gfx->vdisplay)) {
 		redraw = 1;
 		f->top += f->text_steps;
 	    } else {
@@ -937,22 +937,22 @@ svga_show(struct flist *f, struct flist *prev,
 		return KEY_SPACE;
 	    }
 
-	} else if (0 == strcmp(key, "\x1b[A") && img->i.height > fb_var.yres) {
+	} else if (0 == strcmp(key, "\x1b[A") && img->i.height > gfx->vdisplay) {
 	    redraw = 1;
 	    f->top -= v_steps;
-	} else if (0 == strcmp(key, "\x1b[B") && img->i.height > fb_var.yres) {
+	} else if (0 == strcmp(key, "\x1b[B") && img->i.height > gfx->vdisplay) {
 	    redraw = 1;
 	    f->top += v_steps;
-	} else if (0 == strcmp(key, "\x1b[1~") && img->i.height > fb_var.yres) {
+	} else if (0 == strcmp(key, "\x1b[1~") && img->i.height > gfx->vdisplay) {
 	    redraw = 1;
 	    f->top = 0;
 	} else if (0 == strcmp(key, "\x1b[4~")) {
 	    redraw = 1;
-	    f->top = img->i.height - fb_var.yres;
-	} else if (0 == strcmp(key, "\x1b[D") && img->i.width > fb_var.xres) {
+	    f->top = img->i.height - gfx->vdisplay;
+	} else if (0 == strcmp(key, "\x1b[D") && img->i.width > gfx->hdisplay) {
 	    redraw = 1;
 	    f->left -= h_steps;
-	} else if (0 == strcmp(key, "\x1b[C") && img->i.width > fb_var.xres) {
+	} else if (0 == strcmp(key, "\x1b[C") && img->i.width > gfx->hdisplay) {
 	    redraw = 1;
 	    f->left += h_steps;
 
@@ -972,7 +972,7 @@ svga_show(struct flist *f, struct flist *prev,
 		   0 == strcmp(key, "J")       ||
 		   0 == strcmp(key, "n")       ||
 		   0 == strcmp(key, "N")) {
-	    if (textreading && f->top < (int)(img->i.height - fb_var.yres)) {
+	    if (textreading && f->top < (int)(img->i.height - gfx->vdisplay)) {
 		redraw = 1;
 		f->top += f->text_steps;
 	    } else {
@@ -1065,16 +1065,16 @@ static void scale_fix_top_left(struct flist *f, float old, float new)
     unsigned int width, height;
     float cx,cy;
 
-    cx = (float)(f->left + fb_var.xres/2) / (img->i.width  * old);
-    cy = (float)(f->top  + fb_var.yres/2) / (img->i.height * old);
+    cx = (float)(f->left + gfx->hdisplay/2) / (img->i.width  * old);
+    cy = (float)(f->top  + gfx->vdisplay/2) / (img->i.height * old);
 
     width   = img->i.width  * new;
     height  = img->i.height * new;
-    f->left = cx * width  - fb_var.xres/2;
-    f->top  = cy * height - fb_var.yres/2;
+    f->left = cx * width  - gfx->hdisplay/2;
+    f->top  = cy * height - gfx->vdisplay/2;
 
     if (textreading) {
-        f->text_steps = calculate_text_steps(height, fb_var.yres);
+        f->text_steps = calculate_text_steps(height, gfx->vdisplay);
     }
 }
 
@@ -1380,12 +1380,12 @@ static void flist_img_load(struct flist *f, int prefetch)
 
     if (!f->seen) {
  	struct ida_image *img = flist_img_get(f);
-	if (img->i.width > fb_var.xres)
-	    f->left = (img->i.width - fb_var.xres) / 2;
-	if (img->i.height > fb_var.yres) {
-	    f->top = (img->i.height - fb_var.yres) / 2;
+	if (img->i.width > gfx->hdisplay)
+	    f->left = (img->i.width - gfx->hdisplay) / 2;
+	if (img->i.height > gfx->vdisplay) {
+	    f->top = (img->i.height - gfx->vdisplay) / 2;
 	    if (textreading) {
-                f->text_steps = calculate_text_steps(img->i.height, fb_var.yres);
+                f->text_steps = calculate_text_steps(img->i.height, gfx->vdisplay);
 		f->top = 0;
 	    }
 	}
@@ -1401,7 +1401,7 @@ static void flist_img_load(struct flist *f, int prefetch)
 static void cleanup_and_exit(int code)
 {
     shadow_fini();
-    fb_clear_screen();
+    fb_clear_screen(gfx);
     tty_restore();
     fb_cleanup();
     flist_print_tagged(stdout);
@@ -1465,8 +1465,6 @@ main(int argc, char *argv[])
     timeout     = GET_TIMEOUT();
     pcd_res     = GET_PCD_RES();
 
-    fbgamma     = GET_GAMMA();
-
     fontname    = cfg_get_str(O_FONT);
     filelist    = cfg_get_str(O_FILE_LIST);
 
@@ -1493,13 +1491,12 @@ main(int argc, char *argv[])
 	fprintf(stderr,"can't open font: %s\n",fontname);
 	exit(1);
     }
-    fd = fb_init(cfg_get_str(O_DEVICE),
-		 cfg_get_str(O_VIDEO_MODE),
-		 GET_VT());
+    gfx = fb_init(cfg_get_str(O_DEVICE),
+                  cfg_get_str(O_VIDEO_MODE),
+                  GET_VT());
     fb_catch_exit_signals();
     fb_switch_init();
-    shadow_init();
-    shadow_set_palette(fd);
+    shadow_init(gfx);
     signal(SIGTSTP,SIG_IGN);
 
     /* svga main loop */
@@ -1645,9 +1642,9 @@ main(int argc, char *argv[])
 	case KEY_VERBOSE:
 #if 0 /* fbdev testing/debugging hack */
 	    {
-		ioctl(fd,FBIOBLANK,1);
+		ioctl(gfx->fb_fd,FBIOBLANK,1);
 		sleep(1);
-		ioctl(fd,FBIOBLANK,0);
+		ioctl(gfx->fb_fd,FBIOBLANK,0);
 	    }
 #endif
 	    statusline = !statusline;

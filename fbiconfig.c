@@ -147,12 +147,6 @@ struct cfg_cmdline fbi_cfg[] = {
 	.needsarg = 1,
 	.desc     = "pick PhotoCD resolution (1..5)",
     },{
-	.letter   = 'g',
-	.cmdline  = "gamma",
-	.option   = { O_GAMMA },
-	.needsarg = 1,
-	.desc     = "set display gamma (doesn't work on all hardware)",
-    },{
 	.letter   = 'f',
 	.cmdline  = "font",
 	.option   = { O_FONT },
