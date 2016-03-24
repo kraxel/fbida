@@ -574,22 +574,22 @@ tty_raw(void)
 {
     struct termios tattr;
 
-    fcntl(0,F_GETFL,&saved_fl);
+    fcntl(STDIN_FILENO, F_GETFL, &saved_fl);
     tcgetattr (0, &saved_attributes);
 
-    fcntl(0,F_SETFL,O_NONBLOCK);
+    fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
     memcpy(&tattr,&saved_attributes,sizeof(struct termios));
     tattr.c_lflag &= ~(ICANON|ECHO);
     tattr.c_cc[VMIN] = 1;
     tattr.c_cc[VTIME] = 0;
-    tcsetattr (0, TCSAFLUSH, &tattr);
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &tattr);
 }
 
 static void
 tty_restore(void)
 {
-    fcntl(0,F_SETFL,saved_fl);
-    tcsetattr (0, TCSANOW, &saved_attributes);
+    fcntl(STDIN_FILENO, F_SETFL, saved_fl);
+    tcsetattr(STDIN_FILENO, TCSANOW, &saved_attributes);
 }
 
 /* testing: find key codes */
@@ -1512,7 +1512,7 @@ int main(int argc, char *argv[])
                   cfg_get_str(O_VIDEO_MODE),
                   GET_VT());
     exit_signals_init();
-    console_switch_init(gfx->tty_fd, console_switch_redraw);
+    console_switch_init(console_switch_redraw);
     shadow_init(gfx);
     signal(SIGTSTP,SIG_IGN);
 

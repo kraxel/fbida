@@ -23,7 +23,7 @@ int console_visible = 1;
 
 extern int debug;
 
-static int switch_last, tty;
+static int switch_last;
 static int console_switch_state = CONSOLE_ACTIVE;
 static struct vt_mode vt_mode;
 static int orig_vt_no = 0;
@@ -47,7 +47,7 @@ static void console_switch_signal(int signal)
 
 static void console_switch_release(void)
 {
-    ioctl(tty, VT_RELDISP, 1);
+    ioctl(STDIN_FILENO, VT_RELDISP, 1);
     console_switch_state = CONSOLE_INACTIVE;
     if (debug)
 	write(2,"vt: release\n",12);
@@ -55,17 +55,16 @@ static void console_switch_release(void)
 
 static void console_switch_acquire(void)
 {
-    ioctl(tty, VT_RELDISP, VT_ACKACQ);
+    ioctl(STDIN_FILENO, VT_RELDISP, VT_ACKACQ);
     console_switch_state = CONSOLE_ACTIVE;
     if (debug)
 	write(2,"vt: acquire\n",12);
 }
 
-int console_switch_init(int tty_fd, void (*redraw)(void))
+int console_switch_init(void (*redraw)(void))
 {
     struct sigaction act,old;
 
-    tty = tty_fd;
     console_redraw = redraw;
 
     memset(&act,0,sizeof(act));
@@ -74,7 +73,7 @@ int console_switch_init(int tty_fd, void (*redraw)(void))
     sigaction(SIGUSR1,&act,&old);
     sigaction(SIGUSR2,&act,&old);
 
-    if (-1 == ioctl(tty, VT_GETMODE, &vt_mode)) {
+    if (-1 == ioctl(STDIN_FILENO, VT_GETMODE, &vt_mode)) {
 	perror("ioctl VT_GETMODE");
 	exit(1);
     }
@@ -83,7 +82,7 @@ int console_switch_init(int tty_fd, void (*redraw)(void))
     vt_mode.relsig = SIGUSR1;
     vt_mode.acqsig = SIGUSR2;
 
-    if (-1 == ioctl(tty, VT_SETMODE, &vt_mode)) {
+    if (-1 == ioctl(STDIN_FILENO, VT_SETMODE, &vt_mode)) {
 	perror("ioctl VT_SETMODE");
 	exit(1);
     }
@@ -120,7 +119,7 @@ void console_set_vt(int vtno)
     char vtname[12];
 
     if (vtno < 0) {
-	if (-1 == ioctl(tty, VT_OPENQRY, &vtno) || vtno == -1) {
+	if (-1 == ioctl(STDIN_FILENO, VT_OPENQRY, &vtno) || vtno == -1) {
 	    perror("ioctl VT_OPENQRY");
 	    exit(1);
 	}
@@ -152,16 +151,16 @@ void console_set_vt(int vtno)
     dup(0);
     dup(0);
 
-    if (-1 == ioctl(tty,VT_GETSTATE, &vts)) {
+    if (-1 == ioctl(STDIN_FILENO,VT_GETSTATE, &vts)) {
 	perror("ioctl VT_GETSTATE");
 	exit(1);
     }
     orig_vt_no = vts.v_active;
-    if (-1 == ioctl(tty,VT_ACTIVATE, vtno)) {
+    if (-1 == ioctl(STDIN_FILENO,VT_ACTIVATE, vtno)) {
 	perror("ioctl VT_ACTIVATE");
 	exit(1);
     }
-    if (-1 == ioctl(tty,VT_WAITACTIVE, vtno)) {
+    if (-1 == ioctl(STDIN_FILENO,VT_WAITACTIVE, vtno)) {
 	perror("ioctl VT_WAITACTIVE");
 	exit(1);
     }
@@ -172,26 +171,26 @@ void console_restore_vt(void)
     if (!orig_vt_no)
         return;
 
-    if (ioctl(tty, VT_ACTIVATE, orig_vt_no) < 0)
+    if (ioctl(STDIN_FILENO, VT_ACTIVATE, orig_vt_no) < 0)
 	perror("ioctl VT_ACTIVATE");
-    if (ioctl(tty, VT_WAITACTIVE, orig_vt_no) < 0)
+    if (ioctl(STDIN_FILENO, VT_WAITACTIVE, orig_vt_no) < 0)
 	perror("ioctl VT_WAITACTIVE");
 }
 
 /* Hmm. radeonfb needs this. matroxfb doesn't. */
-int console_activate_current(int tty)
+int console_activate_current(void)
 {
     struct vt_stat vts;
 
-    if (-1 == ioctl(tty,VT_GETSTATE, &vts)) {
+    if (-1 == ioctl(STDIN_FILENO, VT_GETSTATE, &vts)) {
 	perror("ioctl VT_GETSTATE");
 	return -1;
     }
-    if (-1 == ioctl(tty,VT_ACTIVATE, vts.v_active)) {
+    if (-1 == ioctl(STDIN_FILENO, VT_ACTIVATE, vts.v_active)) {
 	perror("ioctl VT_ACTIVATE");
 	return -1;
     }
-    if (-1 == ioctl(tty,VT_WAITACTIVE, vts.v_active)) {
+    if (-1 == ioctl(STDIN_FILENO, VT_WAITACTIVE, vts.v_active)) {
 	perror("ioctl VT_WAITACTIVE");
 	return -1;
     }

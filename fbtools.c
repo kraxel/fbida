@@ -40,7 +40,7 @@ static struct fb_var_screeninfo  fb_var;
 static unsigned char             *fb_mem;
 static int			 fb_mem_offset = 0;
 
-static int                       fb,tty;
+static int                       fb;
 
 static int                       kd_mode;
 static struct vt_mode            vt_omode;
@@ -212,24 +212,23 @@ static void fb_restore_display(void)
 static void fb_cleanup_display(void)
 {
     /* restore console */
-    if (-1 == ioctl(tty,KDSETMODE, kd_mode))
+    if (-1 == ioctl(STDIN_FILENO, KDSETMODE, kd_mode))
 	perror("ioctl KDSETMODE");
-    if (-1 == ioctl(fb,FBIOPUT_VSCREENINFO,&fb_ovar))
+    if (-1 == ioctl(fb, FBIOPUT_VSCREENINFO, &fb_ovar))
 	perror("ioctl FBIOPUT_VSCREENINFO");
-    if (-1 == ioctl(fb,FBIOGET_FSCREENINFO,&fb_fix))
+    if (-1 == ioctl(fb, FBIOGET_FSCREENINFO, &fb_fix))
 	perror("ioctl FBIOGET_FSCREENINFO");
     if (fb_ovar.bits_per_pixel == 8 ||
 	fb_fix.visual == FB_VISUAL_DIRECTCOLOR) {
-	if (-1 == ioctl(fb,FBIOPUTCMAP,&ocmap))
+	if (-1 == ioctl(fb, FBIOPUTCMAP, &ocmap))
 	    perror("ioctl FBIOPUTCMAP");
     }
     close(fb);
 
-    if (-1 == ioctl(tty,VT_SETMODE, &vt_omode))
+    if (-1 == ioctl(STDIN_FILENO, VT_SETMODE, &vt_omode))
 	perror("ioctl VT_SETMODE");
     console_restore_vt();
-    tcsetattr(tty, TCSANOW, &term);
-    close(tty);
+    tcsetattr(STDIN_FILENO, TCSANOW, &term);
 }
 
 /* -------------------------------------------------------------------- */
@@ -241,11 +240,10 @@ gfxstate* fb_init(char *device, char *mode, int vt)
     unsigned long page_mask;
     gfxstate *gfx;
 
-    tty = 0;
     if (vt != 0)
 	console_set_vt(vt);
 
-    if (-1 == ioctl(tty,VT_GETSTATE, &vts)) {
+    if (-1 == ioctl(STDIN_FILENO, VT_GETSTATE, &vts)) {
 	fprintf(stderr,"ioctl VT_GETSTATE: %s (not a linux console?)\n",
 		strerror(errno));
 	exit(1);
@@ -293,19 +291,19 @@ gfxstate* fb_init(char *device, char *mode, int vt)
 	    exit(1);
 	}
     }
-    if (-1 == ioctl(tty,KDGETMODE, &kd_mode)) {
+    if (-1 == ioctl(STDIN_FILENO, KDGETMODE, &kd_mode)) {
 	perror("ioctl KDGETMODE");
 	exit(1);
     }
-    if (-1 == ioctl(tty,VT_GETMODE, &vt_omode)) {
+    if (-1 == ioctl(STDIN_FILENO, VT_GETMODE, &vt_omode)) {
 	perror("ioctl VT_GETMODE");
 	exit(1);
     }
-    tcgetattr(tty, &term);
-    
+    tcgetattr(STDIN_FILENO, &term);
+
     /* switch mode */
     fb_setmode(mode);
-    
+
     /* checks & initialisation */
     if (-1 == ioctl(fb,FBIOGET_FSCREENINFO,&fb_fix)) {
 	perror("ioctl FBIOGET_FSCREENINFO");
@@ -332,11 +330,11 @@ gfxstate* fb_init(char *device, char *mode, int vt)
 	    goto err;
 	}
     }
-    if (-1 == ioctl(tty,KDSETMODE, KD_GRAPHICS)) {
+    if (-1 == ioctl(STDIN_FILENO, KDSETMODE, KD_GRAPHICS)) {
 	perror("ioctl KDSETMODE");
 	goto err;
     }
-    console_activate_current(tty);
+    console_activate_current();
 
     /* cls */
     fb_memset(fb_mem+fb_mem_offset, 0, fb_fix.line_length * fb_var.yres);
@@ -384,7 +382,6 @@ gfxstate* fb_init(char *device, char *mode, int vt)
     gfx->cleanup_display = fb_cleanup_display;
 
     gfx->fb_fd           = fb;
-    gfx->tty_fd          = tty;
     return gfx;
 
  err:
