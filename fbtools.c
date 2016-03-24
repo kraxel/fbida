@@ -118,7 +118,7 @@ fb_memset (void *addr, int c, size_t len)
 {
 #if 1 /* defined(__powerpc__) */
     unsigned int i, *p;
-    
+
     i = (c & 0xff) << 8;
     i |= i << 16;
     len >>= 2;
@@ -135,13 +135,13 @@ fb_setmode(char *name)
     FILE *fp;
     char line[80],label[32],value[16];
     int  geometry=0, timings=0;
-    
+
     /* load current values */
     if (-1 == ioctl(fb,FBIOGET_VSCREENINFO,&fb_var)) {
 	perror("ioctl FBIOGET_VSCREENINFO");
 	exit(1);
     }
-    
+
     if (NULL == name)
 	return -1;
     if (NULL == (fp = fopen("/etc/fb.modes","r")))
