@@ -187,7 +187,7 @@ fb_switch_init()
 /* -------------------------------------------------------------------- */
 /* initialisation & cleanup                                             */
 
-void
+static void
 fb_memset (void *addr, int c, size_t len)
 {
 #if 1 /* defined(__powerpc__) */

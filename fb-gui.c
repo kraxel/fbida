@@ -559,12 +559,3 @@ FT_Face font_open(char *fcname)
     /* oops, didn't work */
     return NULL;
 }
-
-/* ---------------------------------------------------------------------- */
-/* clear screen (areas)                                                   */
-
-void fb_clear_screen(gfxstate *gfx)
-{
-    if (visible)
-	fb_memset(gfx->mem, 0, gfx->stride * gfx->vdisplay);
-}

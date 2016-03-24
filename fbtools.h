@@ -10,7 +10,6 @@ extern int                        fb_switch_state;
 
 /* init + cleanup */
 gfxstate *fb_init(char *device, char *mode, int vt);
-void fb_memset(void *addr, int c, size_t len);
 
 /* console switching */
 int  fb_switch_init(void);
