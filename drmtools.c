@@ -42,19 +42,13 @@ static void drm_cleanup_display(void)
     }
 }
 
-static int drm_init_dev(const char *device)
+static int drm_init_dev(const char *dev)
 {
     drmModeRes *res;
-    char dev[64];
     int i, rc;
     uint64_t has_dumb;
 
     /* open device */
-    if (device) {
-        snprintf(dev, sizeof(dev), "%s", device);
-    } else {
-        snprintf(dev, sizeof(dev), DRM_DEV_NAME, DRM_DIR_NAME, 0);
-    }
     fd = open(dev, O_RDWR);
     if (fd < 0) {
         fprintf(stderr, "drm: open %s: %s\n", dev, strerror(errno));
@@ -157,9 +151,16 @@ static void drm_restore_display(void)
     drm_show_fb();
 }
 
-gfxstate *drm_init(const char *dev)
+gfxstate *drm_init(const char *device)
 {
     gfxstate *gfx;
+    char dev[64];
+
+    if (device) {
+        snprintf(dev, sizeof(dev), "%s", device);
+    } else {
+        snprintf(dev, sizeof(dev), DRM_DEV_NAME, DRM_DIR_NAME, 0);
+    }
 
     if (drm_init_dev(dev) < 0)
         return NULL;
@@ -190,5 +191,6 @@ gfxstate *drm_init(const char *dev)
     gfx->restore_display = drm_restore_display;
     gfx->cleanup_display = drm_cleanup_display;
 
+    fprintf(stderr, "using drm: %s\n", device);
     return gfx;
 }
