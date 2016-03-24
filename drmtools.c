@@ -200,6 +200,11 @@ static void drm_restore_display(void)
     drm_show_fb();
 }
 
+static void drm_flush_display(void)
+{
+    drmModeDirtyFB(fd, fb_id, 0, 0);
+}
+
 gfxstate *drm_init(const char *device, const char *output)
 {
     gfxstate *gfx;
@@ -240,6 +245,7 @@ gfxstate *drm_init(const char *device, const char *output)
 
     gfx->restore_display = drm_restore_display;
     gfx->cleanup_display = drm_cleanup_display;
+    gfx->flush_display   = drm_flush_display;
     return gfx;
 }
 

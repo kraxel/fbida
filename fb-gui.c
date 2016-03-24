@@ -101,6 +101,8 @@ void shadow_render(gfxstate *gfx)
 	shadow_render_line(gfx, i, gfx->mem + offset, shadow[i]);
 	sdirty[i] = 0;
     }
+    if (gfx->flush_display)
+        gfx->flush_display();
 }
 
 void shadow_clear_lines(int first, int last)
