@@ -60,39 +60,6 @@ static unsigned short p_red[256], p_green[256], p_blue[256];
 static struct fb_cmap p_cmap = { 0, 256, p_red, p_green, p_blue };
 
 /* -------------------------------------------------------------------- */
-/* devices                                                              */
-
-struct DEVS {
-    char *fb0;
-    char *fbnr;
-    char *ttynr;
-};
-
-struct DEVS devs_default = {
-    fb0:   "/dev/fb0",
-    fbnr:  "/dev/fb%d",
-    ttynr: "/dev/tty%d",
-};
-struct DEVS devs_devfs = {
-    fb0:   "/dev/fb/0",
-    fbnr:  "/dev/fb/%d",
-    ttynr: "/dev/vc/%d",
-};
-struct DEVS *devices;
-
-static void dev_init(void)
-{
-    struct stat dummy;
-
-    if (NULL != devices)
-	return;
-    if (0 == stat("/dev/.devfsd",&dummy))
-	devices = &devs_devfs;
-    else
-	devices = &devs_default;
-}
-
-/* -------------------------------------------------------------------- */
 /* palette handling                                                     */
 
 static unsigned short color_scale(int n, int max)
@@ -324,7 +291,7 @@ fb_setvt(int vtno)
     }
 
     vtno &= 0xff;
-    sprintf(vtname, devices->ttynr, vtno);
+    sprintf(vtname, "/dev/tty%d", vtno);
     chown(vtname, getuid(), getgid());
     if (-1 == access(vtname, R_OK | W_OK)) {
 	fprintf(stderr,"access %s: %s\n",vtname,strerror(errno));
@@ -424,7 +391,6 @@ gfxstate* fb_init(char *device, char *mode, int vt)
     unsigned long page_mask;
     gfxstate *gfx;
 
-    dev_init();
     tty = 0;
     if (vt != 0)
 	fb_setvt(vt);
@@ -434,14 +400,14 @@ gfxstate* fb_init(char *device, char *mode, int vt)
 		strerror(errno));
 	exit(1);
     }
-    
+
     if (NULL == device) {
 	device = getenv("FRAMEBUFFER");
 	if (NULL == device) {
 	    struct fb_con2fbmap c2m;
 	    memset(&c2m, 0, sizeof(c2m));
-	    if (-1 == (fb = open(devices->fb0,O_RDWR /* O_WRONLY */,0))) {
-		fprintf(stderr,"open %s: %s\n",devices->fb0,strerror(errno));
+	    if (-1 == (fb = open("/dev/fb0", O_RDWR /* O_WRONLY */, 0))) {
+		fprintf(stderr, "open /dev/fb0: %s\n", strerror(errno));
 		exit(1);
 	    }
 	    c2m.console = vts.v_active;
@@ -452,7 +418,7 @@ gfxstate* fb_init(char *device, char *mode, int vt)
 	    close(fb);
 	    fprintf(stderr,"map: vt%02d => fb%d\n",
 		    c2m.console, c2m.framebuffer);
-	    sprintf(fbdev,devices->fbnr,c2m.framebuffer);
+	    sprintf(fbdev, "/dev/fb%d", c2m.framebuffer);
 	    device = fbdev;
 	}
     }
