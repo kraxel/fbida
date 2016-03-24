@@ -42,13 +42,19 @@ static void drm_cleanup_display(void)
     }
 }
 
-static int drm_init_dev(const char *dev)
+static int drm_init_dev(const char *device)
 {
     drmModeRes *res;
+    char dev[64];
     int i, rc;
     uint64_t has_dumb;
 
     /* open device */
+    if (device) {
+        snprintf(dev, sizeof(dev), "%s", device);
+    } else {
+        snprintf(dev, sizeof(dev), DRM_DEV_NAME, DRM_DIR_NAME, 0);
+    }
     fd = open(dev, O_RDWR);
     if (fd < 0) {
         fprintf(stderr, "drm: open %s: %s\n", dev, strerror(errno));

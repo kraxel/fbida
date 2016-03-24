@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
 #include <unistd.h>
@@ -1433,7 +1434,8 @@ int main(int argc, char *argv[])
 {
     int              once;
     int              i, arg, key;
-    char             *info, *desc, *filelist, *device;
+    bool             framebuffer = false;
+    char             *info, *desc, *filelist, *device, *mode;
     char             linebuffer[128];
     struct flist     *fprev = NULL;
 
@@ -1514,17 +1516,39 @@ int main(int argc, char *argv[])
 
     /* gfx device init */
     device = cfg_get_str(O_DEVICE);
-    if (device && strncmp(device, "/dev/dri", 8) == 0) {
-        gfx = drm_init(device);
+    mode = cfg_get_str(O_VIDEO_MODE);
+    if (device) {
+        /* device specified */
+        if (strncmp(device, "/dev/d", 6) == 0) {
+            gfx = drm_init(device);
+        } else {
+            framebuffer = true;
+            gfx = fb_init(device, mode, GET_VT());
+        }
     } else {
-        gfx = fb_init(device,
-                      cfg_get_str(O_VIDEO_MODE),
-                      GET_VT());
+        /* try drm first, failing that fb */
+        gfx = drm_init(NULL);
+        if (!gfx) {
+            framebuffer = true;
+            gfx = fb_init(NULL, mode, GET_VT());
+        }
+    }
+    if (!gfx) {
+        fprintf(stderr, "graphics init failed\n");
+        exit(1);
     }
     exit_signals_init();
-    console_switch_init(console_switch_redraw);
-    shadow_init(gfx);
     signal(SIGTSTP,SIG_IGN);
+    if (console_switch_init(console_switch_redraw) < 0) {
+        fprintf(stderr, "NOTICE: No vt switching available on terminal.\n");
+        fprintf(stderr, "NOTICE: Not started from linux console?  CONFIG_VT=n?\n");
+        if (framebuffer) {
+            fprintf(stderr, "WARNING: Running on framebuffer and can't manage access.\n");
+            fprintf(stderr, "WARNING: Other processes (fbcon too) can write to display.\n");
+            fprintf(stderr, "WARNING: Also can't properly cleanup on exit.\n");
+        }
+    }
+    shadow_init(gfx);
 
     /* svga main loop */
     tty_raw();

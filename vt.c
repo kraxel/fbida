@@ -77,30 +77,31 @@ int console_switch_init(void (*redraw)(void))
     sigaction(SIGUSR1,&act,&old);
     sigaction(SIGUSR2,&act,&old);
 
+    if (-1 == ioctl(STDIN_FILENO, VT_GETMODE, &vt_omode)) {
+	perror("ioctl VT_GETMODE");
+        return -1;
+    }
+    if (-1 == ioctl(STDIN_FILENO, KDGETMODE, &kd_mode)) {
+	perror("ioctl KDGETMODE");
+        return -1;
+    }
+
     if (-1 == ioctl(STDIN_FILENO, VT_GETMODE, &vt_mode)) {
 	perror("ioctl VT_GETMODE");
-	exit(1);
+        return -1;
     }
     vt_mode.mode   = VT_PROCESS;
     vt_mode.waitv  = 0;
     vt_mode.relsig = SIGUSR1;
     vt_mode.acqsig = SIGUSR2;
-
-    if (-1 == ioctl(STDIN_FILENO, VT_GETMODE, &vt_omode)) {
-	perror("ioctl VT_GETMODE");
-	exit(1);
-    }
     if (-1 == ioctl(STDIN_FILENO, VT_SETMODE, &vt_mode)) {
 	perror("ioctl VT_SETMODE");
-	exit(1);
-    }
-    if (-1 == ioctl(STDIN_FILENO, KDGETMODE, &kd_mode)) {
-	perror("ioctl KDGETMODE");
-	exit(1);
+        return -1;
     }
     if (-1 == ioctl(STDIN_FILENO, KDSETMODE, KD_GRAPHICS)) {
+        ioctl(STDIN_FILENO, VT_SETMODE, &vt_omode);
 	perror("ioctl KDSETMODE");
-        exit(1);
+        return -1;
     }
     console_switching_active = true;
     return 0;

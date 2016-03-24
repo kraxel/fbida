@@ -237,32 +237,11 @@ gfxstate* fb_init(char *device, char *mode, int vt)
     if (vt != 0)
 	console_set_vt(vt);
 
-    if (-1 == ioctl(STDIN_FILENO, VT_GETSTATE, &vts)) {
-	fprintf(stderr,"ioctl VT_GETSTATE: %s (not a linux console?)\n",
-		strerror(errno));
-	exit(1);
-    }
-
     if (NULL == device) {
 	device = getenv("FRAMEBUFFER");
 	if (NULL == device) {
-	    struct fb_con2fbmap c2m;
-	    memset(&c2m, 0, sizeof(c2m));
-	    if (-1 == (fb = open("/dev/fb0", O_RDWR /* O_WRONLY */, 0))) {
-		fprintf(stderr, "open /dev/fb0: %s\n", strerror(errno));
-		exit(1);
-	    }
-	    c2m.console = vts.v_active;
-	    if (-1 == ioctl(fb, FBIOGET_CON2FBMAP, &c2m)) {
-		perror("ioctl FBIOGET_CON2FBMAP");
-		exit(1);
-	    }
-	    close(fb);
-	    fprintf(stderr,"map: vt%02d => fb%d\n",
-		    c2m.console, c2m.framebuffer);
-	    sprintf(fbdev, "/dev/fb%d", c2m.framebuffer);
-	    device = fbdev;
-	}
+            device = "/dev/fb0";
+        }
     }
 
     /* get current settings (which we have to restore) */
