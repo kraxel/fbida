@@ -172,7 +172,7 @@ ida.o: Ida.ad.h logo.h
 
 # object files
 OBJS_FBI := \
-	fbi.o fbtools.o fb-gui.o desktop.o \
+	fbi.o vt.o fbtools.o fb-gui.o desktop.o \
 	parseconfig.o fbiconfig.o \
 	jpegtools.o jpeg/$(JPEG_VER)/transupp.o \
 	dither.o filter.o op.o

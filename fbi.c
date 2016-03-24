@@ -36,6 +36,7 @@
 #endif
 
 #include "readers.h"
+#include "vt.h"
 #include "fbtools.h"
 #include "fb-gui.h"
 #include "filter.h"
@@ -196,101 +197,6 @@ usage(char *name)
 	    "works with <i>g.  Return acts like Space but additionally prints\n"
 	    "prints the filename of the currently displayed image to stdout.\n"
 	    "\n");
-}
-
-/* -------------------------------------------------------------------- */
-
-#define CONSOLE_ACTIVE    0
-#define CONSOLE_REL_REQ   1
-#define CONSOLE_INACTIVE  2
-#define CONSOLE_ACQ_REQ   3
-
-static int switch_last;
-static int console_switch_state = CONSOLE_ACTIVE;
-static struct vt_mode            vt_mode;
-
-static void console_switch_signal(int signal)
-{
-    if (signal == SIGUSR1) {
-	/* release */
-	console_switch_state = CONSOLE_REL_REQ;
-	if (debug)
-	    write(2,"vt: SIGUSR1\n",12);
-    }
-    if (signal == SIGUSR2) {
-	/* acquisition */
-	console_switch_state = CONSOLE_ACQ_REQ;
-	if (debug)
-	    write(2,"vt: SIGUSR2\n",12);
-    }
-}
-
-static void console_switch_release(void)
-{
-    ioctl(gfx->tty_fd, VT_RELDISP, 1);
-    console_switch_state = CONSOLE_INACTIVE;
-    if (debug)
-	write(2,"vt: release\n",12);
-}
-
-static void console_switch_acquire(void)
-{
-    ioctl(gfx->tty_fd, VT_RELDISP, VT_ACKACQ);
-    console_switch_state = CONSOLE_ACTIVE;
-    if (debug)
-	write(2,"vt: acquire\n",12);
-}
-
-static int console_switch_init(void)
-{
-    struct sigaction act,old;
-
-    memset(&act,0,sizeof(act));
-    act.sa_handler  = console_switch_signal;
-    sigemptyset(&act.sa_mask);
-    sigaction(SIGUSR1,&act,&old);
-    sigaction(SIGUSR2,&act,&old);
-
-    if (-1 == ioctl(gfx->tty_fd, VT_GETMODE, &vt_mode)) {
-	perror("ioctl VT_GETMODE");
-	exit(1);
-    }
-    vt_mode.mode   = VT_PROCESS;
-    vt_mode.waitv  = 0;
-    vt_mode.relsig = SIGUSR1;
-    vt_mode.acqsig = SIGUSR2;
-
-    if (-1 == ioctl(gfx->tty_fd, VT_SETMODE, &vt_mode)) {
-	perror("ioctl VT_SETMODE");
-	exit(1);
-    }
-    return 0;
-}
-
-static int check_console_switch(void)
-{
-    if (switch_last == console_switch_state)
-        return 0;
-
-    switch (console_switch_state) {
-    case CONSOLE_REL_REQ:
-	console_switch_release();
-    case CONSOLE_INACTIVE:
-	visible = 0;
-	break;
-    case CONSOLE_ACQ_REQ:
-	console_switch_acquire();
-    case CONSOLE_ACTIVE:
-	visible = 1;
-        gfx->restore_display();
-	shadow_set_dirty();
-	shadow_render(gfx);
-	break;
-    default:
-	break;
-    }
-    switch_last = console_switch_state;
-    return 1;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -563,7 +469,7 @@ static void show_exif(struct flist *f)
     char *value[ARRAY_SIZE(tags)];
     wchar_t *linebuffer[ARRAY_SIZE(tags)];
 
-    if (!visible)
+    if (!console_visible)
 	return;
 
     ed = exif_data_new_from_file(f->name);
@@ -1513,8 +1419,14 @@ static void cleanup_and_exit(int code)
     exit(code);
 }
 
-int
-main(int argc, char *argv[])
+static void console_switch_redraw(void)
+{
+    gfx->restore_display();
+    shadow_set_dirty();
+    shadow_render(gfx);
+}
+
+int main(int argc, char *argv[])
 {
     int              once;
     int              i, arg, key;
@@ -1600,7 +1512,7 @@ main(int argc, char *argv[])
                   cfg_get_str(O_VIDEO_MODE),
                   GET_VT());
     exit_signals_init();
-    console_switch_init();
+    console_switch_init(gfx->tty_fd, console_switch_redraw);
     shadow_init(gfx);
     signal(SIGTSTP,SIG_IGN);
 

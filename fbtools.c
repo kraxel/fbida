@@ -22,6 +22,7 @@
 #include <linux/vt.h>
 #include <linux/fb.h>
 
+#include "vt.h"
 #include "fbtools.h"
 
 #ifndef HAVE_STRSIGNAL
@@ -40,8 +41,6 @@ static unsigned char             *fb_mem;
 static int			 fb_mem_offset = 0;
 
 static int                       fb,tty;
-
-static int                       orig_vt_no = 0;
 
 static int                       kd_mode;
 static struct vt_mode            vt_omode;
@@ -204,59 +203,6 @@ fb_setmode(char *name)
     return -1;
 }
 
-static void
-fb_setvt(int vtno)
-{
-    struct vt_stat vts;
-    char vtname[12];
-    
-    if (vtno < 0) {
-	if (-1 == ioctl(tty,VT_OPENQRY, &vtno) || vtno == -1) {
-	    perror("ioctl VT_OPENQRY");
-	    exit(1);
-	}
-    }
-
-    vtno &= 0xff;
-    sprintf(vtname, "/dev/tty%d", vtno);
-    chown(vtname, getuid(), getgid());
-    if (-1 == access(vtname, R_OK | W_OK)) {
-	fprintf(stderr,"access %s: %s\n",vtname,strerror(errno));
-	exit(1);
-    }
-    switch (fork()) {
-    case 0:
-	break;
-    case -1:
-	perror("fork");
-	exit(1);
-    default:
-	exit(0);
-    }
-    close(tty);
-    close(0);
-    close(1);
-    close(2);
-    setsid();
-    open(vtname,O_RDWR);
-    dup(0);
-    dup(0);
-
-    if (-1 == ioctl(tty,VT_GETSTATE, &vts)) {
-	perror("ioctl VT_GETSTATE");
-	exit(1);
-    }
-    orig_vt_no = vts.v_active;
-    if (-1 == ioctl(tty,VT_ACTIVATE, vtno)) {
-	perror("ioctl VT_ACTIVATE");
-	exit(1);
-    }
-    if (-1 == ioctl(tty,VT_WAITACTIVE, vtno)) {
-	perror("ioctl VT_WAITACTIVE");
-	exit(1);
-    }
-}
-
 /* Hmm. radeonfb needs this. matroxfb doesn't. */
 static int fb_activate_current(int tty)
 {
@@ -301,10 +247,7 @@ static void fb_cleanup_display(void)
 
     if (-1 == ioctl(tty,VT_SETMODE, &vt_omode))
 	perror("ioctl VT_SETMODE");
-    if (orig_vt_no && -1 == ioctl(tty, VT_ACTIVATE, orig_vt_no))
-	perror("ioctl VT_ACTIVATE");
-    if (orig_vt_no && -1 == ioctl(tty, VT_WAITACTIVE, orig_vt_no))
-	perror("ioctl VT_WAITACTIVE");
+    console_restore_vt();
     tcsetattr(tty, TCSANOW, &term);
     close(tty);
 }
@@ -320,7 +263,7 @@ gfxstate* fb_init(char *device, char *mode, int vt)
 
     tty = 0;
     if (vt != 0)
-	fb_setvt(vt);
+	console_set_vt(vt);
 
     if (-1 == ioctl(tty,VT_GETSTATE, &vts)) {
 	fprintf(stderr,"ioctl VT_GETSTATE: %s (not a linux console?)\n",

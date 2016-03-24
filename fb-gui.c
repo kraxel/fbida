@@ -11,12 +11,10 @@
 #include <fontconfig/fontconfig.h>
 #include <fontconfig/fcfreetype.h>
 
+#include "vt.h"
 #include "fbtools.h"
 #include "dither.h"
 #include "fb-gui.h"
-
-/* public */
-int visible = 1;
 
 static int ys =  3;
 static int xs = 10;
@@ -95,7 +93,7 @@ void shadow_render(gfxstate *gfx)
     unsigned int offset = 0;
     int i;
 
-    if (!visible)
+    if (!console_visible)
 	return;
     for (i = 0; i < sheight; i++, offset += gfx->stride) {
 	if (0 == sdirty[i])
@@ -465,7 +463,7 @@ void shadow_draw_text_box(FT_Face face, int x, int y, int percent, wchar_t *line
 {
     unsigned int i,len,max, x1, x2, y1, y2;
 
-    if (!visible)
+    if (!console_visible)
 	return;
 
     max = 0;
