@@ -163,20 +163,20 @@ static void flist_img_load(struct flist *f, int prefetch);
 static void
 version(void)
 {
-    fprintf(stderr,
+    fprintf(stdout,
 	    "fbi version " VERSION ", compiled on %s\n"
-	    "(c) 1998-2012 Gerd Hoffmann <gerd@kraxel.org> [SUSE Labs]\n",
+	    "(c) 1998-2016 Gerd Hoffmann <gerd@kraxel.org>\n",
 	    __DATE__ );
 }
 
 static void
-usage(char *name)
+usage(FILE *fp, char *name)
 {
     char           *h;
 
     if (NULL != (h = strrchr(name, '/')))
 	name = h+1;
-    fprintf(stderr,
+    fprintf(fp,
 	    "\n"
 	    "This program displays images using the Linux framebuffer device.\n"
 	    "Supported formats: PhotoCD, jpeg, ppm, gif, tiff, xwd, bmp, png,\n"
@@ -186,10 +186,10 @@ usage(char *name)
 	    "\n",
 	    name);
 
-    cfg_help_cmdline(stderr,fbi_cmd,4,20,0);
-    cfg_help_cmdline(stderr,fbi_cfg,4,20,40);
+    cfg_help_cmdline(fp,fbi_cmd,4,20,0);
+    cfg_help_cmdline(fp,fbi_cfg,4,20,40);
 
-    fprintf(stderr,
+    fprintf(fp,
 	    "\n"
 	    "Large images can be scrolled using the cursor keys.  Zoom in/out\n"
 	    "works with '+' and '-'.  Use ESC or 'q' to quit.  Space and PgDn\n"
@@ -1454,7 +1454,7 @@ int main(int argc, char *argv[])
     }
 
     if (GET_HELP()) {
-	usage(argv[0]);
+	usage(stdout, argv[0]);
 	exit(0);
     }
     if (GET_VERSION()) {
@@ -1492,7 +1492,7 @@ int main(int argc, char *argv[])
     flist_renumber();
 
     if (0 == fcount) {
-	usage(argv[0]);
+	usage(stderr, argv[0]);
 	exit(1);
     }
 
