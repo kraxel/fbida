@@ -38,6 +38,7 @@
 #include "readers.h"
 #include "vt.h"
 #include "fbtools.h"
+#include "drmtools.h"
 #include "fb-gui.h"
 #include "filter.h"
 #include "desktop.h"
@@ -1404,6 +1405,7 @@ static void exit_signals_init(void)
 
     /* cleanup */
     gfx->cleanup_display();
+    console_switch_cleanup();
     fprintf(stderr,"Oops: %s\n",strsignal(termsig));
     exit(42);
 }
@@ -1415,6 +1417,7 @@ static void cleanup_and_exit(int code)
     shadow_fini();
     tty_restore();
     gfx->cleanup_display();
+    console_switch_cleanup();
     flist_print_tagged(stdout);
     exit(code);
 }
@@ -1430,7 +1433,7 @@ int main(int argc, char *argv[])
 {
     int              once;
     int              i, arg, key;
-    char             *info, *desc, *filelist;
+    char             *info, *desc, *filelist, *device;
     char             linebuffer[128];
     struct flist     *fprev = NULL;
 
@@ -1508,9 +1511,16 @@ int main(int argc, char *argv[])
 	fprintf(stderr,"can't open font: %s\n",fontname);
 	exit(1);
     }
-    gfx = fb_init(cfg_get_str(O_DEVICE),
-                  cfg_get_str(O_VIDEO_MODE),
-                  GET_VT());
+
+    /* gfx device init */
+    device = cfg_get_str(O_DEVICE);
+    if (device && strncmp(device, "/dev/dri", 8) == 0) {
+        gfx = drm_init(device);
+    } else {
+        gfx = fb_init(device,
+                      cfg_get_str(O_VIDEO_MODE),
+                      GET_VT());
+    }
     exit_signals_init();
     console_switch_init(console_switch_redraw);
     shadow_init(gfx);

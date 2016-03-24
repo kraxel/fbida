@@ -172,16 +172,16 @@ ida.o: Ida.ad.h logo.h
 
 # object files
 OBJS_FBI := \
-	fbi.o vt.o fbtools.o fb-gui.o desktop.o \
+	fbi.o vt.o fbtools.o drmtools.o fb-gui.o desktop.o \
 	parseconfig.o fbiconfig.o \
 	jpegtools.o jpeg/$(JPEG_VER)/transupp.o \
 	dither.o filter.o op.o
 
 OBJS_FBI += $(filter-out wr/%,$(call ac_lib_mkvar,$(fbi_libs),OBJS))
 
-# jpeg/exif libs
-fbi : CFLAGS += $(shell $(PKG_CONFIG) --cflags freetype2 fontconfig)
-fbi : LDLIBS += $(shell $(PKG_CONFIG) --libs   freetype2 fontconfig)
+# font + drm + jpeg/exif libs
+fbi : CFLAGS += $(shell $(PKG_CONFIG) --cflags freetype2 fontconfig libdrm)
+fbi : LDLIBS += $(shell $(PKG_CONFIG) --libs   freetype2 fontconfig libdrm)
 fbi : LDLIBS += -ljpeg -lexif -lm
 
 fbi: $(OBJS_FBI) $(OBJS_READER)

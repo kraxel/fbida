@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
@@ -25,7 +26,10 @@ extern int debug;
 
 static int switch_last;
 static int console_switch_state = CONSOLE_ACTIVE;
+static bool console_switching_active;
+static int kd_mode;
 static struct vt_mode vt_mode;
+static struct vt_mode vt_omode;
 static int orig_vt_no = 0;
 static void (*console_redraw)(void);
 
@@ -82,15 +86,42 @@ int console_switch_init(void (*redraw)(void))
     vt_mode.relsig = SIGUSR1;
     vt_mode.acqsig = SIGUSR2;
 
+    if (-1 == ioctl(STDIN_FILENO, VT_GETMODE, &vt_omode)) {
+	perror("ioctl VT_GETMODE");
+	exit(1);
+    }
     if (-1 == ioctl(STDIN_FILENO, VT_SETMODE, &vt_mode)) {
 	perror("ioctl VT_SETMODE");
 	exit(1);
     }
+    if (-1 == ioctl(STDIN_FILENO, KDGETMODE, &kd_mode)) {
+	perror("ioctl KDGETMODE");
+	exit(1);
+    }
+    if (-1 == ioctl(STDIN_FILENO, KDSETMODE, KD_GRAPHICS)) {
+	perror("ioctl KDSETMODE");
+        exit(1);
+    }
+    console_switching_active = true;
     return 0;
+}
+
+void console_switch_cleanup(void)
+{
+    if (!console_switching_active)
+        return;
+
+    if (-1 == ioctl(STDIN_FILENO, KDSETMODE, kd_mode))
+	perror("ioctl KDSETMODE");
+    if (-1 == ioctl(STDIN_FILENO, VT_SETMODE, &vt_omode))
+	perror("ioctl VT_SETMODE");
+    console_switching_active = false;
 }
 
 int check_console_switch(void)
 {
+    if (!console_switching_active)
+        return 0;
     if (switch_last == console_switch_state)
         return 0;
 

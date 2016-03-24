@@ -42,8 +42,6 @@ static int			 fb_mem_offset = 0;
 
 static int                       fb;
 
-static int                       kd_mode;
-static struct vt_mode            vt_omode;
 static struct termios            term;
 static struct fb_var_screeninfo  fb_ovar;
 static unsigned short            ored[256], ogreen[256], oblue[256];
@@ -212,8 +210,6 @@ static void fb_restore_display(void)
 static void fb_cleanup_display(void)
 {
     /* restore console */
-    if (-1 == ioctl(STDIN_FILENO, KDSETMODE, kd_mode))
-	perror("ioctl KDSETMODE");
     if (-1 == ioctl(fb, FBIOPUT_VSCREENINFO, &fb_ovar))
 	perror("ioctl FBIOPUT_VSCREENINFO");
     if (-1 == ioctl(fb, FBIOGET_FSCREENINFO, &fb_fix))
@@ -225,8 +221,6 @@ static void fb_cleanup_display(void)
     }
     close(fb);
 
-    if (-1 == ioctl(STDIN_FILENO, VT_SETMODE, &vt_omode))
-	perror("ioctl VT_SETMODE");
     console_restore_vt();
     tcsetattr(STDIN_FILENO, TCSANOW, &term);
 }
@@ -291,14 +285,6 @@ gfxstate* fb_init(char *device, char *mode, int vt)
 	    exit(1);
 	}
     }
-    if (-1 == ioctl(STDIN_FILENO, KDGETMODE, &kd_mode)) {
-	perror("ioctl KDGETMODE");
-	exit(1);
-    }
-    if (-1 == ioctl(STDIN_FILENO, VT_GETMODE, &vt_omode)) {
-	perror("ioctl VT_GETMODE");
-	exit(1);
-    }
     tcgetattr(STDIN_FILENO, &term);
 
     /* switch mode */
@@ -329,10 +315,6 @@ gfxstate* fb_init(char *device, char *mode, int vt)
 	    perror("ioctl FBIOPAN_DISPLAY");
 	    goto err;
 	}
-    }
-    if (-1 == ioctl(STDIN_FILENO, KDSETMODE, KD_GRAPHICS)) {
-	perror("ioctl KDSETMODE");
-	goto err;
     }
     console_activate_current();
 
