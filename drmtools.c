@@ -191,6 +191,6 @@ gfxstate *drm_init(const char *device)
     gfx->restore_display = drm_restore_display;
     gfx->cleanup_display = drm_cleanup_display;
 
-    fprintf(stderr, "using drm: %s\n", device);
+    fprintf(stderr, "using drm: %s\n", dev);
     return gfx;
 }
