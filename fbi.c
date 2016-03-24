@@ -21,6 +21,9 @@
 #include <wchar.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
+
+#include <linux/kd.h>
+#include <linux/vt.h>
 #include <linux/fb.h>
 
 #include <jpeglib.h>
@@ -121,11 +124,11 @@ static int img_mem, max_mem_mb;
 
 /* graphics interface */
 gfxstate                   *gfx;
+int                        debug;
 
 /* framebuffer */
 char                       *fbdev = NULL;
 char                       *fbmode  = NULL;
-int                        switch_last, debug;
 
 unsigned short red[256],  green[256],  blue[256];
 struct fb_cmap cmap  = { 0, 256, red,  green,  blue };
@@ -193,6 +196,101 @@ usage(char *name)
 	    "works with <i>g.  Return acts like Space but additionally prints\n"
 	    "prints the filename of the currently displayed image to stdout.\n"
 	    "\n");
+}
+
+/* -------------------------------------------------------------------- */
+
+#define CONSOLE_ACTIVE    0
+#define CONSOLE_REL_REQ   1
+#define CONSOLE_INACTIVE  2
+#define CONSOLE_ACQ_REQ   3
+
+static int switch_last;
+static int console_switch_state = CONSOLE_ACTIVE;
+static struct vt_mode            vt_mode;
+
+static void console_switch_signal(int signal)
+{
+    if (signal == SIGUSR1) {
+	/* release */
+	console_switch_state = CONSOLE_REL_REQ;
+	if (debug)
+	    write(2,"vt: SIGUSR1\n",12);
+    }
+    if (signal == SIGUSR2) {
+	/* acquisition */
+	console_switch_state = CONSOLE_ACQ_REQ;
+	if (debug)
+	    write(2,"vt: SIGUSR2\n",12);
+    }
+}
+
+static void console_switch_release(void)
+{
+    ioctl(gfx->tty_fd, VT_RELDISP, 1);
+    console_switch_state = CONSOLE_INACTIVE;
+    if (debug)
+	write(2,"vt: release\n",12);
+}
+
+static void console_switch_acquire(void)
+{
+    ioctl(gfx->tty_fd, VT_RELDISP, VT_ACKACQ);
+    console_switch_state = CONSOLE_ACTIVE;
+    if (debug)
+	write(2,"vt: acquire\n",12);
+}
+
+static int console_switch_init(void)
+{
+    struct sigaction act,old;
+
+    memset(&act,0,sizeof(act));
+    act.sa_handler  = console_switch_signal;
+    sigemptyset(&act.sa_mask);
+    sigaction(SIGUSR1,&act,&old);
+    sigaction(SIGUSR2,&act,&old);
+
+    if (-1 == ioctl(gfx->tty_fd, VT_GETMODE, &vt_mode)) {
+	perror("ioctl VT_GETMODE");
+	exit(1);
+    }
+    vt_mode.mode   = VT_PROCESS;
+    vt_mode.waitv  = 0;
+    vt_mode.relsig = SIGUSR1;
+    vt_mode.acqsig = SIGUSR2;
+
+    if (-1 == ioctl(gfx->tty_fd, VT_SETMODE, &vt_mode)) {
+	perror("ioctl VT_SETMODE");
+	exit(1);
+    }
+    return 0;
+}
+
+static int check_console_switch(void)
+{
+    if (switch_last == console_switch_state)
+        return 0;
+
+    switch (console_switch_state) {
+    case CONSOLE_REL_REQ:
+	console_switch_release();
+    case CONSOLE_INACTIVE:
+	visible = 0;
+	break;
+    case CONSOLE_ACQ_REQ:
+	console_switch_acquire();
+    case CONSOLE_ACTIVE:
+	visible = 1;
+        gfx->restore_display();
+	shadow_set_dirty();
+	shadow_render(gfx);
+	break;
+    default:
+	break;
+    }
+    switch_last = console_switch_state;
+    return 1;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -603,30 +701,6 @@ static void debug_key(char *key)
     status_update(linebuffer, NULL);
 }
 
-static void
-console_switch(void)
-{
-    switch (fb_switch_state) {
-    case FB_REL_REQ:
-	fb_switch_release();
-    case FB_INACTIVE:
-	visible = 0;
-	break;
-    case FB_ACQ_REQ:
-	fb_switch_acquire();
-    case FB_ACTIVE:
-	visible = 1;
-        gfx->restore_display();
-	shadow_set_dirty();
-	shadow_render(gfx);
-	break;
-    default:
-	break;
-    }
-    switch_last = fb_switch_state;
-    return;
-}
-
 /* ---------------------------------------------------------------------- */
 
 static void free_image(struct ida_image *img)
@@ -708,8 +782,7 @@ read_image(char *filename)
     img->data = flist_malloc(img->i.width * img->i.height * 3);
     img_mem += img->i.width * img->i.height * 3;
     for (y = 0; y < img->i.height; y++) {
-        if (switch_last != fb_switch_state)
-	    console_switch();
+        check_console_switch();
 	loader->read(img->data + img->i.width * 3 * y, y, data);
     }
     loader->done(data);
@@ -742,8 +815,7 @@ scale_image(struct ida_image *src, float scale)
     dest->data = flist_malloc(dest->i.width * dest->i.height * 3);
     img_mem += dest->i.width * dest->i.height * 3;
     for (y = 0; y < dest->i.height; y++) {
-	if (switch_last != fb_switch_state)
-	    console_switch();
+        check_console_switch();
 	desc_resize.work(src,&rect,
 			 dest->data + 3 * dest->i.width * y,
 			 y, data);
@@ -874,8 +946,7 @@ svga_show(struct flist *f, struct flist *prev,
 		shadow_render(gfx);
 	    }
 	}
-        if (switch_last != fb_switch_state) {
-	    console_switch();
+        if (check_console_switch()) {
 	    continue;
 	}
 	FD_ZERO(&set);
@@ -891,8 +962,7 @@ svga_show(struct flist *f, struct flist *prev,
 	limit.tv_usec = 0;
 	rc = select(fdmax, &set, NULL, NULL,
 		    (0 != timeout && !paused) ? &limit : NULL);
-        if (switch_last != fb_switch_state) {
-	    console_switch();
+        if (check_console_switch()) {
 	    continue;
 	}
 	if (0 == rc)
@@ -1157,8 +1227,7 @@ static char edit_line(struct ida_image *img, char *line, int max)
 
 	FD_SET(0, &set);
 	rc = select(1, &set, NULL, NULL, NULL);
-        if (switch_last != fb_switch_state) {
-	    console_switch();
+        if (check_console_switch()) {
 	    continue;
 	}
 	rc = read(0, key, sizeof(key)-1);
@@ -1398,15 +1467,6 @@ static void flist_img_load(struct flist *f, int prefetch)
 
 /* ---------------------------------------------------------------------- */
 
-static void cleanup_and_exit(int code)
-{
-    shadow_fini();
-    tty_restore();
-    gfx->cleanup_display();
-    flist_print_tagged(stdout);
-    exit(code);
-}
-
 static jmp_buf fb_fatal_cleanup;
 
 static void catch_exit_signal(int signal)
@@ -1440,6 +1500,17 @@ static void exit_signals_init(void)
     gfx->cleanup_display();
     fprintf(stderr,"Oops: %s\n",strsignal(termsig));
     exit(42);
+}
+
+/* ---------------------------------------------------------------------- */
+
+static void cleanup_and_exit(int code)
+{
+    shadow_fini();
+    tty_restore();
+    gfx->cleanup_display();
+    flist_print_tagged(stdout);
+    exit(code);
 }
 
 int
@@ -1529,7 +1600,7 @@ main(int argc, char *argv[])
                   cfg_get_str(O_VIDEO_MODE),
                   GET_VT());
     exit_signals_init();
-    fb_switch_init();
+    console_switch_init();
     shadow_init(gfx);
     signal(SIGTSTP,SIG_IGN);
 

@@ -32,11 +32,6 @@ static const char *strsignal(int signr)
 #endif
 
 /* -------------------------------------------------------------------- */
-/* exported stuff                                                       */
-
-int                        fb_switch_state = FB_ACTIVE;
-
-/* -------------------------------------------------------------------- */
 /* internal variables                                                   */
 
 static struct fb_fix_screeninfo  fb_fix;
@@ -47,7 +42,6 @@ static int			 fb_mem_offset = 0;
 static int                       fb,tty;
 
 static int                       orig_vt_no = 0;
-static struct vt_mode            vt_mode;
 
 static int                       kd_mode;
 static struct vt_mode            vt_omode;
@@ -115,73 +109,6 @@ static void fb_set_palette(void)
 	perror("ioctl FBIOPUTCMAP");
 	exit(1);
     }
-}
-
-/* -------------------------------------------------------------------- */
-/* console switching                                                    */
-
-extern int debug;
-
-static void
-fb_switch_signal(int signal)
-{
-    if (signal == SIGUSR1) {
-	/* release */
-	fb_switch_state = FB_REL_REQ;
-	if (debug)
-	    write(2,"vt: SIGUSR1\n",12);
-    }
-    if (signal == SIGUSR2) {
-	/* acquisition */
-	fb_switch_state = FB_ACQ_REQ;
-	if (debug)
-	    write(2,"vt: SIGUSR2\n",12);
-    }
-}
-
-void
-fb_switch_release()
-{
-    ioctl(tty, VT_RELDISP, 1);
-    fb_switch_state = FB_INACTIVE;
-    if (debug)
-	write(2,"vt: release\n",12);
-}
-
-void
-fb_switch_acquire()
-{
-    ioctl(tty, VT_RELDISP, VT_ACKACQ);
-    fb_switch_state = FB_ACTIVE;
-    if (debug)
-	write(2,"vt: acquire\n",12);
-}
-
-int
-fb_switch_init()
-{
-    struct sigaction act,old;
-
-    memset(&act,0,sizeof(act));
-    act.sa_handler  = fb_switch_signal;
-    sigemptyset(&act.sa_mask);
-    sigaction(SIGUSR1,&act,&old);
-    sigaction(SIGUSR2,&act,&old);
-    
-    if (-1 == ioctl(tty,VT_GETMODE, &vt_mode)) {
-	perror("ioctl VT_GETMODE");
-	exit(1);
-    }
-    vt_mode.mode   = VT_PROCESS;
-    vt_mode.waitv  = 0;
-    vt_mode.relsig = SIGUSR1;
-    vt_mode.acqsig = SIGUSR2;
-    
-    if (-1 == ioctl(tty,VT_SETMODE, &vt_mode)) {
-	perror("ioctl VT_SETMODE");
-	exit(1);
-    }
-    return 0;
 }
 
 /* -------------------------------------------------------------------- */
@@ -534,6 +461,7 @@ gfxstate* fb_init(char *device, char *mode, int vt)
     gfx->cleanup_display = fb_cleanup_display;
 
     gfx->fb_fd           = fb;
+    gfx->tty_fd          = tty;
     return gfx;
 
  err:
