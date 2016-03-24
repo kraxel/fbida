@@ -1408,6 +1408,41 @@ static void cleanup_and_exit(int code)
     exit(code);
 }
 
+static jmp_buf fb_fatal_cleanup;
+
+static void catch_exit_signal(int signal)
+{
+    siglongjmp(fb_fatal_cleanup,signal);
+}
+
+static void exit_signals_init(void)
+{
+    struct sigaction act,old;
+    int termsig;
+
+    memset(&act,0,sizeof(act));
+    act.sa_handler = catch_exit_signal;
+    sigemptyset(&act.sa_mask);
+    sigaction(SIGINT, &act,&old);
+    sigaction(SIGQUIT,&act,&old);
+    sigaction(SIGTERM,&act,&old);
+
+    sigaction(SIGABRT,&act,&old);
+    sigaction(SIGTSTP,&act,&old);
+
+    sigaction(SIGBUS, &act,&old);
+    sigaction(SIGILL, &act,&old);
+    sigaction(SIGSEGV,&act,&old);
+
+    if (0 == (termsig = sigsetjmp(fb_fatal_cleanup,0)))
+	return;
+
+    /* cleanup */
+    gfx->cleanup_display();
+    fprintf(stderr,"Oops: %s\n",strsignal(termsig));
+    exit(42);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -1494,7 +1529,7 @@ main(int argc, char *argv[])
     gfx = fb_init(cfg_get_str(O_DEVICE),
                   cfg_get_str(O_VIDEO_MODE),
                   GET_VT());
-    fb_catch_exit_signals();
+    exit_signals_init();
     fb_switch_init();
     shadow_init(gfx);
     signal(SIGTSTP,SIG_IGN);
