@@ -32,6 +32,7 @@
 #define O_PCD_RES		O_OPTIONS, "photocd-res"
 
 #define O_DEVICE                O_OPTIONS, "device"
+#define O_OUTPUT                O_OPTIONS, "output"
 #define O_FONT                  O_OPTIONS, "font"
 #define O_VIDEO_MODE            O_OPTIONS, "video-mode"
 

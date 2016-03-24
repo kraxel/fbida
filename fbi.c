@@ -1435,7 +1435,7 @@ int main(int argc, char *argv[])
     int              once;
     int              i, arg, key;
     bool             framebuffer = false;
-    char             *info, *desc, *filelist, *device, *mode;
+    char             *info, *desc, *filelist, *device, *output, *mode;
     char             linebuffer[128];
     struct flist     *fprev = NULL;
 
@@ -1520,18 +1520,19 @@ int main(int argc, char *argv[])
 
     /* gfx device init */
     device = cfg_get_str(O_DEVICE);
+    output = cfg_get_str(O_OUTPUT);
     mode = cfg_get_str(O_VIDEO_MODE);
     if (device) {
         /* device specified */
         if (strncmp(device, "/dev/d", 6) == 0) {
-            gfx = drm_init(device);
+            gfx = drm_init(device, output);
         } else {
             framebuffer = true;
             gfx = fb_init(device, mode, GET_VT());
         }
     } else {
         /* try drm first, failing that fb */
-        gfx = drm_init(NULL);
+        gfx = drm_init(NULL, output);
         if (!gfx) {
             framebuffer = true;
             gfx = fb_init(NULL, mode, GET_VT());

@@ -163,7 +163,13 @@ struct cfg_cmdline fbi_cfg[] = {
 	.cmdline  = "device",
 	.option   = { O_DEVICE },
 	.needsarg = 1,
-	.desc     = "use framebuffer device <arg>",
+	.desc     = "use framebuffer/drm device <arg>",
+    },{
+	.letter   = 'o',
+	.cmdline  = "output",
+	.option   = { O_OUTPUT },
+	.needsarg = 1,
+	.desc     = "use drm output <arg> (try -info for a list)",
     },{
 	.letter   = 'm',
 	.cmdline  = "mode",

@@ -77,11 +77,12 @@ static void drm_cleanup_display(void)
     }
 }
 
-static int drm_init_dev(const char *dev)
+static int drm_init_dev(const char *dev, const char *output)
 {
     drmModeRes *res;
-    int i, rc;
+    char name[64];
     uint64_t has_dumb;
+    int i, rc;
 
     /* open device */
     fd = open(dev, O_RDWR);
@@ -106,13 +107,26 @@ static int drm_init_dev(const char *dev)
         conn = drmModeGetConnector(fd, res->connectors[i]);
         if (conn &&
             (conn->connection == DRM_MODE_CONNECTED) &&
-            conn->count_modes)
-            break;
+            conn->count_modes) {
+            if (output) {
+                drm_conn_name(conn, name, sizeof(name));
+                if (strcmp(name, output) == 0) {
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
         drmModeFreeConnector(conn);
         conn = NULL;
     }
     if (!conn) {
-        fprintf(stderr, "drm: no usable connector found\n");
+        if (output) {
+            fprintf(stderr, "drm: output %s not found or disconnected\n",
+                    output);
+        } else {
+            fprintf(stderr, "drm: no usable output found\n");
+        }
         return -1;
     }
     mode = &conn->modes[0];
@@ -186,7 +200,7 @@ static void drm_restore_display(void)
     drm_show_fb();
 }
 
-gfxstate *drm_init(const char *device)
+gfxstate *drm_init(const char *device, const char *output)
 {
     gfxstate *gfx;
     char dev[64];
@@ -198,7 +212,7 @@ gfxstate *drm_init(const char *device)
     }
     fprintf(stderr, "trying drm: %s ...\n", dev);
 
-    if (drm_init_dev(dev) < 0)
+    if (drm_init_dev(dev, output) < 0)
         return NULL;
     if (drm_init_fb() < 0)
         return NULL;
