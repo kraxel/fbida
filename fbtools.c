@@ -229,8 +229,6 @@ static void fb_cleanup_display(void)
 
 gfxstate* fb_init(char *device, char *mode, int vt)
 {
-    char   fbdev[16];
-    struct vt_stat vts;
     unsigned long page_mask;
     gfxstate *gfx;
 
