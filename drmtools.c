@@ -161,6 +161,7 @@ gfxstate *drm_init(const char *device)
     } else {
         snprintf(dev, sizeof(dev), DRM_DEV_NAME, DRM_DIR_NAME, 0);
     }
+    fprintf(stderr, "trying drm: %s ...\n", dev);
 
     if (drm_init_dev(dev) < 0)
         return NULL;
@@ -190,7 +191,5 @@ gfxstate *drm_init(const char *device)
 
     gfx->restore_display = drm_restore_display;
     gfx->cleanup_display = drm_cleanup_display;
-
-    fprintf(stderr, "using drm: %s\n", dev);
     return gfx;
 }

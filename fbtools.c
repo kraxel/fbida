@@ -241,6 +241,7 @@ gfxstate* fb_init(char *device, char *mode, int vt)
             device = "/dev/fb0";
         }
     }
+    fprintf(stderr, "trying fbdev: %s ...\n", device);
 
     /* get current settings (which we have to restore) */
     if (-1 == (fb = open(device,O_RDWR /* O_WRONLY */))) {
@@ -339,8 +340,6 @@ gfxstate* fb_init(char *device, char *mode, int vt)
 
     gfx->restore_display = fb_restore_display;
     gfx->cleanup_display = fb_cleanup_display;
-
-    fprintf(stderr, "using fbdev: %s\n", device);
     return gfx;
 
  err:
