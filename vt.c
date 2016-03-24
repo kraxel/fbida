@@ -120,7 +120,7 @@ void console_set_vt(int vtno)
     char vtname[12];
 
     if (vtno < 0) {
-	if (-1 == ioctl(tty,VT_OPENQRY, &vtno) || vtno == -1) {
+	if (-1 == ioctl(tty, VT_OPENQRY, &vtno) || vtno == -1) {
 	    perror("ioctl VT_OPENQRY");
 	    exit(1);
 	}
@@ -133,6 +133,8 @@ void console_set_vt(int vtno)
 	fprintf(stderr,"access %s: %s\n",vtname,strerror(errno));
 	exit(1);
     }
+
+    /* switch controlling tty */
     switch (fork()) {
     case 0:
 	break;
@@ -142,7 +144,6 @@ void console_set_vt(int vtno)
     default:
 	exit(0);
     }
-    close(tty);
     close(0);
     close(1);
     close(2);
@@ -175,4 +176,24 @@ void console_restore_vt(void)
 	perror("ioctl VT_ACTIVATE");
     if (ioctl(tty, VT_WAITACTIVE, orig_vt_no) < 0)
 	perror("ioctl VT_WAITACTIVE");
+}
+
+/* Hmm. radeonfb needs this. matroxfb doesn't. */
+int console_activate_current(int tty)
+{
+    struct vt_stat vts;
+
+    if (-1 == ioctl(tty,VT_GETSTATE, &vts)) {
+	perror("ioctl VT_GETSTATE");
+	return -1;
+    }
+    if (-1 == ioctl(tty,VT_ACTIVATE, vts.v_active)) {
+	perror("ioctl VT_ACTIVATE");
+	return -1;
+    }
+    if (-1 == ioctl(tty,VT_WAITACTIVE, vts.v_active)) {
+	perror("ioctl VT_WAITACTIVE");
+	return -1;
+    }
+    return 0;
 }

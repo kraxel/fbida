@@ -203,26 +203,6 @@ fb_setmode(char *name)
     return -1;
 }
 
-/* Hmm. radeonfb needs this. matroxfb doesn't. */
-static int fb_activate_current(int tty)
-{
-    struct vt_stat vts;
-    
-    if (-1 == ioctl(tty,VT_GETSTATE, &vts)) {
-	perror("ioctl VT_GETSTATE");
-	return -1;
-    }
-    if (-1 == ioctl(tty,VT_ACTIVATE, vts.v_active)) {
-	perror("ioctl VT_ACTIVATE");
-	return -1;
-    }
-    if (-1 == ioctl(tty,VT_WAITACTIVE, vts.v_active)) {
-	perror("ioctl VT_WAITACTIVE");
-	return -1;
-    }
-    return 0;
-}
-
 static void fb_restore_display(void)
 {
     ioctl(fb,FBIOPAN_DISPLAY,&fb_var);
@@ -356,7 +336,7 @@ gfxstate* fb_init(char *device, char *mode, int vt)
 	perror("ioctl KDSETMODE");
 	goto err;
     }
-    fb_activate_current(tty);
+    console_activate_current(tty);
 
     /* cls */
     fb_memset(fb_mem+fb_mem_offset, 0, fb_fix.line_length * fb_var.yres);
