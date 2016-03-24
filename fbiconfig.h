@@ -9,6 +9,7 @@
 #define O_FILE_LIST		O_CMDLINE, "file-list"
 #define O_TEXT_MODE		O_CMDLINE, "text-mode"
 #define O_AUTO_ZOOM		O_CMDLINE, "auto-zoom"
+#define O_DEVICE_INFO		O_CMDLINE, "device-info"
 
 #define O_AUTO_UP		O_OPTIONS, "auto-up"
 #define O_AUTO_DOWN		O_OPTIONS, "auto-down"
@@ -39,6 +40,7 @@
 #define GET_WRITECONF()		cfg_get_bool(O_WRITECONF,     0)
 #define GET_TEXT_MODE()		cfg_get_bool(O_TEXT_MODE,     0)
 #define GET_AUTO_ZOOM()		cfg_get_bool(O_AUTO_ZOOM,     0)
+#define GET_DEVICE_INFO()	cfg_get_bool(O_DEVICE_INFO,   0)
 
 #define GET_AUTO_UP()		cfg_get_bool(O_AUTO_UP,       0)
 #define GET_AUTO_DOWN()		cfg_get_bool(O_AUTO_DOWN,     0)

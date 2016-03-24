@@ -33,6 +33,41 @@ static uint8_t *fbmem;
 
 /* ------------------------------------------------------------------ */
 
+static const char *conn_type[] = {
+    [ DRM_MODE_CONNECTOR_Unknown      ] = "unknown",
+    [ DRM_MODE_CONNECTOR_VGA          ] = "vga",
+    [ DRM_MODE_CONNECTOR_DVII         ] = "dvi-i",
+    [ DRM_MODE_CONNECTOR_DVID         ] = "dvi-d",
+    [ DRM_MODE_CONNECTOR_DVIA         ] = "dvi-a",
+    [ DRM_MODE_CONNECTOR_Composite    ] = "composite",
+    [ DRM_MODE_CONNECTOR_SVIDEO       ] = "svideo",
+    [ DRM_MODE_CONNECTOR_LVDS         ] = "lvds",
+    [ DRM_MODE_CONNECTOR_Component    ] = "component",
+    [ DRM_MODE_CONNECTOR_9PinDIN      ] = "9pin-din",
+    [ DRM_MODE_CONNECTOR_DisplayPort  ] = "dp",
+    [ DRM_MODE_CONNECTOR_HDMIA        ] = "hdmi-a",
+    [ DRM_MODE_CONNECTOR_HDMIB        ] = "hdmi-b",
+    [ DRM_MODE_CONNECTOR_TV           ] = "tv",
+    [ DRM_MODE_CONNECTOR_eDP          ] = "edp",
+    [ DRM_MODE_CONNECTOR_VIRTUAL      ] = "virtual",
+    [ DRM_MODE_CONNECTOR_DSI          ] = "dsi",
+};
+
+static void drm_conn_name(drmModeConnector *conn, char *dest, int dlen)
+{
+    const char *type;
+
+    if (conn->connector_type_id < sizeof(conn_type)/sizeof(conn_type[0]) &&
+        conn_type[conn->connector_type]) {
+        type = conn_type[conn->connector_type];
+    } else {
+        type = "unknown";
+    }
+    snprintf(dest, dlen, "%s-%d", type, conn->connector_type_id);
+}
+
+/* ------------------------------------------------------------------ */
+
 static void drm_cleanup_display(void)
 {
     /* restore crtc */
@@ -192,4 +227,61 @@ gfxstate *drm_init(const char *device)
     gfx->restore_display = drm_restore_display;
     gfx->cleanup_display = drm_cleanup_display;
     return gfx;
+}
+
+void drm_info(const char *device)
+{
+    drmModeConnector *conn;
+    drmModeEncoder *enc;
+    drmModeCrtc *crtc;
+    drmModeRes *res;
+    char name[64];
+    char dev[64];
+    int i;
+
+    if (device) {
+        snprintf(dev, sizeof(dev), "%s", device);
+    } else {
+        snprintf(dev, sizeof(dev), DRM_DEV_NAME, DRM_DIR_NAME, 0);
+    }
+    fd = open(dev, O_RDWR);
+    if (fd < 0) {
+        fprintf(stderr, "drm: open %s: %s\n", dev, strerror(errno));
+        return;
+    }
+    fprintf(stdout, "connectors for %s:\n", dev);
+
+    res = drmModeGetResources(fd);
+    if (res == NULL) {
+        return;
+    }
+
+    for (i = 0; i < res->count_connectors; i++) {
+        conn = drmModeGetConnector(fd, res->connectors[i]);
+        if (!conn)
+            continue;
+        if (!conn->count_encoders)
+            return;
+        drm_conn_name(conn, name, sizeof(name));
+
+        enc = NULL;
+        crtc = NULL;
+        if (conn->encoder_id) {
+            enc = drmModeGetEncoder(fd, conn->encoder_id);
+            if (enc && enc->crtc_id) {
+                crtc = drmModeGetCrtc(fd, enc->crtc_id);
+            }
+        }
+
+        if (conn->connection == DRM_MODE_CONNECTED && crtc) {
+            fprintf(stdout, "    %s, connected, %dx%d\n", name,
+                    crtc->width, crtc->height);
+        } else {
+            fprintf(stdout, "    %s, disconnected\n", name);
+        }
+
+        drmModeFreeCrtc(crtc);
+        drmModeFreeEncoder(enc);
+        drmModeFreeConnector(conn);
+    }
 }

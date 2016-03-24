@@ -23,6 +23,12 @@ struct cfg_cmdline fbi_cmd[] = {
 	.value    = "1",
 	.desc     = "print fbi version number",
     },{
+	.letter   = 'i',
+	.cmdline  = "info",
+	.option   = { O_DEVICE_INFO },
+	.value    = "1",
+	.desc     = "print device info",
+    },{
 	.cmdline  = "store",
 	.option   = { O_WRITECONF },
 	.value    = "1",

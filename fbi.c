@@ -1466,6 +1466,10 @@ int main(int argc, char *argv[])
 	version();
 	exit(0);
     }
+    if (GET_DEVICE_INFO()) {
+        drm_info(cfg_get_str(O_DEVICE));
+        exit(0);
+    }
     if (GET_WRITECONF())
 	fbi_write_config();
 
