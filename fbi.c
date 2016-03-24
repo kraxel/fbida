@@ -1691,13 +1691,6 @@ int main(int argc, char *argv[])
 	    timeout = arg;
 	    break;
 	case KEY_VERBOSE:
-#if 0 /* fbdev testing/debugging hack */
-	    {
-		ioctl(gfx->fb_fd,FBIOBLANK,1);
-		sleep(1);
-		ioctl(gfx->fb_fd,FBIOBLANK,0);
-	    }
-#endif
 	    statusline = !statusline;
 	    break;
 	case KEY_DESC:

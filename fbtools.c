@@ -340,7 +340,6 @@ gfxstate* fb_init(char *device, char *mode, int vt)
     gfx->restore_display = fb_restore_display;
     gfx->cleanup_display = fb_cleanup_display;
 
-    gfx->fb_fd           = fb;
     return gfx;
 
  err:
