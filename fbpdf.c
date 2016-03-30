@@ -262,7 +262,7 @@ int main(int argc, char *argv[])
     }
 
     if (optind+1 != argc ) {
-        fprintf(stderr, "usage: %s [ options ] <pdf-file>\n", argv[0]);
+	usage(stderr, argv[0]);
         exit(1);
     }
 
