@@ -83,7 +83,7 @@ static struct termctrl termctrl[] = {
     { .seq = "\x07", .code = KEY_G, .mod = KEY_MOD_CTRL },
     { .seq = "\x08", .code = KEY_H, .mod = KEY_MOD_CTRL },
     { .seq = "\x09", .code = KEY_I, .mod = KEY_MOD_CTRL },
-    { .seq = "\x0a", .code = KEY_J, .mod = KEY_MOD_CTRL },
+    { .seq = "\x0a", .code = KEY_ENTER },
     { .seq = "\x0b", .code = KEY_K, .mod = KEY_MOD_CTRL },
     { .seq = "\x0c", .code = KEY_L, .mod = KEY_MOD_CTRL },
     { .seq = "\x0d", .code = KEY_M, .mod = KEY_MOD_CTRL },
@@ -116,6 +116,7 @@ static struct termctrl termctrl[] = {
     { .seq = "\x1b",      .code = KEY_ESC      },
     { .seq = "+",         .code = KEY_KPPLUS   },
     { .seq = "-",         .code = KEY_KPMINUS  },
+    { .seq = "\x7f",      .code = KEY_BACKSPACE},
 
     { .seq = "\x1b[A",    .code = KEY_UP       },
     { .seq = "\x1b[B",    .code = KEY_DOWN     },

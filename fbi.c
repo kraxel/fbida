@@ -57,32 +57,6 @@
 #define MIN(x,y)        ((x)<(y)?(x):(y))
 #define ARRAY_SIZE(x)   (sizeof(x)/sizeof(x[0]))
 
-#define KEY_EOF        -1       /* ^D */
-#define KEY_ESC        -2
-#define KEY_SPACE      -3
-#define KEY_Q          -4
-#define KEY_PGUP       -5
-#define KEY_PGDN       -6
-#define KEY_TIMEOUT    -7
-#define KEY_TAGFILE    -8
-#define KEY_PLUS       -9
-#define KEY_MINUS     -10
-#define KEY_VERBOSE   -11
-#define KEY_ASCALE    -12
-#define KEY_DESC      -13
-
-/* with arg */
-#define KEY_GOTO     -100
-#define KEY_SCALE    -101
-#define KEY_DELAY    -102
-
-/* edit */
-#define KEY_DELETE   -200
-#define KEY_ROT_CW   -201
-#define KEY_ROT_CCW  -202
-#define KEY_FLIP_V   -203
-#define KEY_FLIP_H   -204
-
 /* ---------------------------------------------------------------------- */
 
 /* lirc fd */
@@ -762,7 +736,8 @@ svga_show(struct flist *f, struct flist *prev,
     struct ida_image  *img = flist_img_get(f);
     int               exif = 0, help = 0;
     int               rc;
-    char              key[11];
+    char              key[16];
+    uint32_t          keycode, keymod;
     fd_set            set;
     struct timeval    limit;
     char              linebuffer[80];
@@ -830,14 +805,14 @@ svga_show(struct flist *f, struct flist *prev,
 	    continue;
 	}
 	if (0 == rc)
-	    return KEY_TIMEOUT;
+	    return -1; /* timeout */
 
 	if (FD_ISSET(0,&set)) {
 	    /* stdin, i.e. keyboard */
 	    rc = read(0, key, sizeof(key)-1);
 	    if (rc < 1) {
 		/* EOF */
-		return KEY_EOF;
+		return KEY_ESC;
 	    }
 	    key[rc] = 0;
 	}
@@ -852,17 +827,9 @@ svga_show(struct flist *f, struct flist *prev,
 	    key[rc] = 0;
         }
 #endif
-
-	if (rc == 1 && (*key == 'q'    || *key == 'Q' ||
-			*key == 'e'    || *key == 'E' ||
-			*key == '\x1b' || *key == '\n')) {
-	    if (*key == '\n')
-		return KEY_TAGFILE;
-	    if (*key == '\x1b')
-		return KEY_ESC;
-	    return KEY_Q;
-
-	} else if (0 == strcmp(key, " ")) {
+        keycode = kbd_parse(key, &keymod);
+        switch (keycode) {
+        case KEY_SPACE:
 	    if (textreading && f->top < (int)(img->i.height - gfx->vdisplay)) {
 		redraw = 1;
 		f->top += f->text_steps;
@@ -870,82 +837,63 @@ svga_show(struct flist *f, struct flist *prev,
 		skip = KEY_SPACE;
 		return KEY_SPACE;
 	    }
+            break;
 
-	} else if (0 == strcmp(key, "\x1b[A") && img->i.height > gfx->vdisplay) {
+        case KEY_UP:
 	    redraw = 1;
 	    f->top -= v_steps;
-	} else if (0 == strcmp(key, "\x1b[B") && img->i.height > gfx->vdisplay) {
+            break;
+        case KEY_DOWN:
 	    redraw = 1;
 	    f->top += v_steps;
-	} else if (0 == strcmp(key, "\x1b[1~") && img->i.height > gfx->vdisplay) {
+            break;
+        case KEY_HOME:
 	    redraw = 1;
 	    f->top = 0;
-	} else if (0 == strcmp(key, "\x1b[4~")) {
+            break;
+        case KEY_END:
 	    redraw = 1;
 	    f->top = img->i.height - gfx->vdisplay;
-	} else if (0 == strcmp(key, "\x1b[D") && img->i.width > gfx->hdisplay) {
+            break;
+        case KEY_LEFT:
 	    redraw = 1;
 	    f->left -= h_steps;
-	} else if (0 == strcmp(key, "\x1b[C") && img->i.width > gfx->hdisplay) {
+            break;
+        case KEY_RIGHT:
 	    redraw = 1;
 	    f->left += h_steps;
+            break;
 
-	} else if (0 == strcmp(key, "\x1b[5~") ||
-		   0 == strcmp(key, "k")       ||
-		   0 == strcmp(key, "K")) {
+        case KEY_PAGEUP:
+        case KEY_K:
 	    if (textreading && f->top > 0) {
 		redraw = 1;
 		f->top -= f->text_steps;
 	    } else {
-		skip = KEY_PGUP;
-		return KEY_PGUP;
+		skip = KEY_PAGEUP;
+		return KEY_PAGEUP;
 	    }
-
-	} else if (0 == strcmp(key, "\x1b[6~") ||
-		   0 == strcmp(key, "j")       ||
-		   0 == strcmp(key, "J")       ||
-		   0 == strcmp(key, "n")       ||
-		   0 == strcmp(key, "N")) {
+            break;
+        case KEY_PAGEDOWN:
+        case KEY_J:
+        case KEY_N:
 	    if (textreading && f->top < (int)(img->i.height - gfx->vdisplay)) {
 		redraw = 1;
 		f->top += f->text_steps;
 	    } else {
-		skip = KEY_PGDN;
-		return KEY_PGDN;
+		skip = KEY_PAGEDOWN;
+		return KEY_PAGEDOWN;
 	    }
+            break;
 
-	} else if (0 == strcmp(key, "+")) {
-	    return KEY_PLUS;
-	} else if (0 == strcmp(key, "-")) {
-	    return KEY_MINUS;
-	} else if (0 == strcmp(key, "a") ||
-		   0 == strcmp(key, "A")) {
-	    return KEY_ASCALE;
-
-	} else if (0 == strcmp(key, "p") ||
-		   0 == strcmp(key, "P")) {
+        case KEY_P:
 	    if (0 != timeout) {
 		paused = !paused;
 		status_update(paused ? "pause on " : "pause off", NULL);
 	    }
+            break;
 
-	} else if (0 == strcmp(key, "D")) {
-	    return KEY_DELETE;
-	} else if (0 == strcmp(key, "r") ||
-		   0 == strcmp(key, "R")) {
-	    return KEY_ROT_CW;
-	} else if (0 == strcmp(key, "l") ||
-		   0 == strcmp(key, "L")) {
-	    return KEY_ROT_CCW;
-	} else if (0 == strcmp(key, "x") ||
-		   0 == strcmp(key, "X")) {
-	    return KEY_FLIP_V;
-	} else if (0 == strcmp(key, "y") ||
-		   0 == strcmp(key, "Y")) {
-	    return KEY_FLIP_H;
-
-	} else if (0 == strcmp(key, "h") ||
-		   0 == strcmp(key, "H")) {
+        case KEY_H:
 	    if (!help) {
 		show_help();
 		help = 1;
@@ -954,9 +902,9 @@ svga_show(struct flist *f, struct flist *prev,
 		help = 0;
 	    }
 	    exif = 0;
+            break;
 
-	} else if (0 == strcmp(key, "i") ||
-		   0 == strcmp(key, "I")) {
+        case KEY_I:
 	    if (!exif) {
 		show_exif(fcurrent);
 		exif = 1;
@@ -965,31 +913,32 @@ svga_show(struct flist *f, struct flist *prev,
 		exif = 0;
 	    }
 	    help = 0;
+            break;
 
-	} else if (0 == strcmp(key, "v") ||
-		   0 == strcmp(key, "V")) {
-	    return KEY_VERBOSE;
-
-	} else if (0 == strcmp(key, "t") ||
-		   0 == strcmp(key, "T")) {
-	    return KEY_DESC;
-
-	} else if (rc == 1 && (*key == 'g' || *key == 'G')) {
-	    return KEY_GOTO;
-	} else if (rc == 1 && (*key == 's' || *key == 'S')) {
-	    return KEY_SCALE;
-	} else if (rc == 1 && (*key == 'x' || *key == 'X')) {
-	    return KEY_DELAY;
-	} else if (rc == 1 && *key >= '0' && *key <= '9') {
-	    *nr = *nr * 10 + (*key - '0');
+        case KEY_0:
+        case KEY_1:
+        case KEY_2:
+        case KEY_3:
+        case KEY_4:
+        case KEY_5:
+        case KEY_6:
+        case KEY_7:
+        case KEY_8:
+        case KEY_9:
+	    *nr = *nr * 10;
+            if (keycode != KEY_0)
+                *nr += keycode - KEY_1 + 1;
 	    snprintf(linebuffer, sizeof(linebuffer), "> %d",*nr);
 	    status_update(linebuffer, NULL);
-	} else {
-	    *nr = 0;
-#if 0
-	    debug_key(key);
-#endif
-	}
+            break;
+
+        case KEY_D:
+            /* need shift state for this one */
+            return KEY_D | (keymod << 16);
+            break;
+        default:
+            return keycode;
+        }
     }
 }
 
@@ -1083,8 +1032,9 @@ static char edit_line(struct ida_image *img, char *line, int max)
     int      len = strlen(line);
     int      pos = len;
     int      rc;
-    char     key[11];
-    fd_set  set;
+    char     key[16];
+    uint32_t keycode, keymod;
+    fd_set   set;
 
     do {
 	status_edit(line,pos);
@@ -1097,60 +1047,50 @@ static char edit_line(struct ida_image *img, char *line, int max)
 	rc = read(0, key, sizeof(key)-1);
 	if (rc < 1) {
 	    /* EOF */
-	    return KEY_EOF;
+	    return KEY_ESC;
 	}
 	key[rc] = 0;
 
-	if (0 == strcmp(key,"\x0a")) {
-	    /* Enter */
-	    return 0;
+        keycode = kbd_parse(key, &keymod);
 
-	} else if (0 == strcmp(key,"\x1b")) {
-	    /* ESC */
+        switch (keycode) {
+        case KEY_ENTER:
+	    return 0;
+        case KEY_ESC:
 	    return KEY_ESC;
 
-	} else if (0 == strcmp(key,"\x1b[C")) {
-	    /* cursor right */
+        case KEY_RIGHT:
 	    if (pos < len)
 		pos++;
-
-	} else if (0 == strcmp(key,"\x1b[D")) {
-	    /* cursor left */
+        case KEY_LEFT:
 	    if (pos > 0)
 		pos--;
-
-	} else if (0 == strcmp(key,"\x1b[1~")) {
-	    /* home */
+        case KEY_HOME:
 	    pos = 0;
-
-	} else if (0 == strcmp(key,"\x1b[4~")) {
-	    /* end */
+        case KEY_END:
 	    pos = len;
-
-	} else if (0 == strcmp(key,"\x7f")) {
-	    /* backspace */
+        case KEY_BACKSPACE:
 	    if (pos > 0) {
 		memmove(line+pos-1,line+pos,len-pos+1);
 		pos--;
 		len--;
 	    }
-
-	} else if (0 == strcmp(key,"\x1b[3~")) {
-	    /* delete */
+        case KEY_DELETE:
 	    if (pos < len) {
 		memmove(line+pos,line+pos+1,len-pos);
 		len--;
 	    }
 
-	} else if (1 == rc && isprint(key[0]) && len < max) {
-	    /* new key */
-	    if (pos < len)
-		memmove(line+pos+1,line+pos,len-pos+1);
-	    line[pos] = key[0];
-	    pos++;
-	    len++;
-	    line[len] = 0;
-
+        default:
+            if (1 == rc && isprint(key[0]) && len < max) {
+                /* new key */
+                if (pos < len)
+                    memmove(line+pos+1,line+pos,len-pos+1);
+                line[pos] = key[0];
+                pos++;
+                len++;
+                line[len] = 0;
+            }
 	}
     } while (1);
 }
@@ -1524,7 +1464,7 @@ int main(int argc, char *argv[])
 	key = svga_show(fcurrent, fprev, timeout, desc, info, &arg);
 	fprev = fcurrent;
 	switch (key) {
-	case KEY_DELETE:
+	case KEY_D | (KEY_MOD_SHIFT << 16):
 	    if (editable) {
 		struct flist *fdel = fcurrent;
 		if (flist_islast(fcurrent))
@@ -1543,8 +1483,8 @@ int main(int argc, char *argv[])
 		status_error("readonly mode, sorry [start with --edit?]");
 	    }
 	    break;
-	case KEY_ROT_CW:
-	case KEY_ROT_CCW:
+	case KEY_R:
+	case KEY_L:
 	{
 	    if (editable) {
 		snprintf(linebuffer,sizeof(linebuffer),
@@ -1552,7 +1492,7 @@ int main(int argc, char *argv[])
 		status_update(linebuffer, NULL);
 		jpeg_transform_inplace
 		    (fcurrent->name,
-		     (key == KEY_ROT_CW) ? JXFORM_ROT_90 : JXFORM_ROT_270,
+		     (key == KEY_R) ? JXFORM_ROT_90 : JXFORM_ROT_270,
 		     NULL,
 		     NULL,0,
 		     (backup   ? JFLAG_FILE_BACKUP    : 0) |
@@ -1567,8 +1507,8 @@ int main(int argc, char *argv[])
 	    }
 	    break;
 	}
-	case KEY_FLIP_V:
-	case KEY_FLIP_H:
+	case KEY_X:
+	case KEY_Y:
 	{
 	    if (editable) {
 		snprintf(linebuffer,sizeof(linebuffer),
@@ -1576,7 +1516,7 @@ int main(int argc, char *argv[])
 		status_update(linebuffer, NULL);
 		jpeg_transform_inplace
 		    (fcurrent->name,
-		     (key == KEY_FLIP_V) ? JXFORM_FLIP_V : JXFORM_FLIP_H,
+		     (key == KEY_X) ? JXFORM_FLIP_V : JXFORM_FLIP_H,
 		     NULL,
 		     NULL,0,
 		     (backup   ? JFLAG_FILE_BACKUP    : 0) |
@@ -1591,7 +1531,7 @@ int main(int argc, char *argv[])
 	    }
 	    break;
 	}
-	case KEY_TAGFILE:
+	case KEY_ENTER:
 	    fcurrent->tag = !fcurrent->tag;
 	    /* fall throuth */
 	case KEY_SPACE:
@@ -1601,34 +1541,34 @@ int main(int argc, char *argv[])
 	    /* else fall */
 	case KEY_ESC:
 	case KEY_Q:
-	case KEY_EOF:
+	case KEY_E:
 	    cleanup_and_exit(0);
 	    break;
-	case KEY_PGDN:
+	case KEY_PAGEDOWN:
 	    fcurrent = flist_next(fcurrent,0,1);
 	    break;
-	case KEY_PGUP:
+	case KEY_PAGEUP:
 	    fcurrent = flist_prev(fcurrent,1);
 	    break;
-	case KEY_TIMEOUT:
+	case -1: /* timeout */
 	    fcurrent = flist_next(fcurrent,once,1);
 	    if (NULL == fcurrent) {
 		cleanup_and_exit(0);
 	    }
 	    /* FIXME: wrap around */
 	    break;
-	case KEY_PLUS:
-	case KEY_MINUS:
-	case KEY_ASCALE:
-	case KEY_SCALE:
+	case KEY_KPPLUS:
+	case KEY_KPMINUS:
+	case KEY_A:
+	case KEY_S:
 	    {
 		float newscale, oldscale = fcurrent->scale;
 
-		if (key == KEY_PLUS) {
+		if (key == KEY_KPPLUS) {
 		    newscale = fcurrent->scale * 1.6;
-		} else if (key == KEY_MINUS) {
+		} else if (key == KEY_KPMINUS) {
 		    newscale = fcurrent->scale / 1.6;
-		} else if (key == KEY_ASCALE) {
+		} else if (key == KEY_A) {
 		    newscale = auto_scale(fcurrent->fimg);
 		} else {
 		    newscale = arg / 100.0;
@@ -1641,17 +1581,19 @@ int main(int argc, char *argv[])
 		scale_fix_top_left(fcurrent, oldscale, newscale);
 		break;
 	    }
-	case KEY_GOTO:
+	case KEY_G:
 	    if (arg > 0 && arg <= fcount)
 		fcurrent = flist_goto(arg);
 	    break;
+#if 0 /* FIXME */
 	case KEY_DELAY:
 	    timeout = arg;
 	    break;
-	case KEY_VERBOSE:
+#endif
+	case KEY_V:
 	    statusline = !statusline;
 	    break;
-	case KEY_DESC:
+	case KEY_T:
 	    if (!comments) {
 		edit_desc(img, fcurrent->name);
 		desc = make_desc(&fcurrent->fimg->i,fcurrent->name);
