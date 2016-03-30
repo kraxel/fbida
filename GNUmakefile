@@ -16,7 +16,7 @@ all: build
 # what to build
 TARGETS := exiftran thumbnail.cgi
 ifeq ($(HAVE_LINUX_FB_H),yes)
-  TARGETS += fbi fbpdf
+  TARGETS += fbi fbpdf kbdtest
 endif
 ifeq ($(HAVE_MOTIF),yes)
   TARGETS += ida
@@ -172,7 +172,7 @@ ida.o: Ida.ad.h logo.h
 
 # object files
 OBJS_FBI := \
-	fbi.o vt.o fbtools.o drmtools.o fb-gui.o desktop.o \
+	fbi.o vt.o kbd.o fbtools.o drmtools.o fb-gui.o desktop.o \
 	parseconfig.o fbiconfig.o \
 	jpegtools.o jpeg/$(JPEG_VER)/transupp.o \
 	dither.o filter.o op.o
@@ -200,6 +200,11 @@ fbpdf : LDLIBS += $(shell $(PKG_CONFIG) --libs   libdrm poppler-glib)
 
 fbpdf: $(OBJS_FBPDF)
 
+
+########################################################################
+# rules for kbdtest
+
+kbdtest : kbdtest.o kbd.o
 
 ########################################################################
 # general rules

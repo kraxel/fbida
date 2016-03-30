@@ -38,6 +38,7 @@
 
 #include "readers.h"
 #include "vt.h"
+#include "kbd.h"
 #include "fbtools.h"
 #include "drmtools.h"
 #include "fb-gui.h"
@@ -562,49 +563,6 @@ static void show_help(void)
     shadow_draw_text_box(face, 24, 16, transparency,
 			 help, ARRAY_SIZE(help));
     shadow_render(gfx);
-}
-
-/* ---------------------------------------------------------------------- */
-
-struct termios  saved_attributes;
-int             saved_fl;
-
-static void
-tty_raw(void)
-{
-    struct termios tattr;
-
-    fcntl(STDIN_FILENO, F_GETFL, &saved_fl);
-    tcgetattr (0, &saved_attributes);
-
-    fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
-    memcpy(&tattr,&saved_attributes,sizeof(struct termios));
-    tattr.c_lflag &= ~(ICANON|ECHO);
-    tattr.c_cc[VMIN] = 1;
-    tattr.c_cc[VTIME] = 0;
-    tcsetattr(STDIN_FILENO, TCSAFLUSH, &tattr);
-}
-
-static void
-tty_restore(void)
-{
-    fcntl(STDIN_FILENO, F_SETFL, saved_fl);
-    tcsetattr(STDIN_FILENO, TCSANOW, &saved_attributes);
-}
-
-/* testing: find key codes */
-static void debug_key(char *key)
-{
-    char linebuffer[128];
-    int i,len;
-
-    len = sprintf(linebuffer,"key: ");
-    for (i = 0; key[i] != '\0'; i++)
-	len += snprintf(linebuffer+len, sizeof(linebuffer)-len,
-			"%s%c",
-			key[i] < 0x20 ? "^" : "",
-			key[i] < 0x20 ? key[i] + 0x40 : key[i]);
-    status_update(linebuffer, NULL);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -1193,9 +1151,6 @@ static char edit_line(struct ida_image *img, char *line, int max)
 	    len++;
 	    line[len] = 0;
 
-	} else if (0 /* debug */) {
-	    debug_key(key);
-	    sleep(1);
 	}
     } while (1);
 }
