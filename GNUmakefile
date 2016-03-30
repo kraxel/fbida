@@ -16,7 +16,7 @@ all: build
 # what to build
 TARGETS := exiftran thumbnail.cgi
 ifeq ($(HAVE_LINUX_FB_H),yes)
-  TARGETS += fbi
+  TARGETS += fbi fbpdf
 endif
 ifeq ($(HAVE_MOTIF),yes)
   TARGETS += ida
@@ -185,6 +185,20 @@ fbi : LDLIBS += $(shell $(PKG_CONFIG) --libs   freetype2 fontconfig libdrm)
 fbi : LDLIBS += -ljpeg -lexif -lm
 
 fbi: $(OBJS_FBI) $(OBJS_READER)
+
+
+########################################################################
+# rules for fbpdf
+
+# object files
+OBJS_FBPDF := \
+	fbpdf.o vt.o fbtools.o drmtools.o
+
+# font + drm + jpeg/exif libs
+fbpdf : CFLAGS += $(shell $(PKG_CONFIG) --cflags libdrm poppler-glib)
+fbpdf : LDLIBS += $(shell $(PKG_CONFIG) --libs   libdrm poppler-glib)
+
+fbpdf: $(OBJS_FBPDF)
 
 
 ########################################################################

@@ -82,8 +82,6 @@
 #define KEY_FLIP_V   -203
 #define KEY_FLIP_H   -204
 
-#define DEFAULT_DEVICE  "/dev/fb0"
-
 /* ---------------------------------------------------------------------- */
 
 /* lirc fd */
