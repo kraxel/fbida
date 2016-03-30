@@ -68,6 +68,7 @@ struct cfg_cmdline fbi_cfg[] = {
 	.yesno    = 1,
 	.desc     = "  like the above, but downscale only",
     },{
+	.letter   = 'w',
 	.cmdline  = "fitwidth",
 	.option   = { O_FIT_WIDTH },
 	.yesno    = 1,
@@ -184,12 +185,68 @@ struct cfg_cmdline fbi_cfg[] = {
 
 /* ------------------------------------------------------------------------ */
 
+struct cfg_cmdline fbpdf_cmd[] = {
+    {
+	.letter   = 'h',
+	.cmdline  = "help",
+	.option   = { O_HELP },
+	.value    = "1",
+	.desc     = "print this help text",
+    },{
+	.letter   = 'V',
+	.cmdline  = "version",
+	.option   = { O_VERSION },
+	.value    = "1",
+	.desc     = "print fbi version number",
+    },{
+	.letter   = 'i',
+	.cmdline  = "info",
+	.option   = { O_DEVICE_INFO },
+	.value    = "1",
+	.desc     = "print device info",
+    },{
+	/* end of list */
+    }
+};
+
+struct cfg_cmdline fbpdf_cfg[] = {
+    {
+	.letter   = 'w',
+	.cmdline  = "fitwidth",
+	.option   = { O_FIT_WIDTH },
+	.yesno    = 1,
+	.desc     = "fit page width on screen",
+    },{
+	.letter   = 'd',
+	.cmdline  = "device",
+	.option   = { O_DEVICE },
+	.needsarg = 1,
+	.desc     = "use framebuffer/drm device <arg>",
+    },{
+	.letter   = 'o',
+	.cmdline  = "output",
+	.option   = { O_OUTPUT },
+	.needsarg = 1,
+	.desc     = "use drm output <arg> (try -info for a list)",
+    },{
+	.letter   = 'm',
+	.cmdline  = "mode",
+	.option   = { O_VIDEO_MODE },
+	.needsarg = 1,
+	.desc     = "use video mode <arg> (from /etc/fb.modes)",
+    },{
+	/* end of list */
+    }
+};
+
+/* ------------------------------------------------------------------------ */
+
 static char *fbi_config = NULL;
 
 static void init_config(void)
 {
     char *home;
-    
+
     home = getenv("HOME");
     if (NULL == home)
 	return;

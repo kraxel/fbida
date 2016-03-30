@@ -67,6 +67,8 @@
 
 extern struct cfg_cmdline fbi_cmd[];
 extern struct cfg_cmdline fbi_cfg[];
+extern struct cfg_cmdline fbpdf_cmd[];
+extern struct cfg_cmdline fbpdf_cfg[];
 void fbi_read_config(void);
 void fbi_write_config(void);
 

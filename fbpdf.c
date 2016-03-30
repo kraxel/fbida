@@ -36,15 +36,24 @@
 #include "kbd.h"
 #include "fbtools.h"
 #include "drmtools.h"
+#include "fbiconfig.h"
 
 /* ---------------------------------------------------------------------- */
 
+/* options */
+int                        fitwidth;
+char                       *device;
+char                       *output;
+char                       *mode;
+
+/* gfx output state */
 gfxstate                   *gfx;
 int                        debug;
 PopplerDocument            *doc;
 cairo_surface_t            *surface1;
 cairo_surface_t            *surface2;
 
+/* pdf render state */
 PopplerPage                *page;
 double                     pw, ph; /* pdf page size */
 double                     scale;
@@ -192,32 +201,110 @@ static void console_switch_redraw(void)
     gfx->restore_display();
 }
 
+static void
+version(void)
+{
+    fprintf(stdout,
+	    "fbpdf version " VERSION "\n"
+	    "(c) 1998-2016 Gerd Hoffmann <gerd@kraxel.org>\n");
+}
+
+static void
+usage(FILE *fp, char *name)
+{
+    char           *h;
+
+    if (NULL != (h = strrchr(name, '/')))
+	name = h+1;
+    fprintf(fp,
+	    "\n"
+	    "This program displays pfd files using the Linux fbdev or drm device.\n"
+	    "\n"
+	    "usage: %s [ options ] pdf-file\n"
+	    "\n",
+	    name);
+
+    cfg_help_cmdline(fp,fbpdf_cmd,4,20,0);
+    cfg_help_cmdline(fp,fbpdf_cfg,4,20,40);
+
+    fprintf(fp,
+	    "\n");
+}
+
 int main(int argc, char *argv[])
 {
     GError *err = NULL;
     bool framebuffer = false;
     bool quit, newpage;
+    char cwd[1024];
+    char uri[1024];
     char key[32];
     uint32_t keycode, keymod;
     int index = 0;
 
     setlocale(LC_ALL,"");
 
-    if (argc < 2) {
-        fprintf(stderr, "usage: %s <pdf-file>\n", argv[0]);
+    fbi_read_config();
+    cfg_parse_cmdline(&argc,argv,fbi_cmd);
+    cfg_parse_cmdline(&argc,argv,fbi_cfg);
+
+    if (GET_HELP()) {
+	usage(stdout, argv[0]);
+	exit(0);
+    }
+    if (GET_VERSION()) {
+	version();
+	exit(0);
+    }
+    if (GET_DEVICE_INFO()) {
+        drm_info(cfg_get_str(O_DEVICE));
+        exit(0);
+    }
+
+    if (optind+1 != argc ) {
+        fprintf(stderr, "usage: %s [ options ] <pdf-file>\n", argv[0]);
         exit(1);
     }
-    doc = poppler_document_new_from_file(argv[1], NULL, &err);
+
+    /* filename -> uri */
+    if (strncmp(argv[optind], "file:/", 6) == 0) {
+        /* is uri already */
+        snprintf(uri, sizeof(uri), "%s", argv[optind]);
+    } else if (strncmp(argv[optind], "/", 1) == 0) {
+        /* absolute path */
+        snprintf(uri, sizeof(uri), "file:%s", argv[optind]);
+    } else {
+        /* relative path */
+        getcwd(cwd, sizeof(cwd));
+        snprintf(uri, sizeof(uri), "file:%s/%s", cwd, argv[optind]);
+    }
+    doc = poppler_document_new_from_file(uri, NULL, &err);
     if (!doc) {
-        fprintf(stderr, "loading %s failed: %s\n", argv[1], err->message);
+        fprintf(stderr, "loading %s failed: %s\n", uri, err->message);
         exit(1);
     }
 
     /* gfx init */
-    gfx = drm_init(NULL, NULL, true);
-    if (!gfx) {
-        framebuffer = true;
-        gfx = fb_init(NULL, NULL, 0);
+    device = cfg_get_str(O_DEVICE);
+    output = cfg_get_str(O_OUTPUT);
+    mode = cfg_get_str(O_VIDEO_MODE);
+    fitwidth = GET_FIT_WIDTH();
+
+    if (device) {
+        /* device specified */
+        if (strncmp(device, "/dev/d", 6) == 0) {
+            gfx = drm_init(device, output, true);
+        } else {
+            framebuffer = true;
+            gfx = fb_init(device, mode, GET_VT());
+        }
+    } else {
+        /* try drm first, failing that fb */
+        gfx = drm_init(NULL, output, true);
+        if (!gfx) {
+            framebuffer = true;
+            gfx = fb_init(NULL, mode, GET_VT());
+        }
     }
     if (!gfx) {
         fprintf(stderr, "graphics init failed\n");
@@ -255,10 +342,11 @@ int main(int argc, char *argv[])
     for (quit = false; !quit;) {
         if (newpage) {
             page = poppler_document_get_page(doc, index);
-            if (0)
-                page_fit();
-            if (1)
+            if (fitwidth) {
                 page_fit_width();
+            } else {
+                page_fit();
+            }
             newpage = false;
         }
         page_render();

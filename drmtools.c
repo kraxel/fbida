@@ -255,6 +255,8 @@ gfxstate *drm_init(const char *device, const char *output, bool pageflip)
     if (pageflip) {
         if (drm_init_fb(&fb2) == 0) {
             gfx->mem2 = fb2.mem;
+        } else {
+            fprintf(stderr, "drm: can't alloc two fbs, pageflip disabled.\n");
         }
     }
     return gfx;

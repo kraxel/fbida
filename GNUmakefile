@@ -192,7 +192,8 @@ fbi: $(OBJS_FBI) $(OBJS_READER)
 
 # object files
 OBJS_FBPDF := \
-	fbpdf.o vt.o kbd.o fbtools.o drmtools.o
+	fbpdf.o vt.o kbd.o fbtools.o drmtools.o \
+	fbiconfig.o parseconfig.o
 
 # font + drm + jpeg/exif libs
 fbpdf : CFLAGS += $(shell $(PKG_CONFIG) --cflags libdrm poppler-glib)
