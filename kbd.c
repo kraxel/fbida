@@ -74,31 +74,6 @@ static struct termctrl termctrl[] = {
     { .seq = "Y", .code = KEY_Y, .mod = KEY_MOD_SHIFT },
     { .seq = "Z", .code = KEY_Z, .mod = KEY_MOD_SHIFT },
 
-    { .seq = "0", .code = KEY_0, },
-    { .seq = "1", .code = KEY_1, },
-    { .seq = "2", .code = KEY_2, },
-    { .seq = "3", .code = KEY_3, },
-    { .seq = "4", .code = KEY_4, },
-    { .seq = "5", .code = KEY_5, },
-    { .seq = "6", .code = KEY_6, },
-    { .seq = "7", .code = KEY_7, },
-    { .seq = "8", .code = KEY_8, },
-    { .seq = "9", .code = KEY_9, },
-
-    { .seq = "\x1b[A",    .code = KEY_UP       },
-    { .seq = "\x1b[B",    .code = KEY_DOWN     },
-    { .seq = "\x1b[C",    .code = KEY_RIGHT    },
-    { .seq = "\x1b[D",    .code = KEY_LEFT     },
-    { .seq = "\x1b[F",    .code = KEY_END      },
-    { .seq = "\x1b[H",    .code = KEY_HOME     },
-
-    { .seq = "\x1b[1~",   .code = KEY_HOME     },
-    { .seq = "\x1b[2~",   .code = KEY_INSERT   },
-    { .seq = "\x1b[3~",   .code = KEY_DELETE   },
-    { .seq = "\x1b[4~",   .code = KEY_END      },
-    { .seq = "\x1b[5~",   .code = KEY_PAGEUP   },
-    { .seq = "\x1b[6~",   .code = KEY_PAGEDOWN },
-
     { .seq = "\x01", .code = KEY_A, .mod = KEY_MOD_CTRL },
     { .seq = "\x02", .code = KEY_B, .mod = KEY_MOD_CTRL },
     { .seq = "\x03", .code = KEY_C, .mod = KEY_MOD_CTRL },
@@ -125,7 +100,36 @@ static struct termctrl termctrl[] = {
     { .seq = "\x18", .code = KEY_X, .mod = KEY_MOD_CTRL },
     { .seq = "\x19", .code = KEY_Y, .mod = KEY_MOD_CTRL },
     { .seq = "\x1a", .code = KEY_Z, .mod = KEY_MOD_CTRL },
-    { .seq = "\x1b", .code = KEY_ESC },
+
+    { .seq = "0", .code = KEY_0 },
+    { .seq = "1", .code = KEY_1 },
+    { .seq = "2", .code = KEY_2 },
+    { .seq = "3", .code = KEY_3 },
+    { .seq = "4", .code = KEY_4 },
+    { .seq = "5", .code = KEY_5 },
+    { .seq = "6", .code = KEY_6 },
+    { .seq = "7", .code = KEY_7 },
+    { .seq = "8", .code = KEY_8 },
+    { .seq = "9", .code = KEY_9 },
+
+    { .seq = " ",         .code = KEY_SPACE    },
+    { .seq = "\x1b",      .code = KEY_ESC      },
+    { .seq = "+",         .code = KEY_KPPLUS   },
+    { .seq = "-",         .code = KEY_KPMINUS  },
+
+    { .seq = "\x1b[A",    .code = KEY_UP       },
+    { .seq = "\x1b[B",    .code = KEY_DOWN     },
+    { .seq = "\x1b[C",    .code = KEY_RIGHT    },
+    { .seq = "\x1b[D",    .code = KEY_LEFT     },
+    { .seq = "\x1b[F",    .code = KEY_END      },
+    { .seq = "\x1b[H",    .code = KEY_HOME     },
+
+    { .seq = "\x1b[1~",   .code = KEY_HOME     },
+    { .seq = "\x1b[2~",   .code = KEY_INSERT   },
+    { .seq = "\x1b[3~",   .code = KEY_DELETE   },
+    { .seq = "\x1b[4~",   .code = KEY_END      },
+    { .seq = "\x1b[5~",   .code = KEY_PAGEUP   },
+    { .seq = "\x1b[6~",   .code = KEY_PAGEDOWN },
 
     { /* EOF */ }
 };
@@ -142,6 +146,21 @@ uint32_t kbd_parse(const char *key, uint32_t *mod)
     }
     *mod = 0;
     return KEY_RESERVED;
+}
+
+int kbd_wait(int timeout)
+{
+    struct timeval limit;
+    fd_set set;
+    int rc;
+
+    FD_ZERO(&set);
+    FD_SET(STDIN_FILENO, &set);
+    limit.tv_sec = timeout;
+    limit.tv_usec = 0;
+    rc = select(STDIN_FILENO + 1, &set, NULL, NULL,
+                timeout ? &limit : NULL);
+    return rc;
 }
 
 /* ---------------------------------------------------------------------- */

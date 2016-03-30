@@ -17,6 +17,7 @@
 #include <termios.h>
 #include <math.h>
 #include <signal.h>
+#include <inttypes.h>
 #include <ctype.h>
 #include <locale.h>
 #include <wchar.h>
@@ -32,6 +33,7 @@
 #include <poppler.h>
 
 #include "vt.h"
+#include "kbd.h"
 #include "fbtools.h"
 #include "drmtools.h"
 
@@ -40,9 +42,99 @@
 gfxstate                   *gfx;
 int                        debug;
 PopplerDocument            *doc;
-PopplerPage                *page;
 cairo_surface_t            *surface;
-cairo_t                    *context;
+
+PopplerPage                *page;
+double                     pw, ph; /* pdf page size */
+double                     scale;
+double                     sw, sh; /* scaled pdf page size */
+double                     tx, ty;
+
+/* ---------------------------------------------------------------------- */
+
+static void page_check_scroll(void)
+{
+    if (gfx->vdisplay < sh) {
+        /* range check vertical scroll */
+        if (ty < gfx->vdisplay - sh)
+            ty = gfx->vdisplay - sh;
+        if (ty > 0)
+            ty = 0;
+    } else {
+        /* no need to scroll -> center */
+        ty = (gfx->vdisplay - sh) / 2;
+    }
+
+    if (gfx->hdisplay < sw) {
+        /* range check vertical scroll */
+        if (tx < gfx->hdisplay - sw)
+            tx = gfx->hdisplay - sw;
+        if (tx > 0)
+            tx = 0;
+    } else {
+        /* no need to scroll -> center */
+        tx = (gfx->hdisplay - sw) / 2;
+    }
+}
+
+static void page_move(double dx, double dy)
+{
+    tx += dx * gfx->hdisplay;
+    ty += dy * gfx->vdisplay;
+    page_check_scroll();
+}
+
+static void page_scale(double factor)
+{
+    scale *= factor;
+    tx *= factor;
+    ty *= factor;
+    sw = pw * scale;
+    sh = ph * scale;
+    page_check_scroll();
+}
+
+static void page_fit(void)
+{
+    double sx, sy;
+
+    poppler_page_get_size(page, &pw, &ph);
+    sx = gfx->hdisplay / pw;
+    sy = gfx->vdisplay / ph;
+    scale = sx < sy ? sx : sy;
+    sw = pw * scale;
+    sh = ph * scale;
+    page_check_scroll();
+}
+
+static void page_fit_width(void)
+{
+    poppler_page_get_size(page, &pw, &ph);
+    scale = gfx->hdisplay / pw;
+    sw = pw * scale;
+    sh = ph * scale;
+    ty = 0;
+    page_check_scroll();
+}
+
+static void page_render(void)
+{
+    cairo_t *context;
+
+    context = cairo_create(surface);
+
+    cairo_set_source_rgb(context, 1, 1, 1);
+    cairo_paint(context);
+
+    cairo_translate(context, tx, ty);
+    cairo_scale(context, scale, scale);
+    poppler_page_render(page, context);
+    cairo_show_page(context);
+    cairo_destroy(context);
+
+    if (gfx->flush_display)
+        gfx->flush_display();
+}
 
 /* ---------------------------------------------------------------------- */
 
@@ -93,14 +185,17 @@ static void cleanup_and_exit(int code)
 
 static void console_switch_redraw(void)
 {
-    /* TODO */
+    gfx->restore_display();
 }
 
 int main(int argc, char *argv[])
 {
     GError *err = NULL;
     bool framebuffer = false;
-    double w,h;
+    bool quit, newpage;
+    char key[32];
+    uint32_t keycode, keymod;
+    int index = 0;
 
     setlocale(LC_ALL,"");
 
@@ -141,19 +236,84 @@ int main(int argc, char *argv[])
                                                   gfx->hdisplay,
                                                   gfx->vdisplay,
                                                   gfx->stride);
-    context = cairo_create(surface);
 
-    cairo_set_source_rgb(context, 1, 1, 1);
-    cairo_paint(context);
+    tty_raw();
 
-    page = poppler_document_get_page(doc, 0);
-    poppler_page_get_size(page, &w, &h);
-    fprintf(stderr, "page: %.1lf x %.1lf\n", w, h);
+    index = 0;
+    newpage = true;
+    for (quit = false; !quit;) {
+        if (newpage) {
+            page = poppler_document_get_page(doc, index);
+            if (0)
+                page_fit();
+            if (1)
+                page_fit_width();
+            newpage = false;
+        }
+        page_render();
 
-    poppler_page_render(page, context);
-    cairo_show_page(context);
+        if (check_console_switch()) {
+	    continue;
+	}
+        kbd_wait(0);
+        if (check_console_switch()) {
+	    continue;
+	}
 
-    sleep(5);
+        memset(key, 0, sizeof(key));
+        read(0, key, sizeof(key)-1);
+        keycode = kbd_parse(key, &keymod);
+
+        switch (keycode) {
+        case KEY_ESC:
+        case KEY_Q:
+            quit = true;
+            break;
+        case KEY_PAGEUP:
+            if (index > 0) {
+                index--;
+                newpage = true;
+            }
+            break;
+        case KEY_PAGEDOWN:
+            if (index+1 < poppler_document_get_n_pages(doc)) {
+                index++;
+                newpage = true;
+            }
+            break;
+        case KEY_UP:
+            page_move(0, 0.2);
+            break;
+        case KEY_DOWN:
+            page_move(0, -0.2);
+            break;
+        case KEY_LEFT:
+            page_move(0.2, 0);
+            break;
+        case KEY_RIGHT:
+            page_move(-0.2, 0);
+            break;
+        case KEY_KPMINUS:
+            page_scale(0.7);
+            break;
+        case KEY_KPPLUS:
+            page_scale(1.5);
+            break;
+        case KEY_SPACE:
+            if (ty > gfx->vdisplay - sh) {
+                page_move(0, -0.75);
+                break;
+            } else if (index+1 < poppler_document_get_n_pages(doc)) {
+                index++;
+                newpage = true;
+            } else {
+                quit = true;
+            }
+            break;
+        }
+    }
+
+    tty_restore();
     cleanup_and_exit(0);
     return 0;
 }
