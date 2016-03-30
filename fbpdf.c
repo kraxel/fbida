@@ -42,7 +42,8 @@
 gfxstate                   *gfx;
 int                        debug;
 PopplerDocument            *doc;
-cairo_surface_t            *surface;
+cairo_surface_t            *surface1;
+cairo_surface_t            *surface2;
 
 PopplerPage                *page;
 double                     pw, ph; /* pdf page size */
@@ -119,9 +120,12 @@ static void page_fit_width(void)
 
 static void page_render(void)
 {
+    static bool second;
     cairo_t *context;
 
-    context = cairo_create(surface);
+    if (surface2)
+        second = !second;
+    context = cairo_create(second ? surface2 : surface1);
 
     cairo_set_source_rgb(context, 1, 1, 1);
     cairo_paint(context);
@@ -133,7 +137,7 @@ static void page_render(void)
     cairo_destroy(context);
 
     if (gfx->flush_display)
-        gfx->flush_display();
+        gfx->flush_display(second);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -210,7 +214,7 @@ int main(int argc, char *argv[])
     }
 
     /* gfx init */
-    gfx = drm_init(NULL, NULL);
+    gfx = drm_init(NULL, NULL, true);
     if (!gfx) {
         framebuffer = true;
         gfx = fb_init(NULL, NULL, 0);
@@ -231,11 +235,18 @@ int main(int argc, char *argv[])
         }
     }
 
-    surface = cairo_image_surface_create_for_data(gfx->mem,
+    surface1 = cairo_image_surface_create_for_data(gfx->mem,
                                                   CAIRO_FORMAT_ARGB32,
                                                   gfx->hdisplay,
                                                   gfx->vdisplay,
                                                   gfx->stride);
+    if (gfx->mem2) {
+        surface2 = cairo_image_surface_create_for_data(gfx->mem2,
+                                                       CAIRO_FORMAT_ARGB32,
+                                                       gfx->hdisplay,
+                                                       gfx->vdisplay,
+                                                       gfx->stride);
+    }
 
     tty_raw();
 

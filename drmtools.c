@@ -25,11 +25,12 @@ static drmModeConnector *conn = NULL;
 static drmModeEncoder *enc = NULL;
 static drmModeModeInfo *mode = NULL;
 static drmModeCrtc *scrtc = NULL;
-static uint32_t fb_id;
 
-/* dumb fb */
-static struct drm_mode_create_dumb creq;
-static uint8_t *fbmem;
+struct drmfb {
+    uint32_t id;
+    struct drm_mode_create_dumb creq;
+    uint8_t *mem;
+} fb1, fb2, *fbc;
 
 /* ------------------------------------------------------------------ */
 
@@ -141,23 +142,24 @@ static int drm_init_dev(const char *dev, const char *output)
     return 0;
 }
 
-static int drm_init_fb(void)
+static int drm_init_fb(struct drmfb *fb)
 {
     struct drm_mode_map_dumb mreq;
     int rc;
 
     /* create framebuffer */
-    memset(&creq, 0, sizeof(creq));
-    creq.width = mode->hdisplay;
-    creq.height = mode->vdisplay;
-    creq.bpp = 32;
-    rc = drmIoctl(fd, DRM_IOCTL_MODE_CREATE_DUMB, &creq);
+    memset(&fb->creq, 0, sizeof(fb->creq));
+    fb->creq.width = mode->hdisplay;
+    fb->creq.height = mode->vdisplay;
+    fb->creq.bpp = 32;
+    rc = drmIoctl(fd, DRM_IOCTL_MODE_CREATE_DUMB, &fb->creq);
     if (rc < 0) {
         fprintf(stderr, "drm: DRM_IOCTL_MODE_CREATE_DUMB: %s\n", strerror(errno));
         return -1;
     }
-    rc = drmModeAddFB(fd, creq.width, creq.height, 24, 32, creq.pitch,
-                      creq.handle, &fb_id);
+    rc = drmModeAddFB(fd, fb->creq.width, fb->creq.height,
+                      24, 32, fb->creq.pitch,
+                      fb->creq.handle, &fb->id);
     if (rc < 0) {
         fprintf(stderr, "drm: drmModeAddFB() failed\n");
         return -1;
@@ -165,25 +167,26 @@ static int drm_init_fb(void)
 
     /* map framebuffer */
     memset(&mreq, 0, sizeof(mreq));
-    mreq.handle = creq.handle;
+    mreq.handle = fb->creq.handle;
     rc = drmIoctl(fd, DRM_IOCTL_MODE_MAP_DUMB, &mreq);
     if (rc < 0) {
         fprintf(stderr, "drm: DRM_IOCTL_MODE_MAP_DUMB: %s\n", strerror(errno));
         return -1;
     }
-    fbmem = mmap(0, creq.size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, mreq.offset);
-    if (fbmem == MAP_FAILED) {
+    fb->mem = mmap(0, fb->creq.size, PROT_READ | PROT_WRITE, MAP_SHARED,
+                   fd, mreq.offset);
+    if (fb->mem == MAP_FAILED) {
         fprintf(stderr, "drm: framebuffer mmap: %s\n", strerror(errno));
         return -1;
     }
     return 0;
 }
 
-static int drm_show_fb(void)
+static int drm_show_fb(struct drmfb *fb)
 {
     int rc;
 
-    rc = drmModeSetCrtc(fd, enc->crtc_id, fb_id, 0, 0,
+    rc = drmModeSetCrtc(fd, enc->crtc_id, fb->id, 0, 0,
                         &conn->connector_id, 1,
                         &conn->modes[0]);
     if (rc < 0) {
@@ -197,15 +200,17 @@ static int drm_show_fb(void)
 
 static void drm_restore_display(void)
 {
-    drm_show_fb();
+    drm_show_fb(fbc);
 }
 
-static void drm_flush_display(void)
+static void drm_flush_display(bool second)
 {
-    drmModeDirtyFB(fd, fb_id, 0, 0);
+    fbc = second ? &fb2 : &fb1;
+    drm_show_fb(fbc);
+    drmModeDirtyFB(fd, fbc->id, 0, 0);
 }
 
-gfxstate *drm_init(const char *device, const char *output)
+gfxstate *drm_init(const char *device, const char *output, bool pageflip)
 {
     gfxstate *gfx;
     char dev[64];
@@ -219,9 +224,9 @@ gfxstate *drm_init(const char *device, const char *output)
 
     if (drm_init_dev(dev, output) < 0)
         return NULL;
-    if (drm_init_fb() < 0)
+    if (drm_init_fb(&fb1) < 0)
         return NULL;
-    if (drm_show_fb() < 0)
+    if (drm_show_fb(&fb1) < 0)
         return NULL;
 
     /* prepare gfx */
@@ -230,8 +235,8 @@ gfxstate *drm_init(const char *device, const char *output)
 
     gfx->hdisplay        = mode->hdisplay;
     gfx->vdisplay        = mode->vdisplay;
-    gfx->stride          = creq.pitch;
-    gfx->mem             = fbmem;
+    gfx->stride          = fb1.creq.pitch;
+    gfx->mem             = fb1.mem;
 
     gfx->rlen            =  8;
     gfx->glen            =  8;
@@ -246,6 +251,12 @@ gfxstate *drm_init(const char *device, const char *output)
     gfx->restore_display = drm_restore_display;
     gfx->cleanup_display = drm_cleanup_display;
     gfx->flush_display   = drm_flush_display;
+
+    if (pageflip) {
+        if (drm_init_fb(&fb2) == 0) {
+            gfx->mem2 = fb2.mem;
+        }
+    }
     return gfx;
 }
 

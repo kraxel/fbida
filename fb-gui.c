@@ -102,7 +102,7 @@ void shadow_render(gfxstate *gfx)
 	sdirty[i] = 0;
     }
     if (gfx->flush_display)
-        gfx->flush_display();
+        gfx->flush_display(false);
 }
 
 void shadow_clear_lines(int first, int last)
