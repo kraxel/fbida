@@ -225,6 +225,7 @@ install: build
 ifeq ($(HAVE_LINUX_FB_H),yes)
 	$(INSTALL_BINARY) fbi $(bindir)
 	$(INSTALL_SCRIPT) fbgs $(bindir)
+	$(INSTALL_SCRIPT) fbpdf $(bindir)
 	$(INSTALL_DATA) $(srcdir)/fbi.man $(mandir)/man1/fbi.1
 	$(INSTALL_DATA) $(srcdir)/fbgs.man $(mandir)/man1/fbgs.1
 endif

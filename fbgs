@@ -22,6 +22,8 @@ helptext="\
 This program displays PostScript/pdf files using the linux framebuffer device.
 It is a simple wrapper script for GhostScript and fbi.
 
+Note: you might want try the new fbpdf instead.
+
 usage: fbgs [fbgs options] [fbi options] file
 
    -b    --bell              emit a beep when the document is ready
