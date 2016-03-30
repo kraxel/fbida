@@ -245,8 +245,8 @@ int main(int argc, char *argv[])
     setlocale(LC_ALL,"");
 
     fbi_read_config();
-    cfg_parse_cmdline(&argc,argv,fbi_cmd);
-    cfg_parse_cmdline(&argc,argv,fbi_cfg);
+    cfg_parse_cmdline(&argc,argv,fbpdf_cmd);
+    cfg_parse_cmdline(&argc,argv,fbpdf_cfg);
 
     if (GET_HELP()) {
 	usage(stdout, argv[0]);
