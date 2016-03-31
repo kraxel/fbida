@@ -10,6 +10,24 @@ resdir	=  $(DESTDIR)$(RESDIR)
 CFLAGS	+= -DVERSION='"$(VERSION)"' -I$(srcdir)
 CFLAGS	+= -Wno-pointer-sign
 
+# hard build deps
+PKG_CONFIG = pkg-config
+PKGS_FBI := freetype2 fontconfig libdrm
+PKGS_FBPDF := libdrm poppler-glib gbm epoxy cairo-gl
+HAVE_DEPS := $(shell $(PKG_CONFIG) $(PKGS_FBI) $(PKGS_FBPDF) && echo yes)
+
+ifeq ($(HAVE_LINUX_FB_H),yes)
+ifneq ($(HAVE_DEPS),yes)
+.PHONY: deps
+deps:
+	@echo "Build dependencies missing for fbi and/or fbpdf."
+	@echo "  fbi   needs:  $(PKGS_FBI)"
+	@echo "  fbpdf needs:  $(PKGS_FBPDF)"
+	@echo "Please install."
+	@false
+endif
+endif
+
 # default target
 all: build
 
@@ -67,8 +85,6 @@ ifeq ($(HAVE_LIBCURL),yes)
   ida fbi : CFLAGS   += -D_GNU_SOURCE
   ida fbi : LDFLAGS  += -Wl,--wrap=fopen
 endif
-
-PKG_CONFIG = pkg-config
 
 ########################################################################
 # conditional stuff
@@ -171,8 +187,6 @@ OBJS_FBI := \
 	dither.o filter.o op.o
 OBJS_FBI += $(filter-out wr/%,$(call ac_lib_mkvar,$(fbi_libs),OBJS))
 
-PKGS_FBI := freetype2 fontconfig libdrm
-
 # font + drm + jpeg/exif libs
 fbi : CFLAGS += $(shell $(PKG_CONFIG) --cflags $(PKGS_FBI))
 fbi : LDLIBS += $(shell $(PKG_CONFIG) --libs   $(PKGS_FBI))
@@ -189,21 +203,11 @@ OBJS_FBPDF := \
 	fbpdf.o vt.o kbd.o fbtools.o drmtools.o drmtools-egl.o \
 	fbiconfig.o parseconfig.o
 
-PKGS_FBPDF := libdrm poppler-glib gbm epoxy cairo-gl
-
 # font + drm + jpeg/exif libs
 fbpdf : CFLAGS += $(shell $(PKG_CONFIG) --cflags $(PKGS_FBPDF))
 fbpdf : LDLIBS += $(shell $(PKG_CONFIG) --libs   $(PKGS_FBPDF))
 
-ifeq ($(shell $(PKG_CONFIG) $(PKGS_FBPDF) && echo ok),ok)
 fbpdf: $(OBJS_FBPDF)
-else
-.PHONY: fbpdf
-fbpdf:
-	@echo "Build dependencies missing for fbpdf"
-	@echo "needed: $(PKGS_FBPDF)"
-	false
-endif
 
 
 ########################################################################
