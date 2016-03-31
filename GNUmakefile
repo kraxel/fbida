@@ -90,14 +90,24 @@ endif
 ########################################################################
 # conditional stuff
 
+ifeq ($(HAVE_LIBPNG),yes)
+  PKGS_IDA += libpng
+  PKGS_FBI += libpng
+endif
+ifeq ($(HAVE_LIBTIFF),yes)
+  PKGS_IDA += libtiff-4
+  PKGS_FBI += libtiff-4
+endif
+ifeq ($(HAVE_LIBWEBP),yes)
+  PKGS_IDA += libwebp
+  PKGS_FBI += libwebp
+endif
+
 includes        = ENDIAN_H STRSIGNAL NEW_EXIF
-libraries       = PCD GIF PNG TIFF WEBP CURL SANE LIRC
+libraries       = PCD GIF CURL SANE LIRC
 ida_libs	= PCD GIF PNG TIFF WEBP CURL SANE
 fbi_libs	= PCD GIF PNG TIFF WEBP CURL LIRC
 
-PNG_LDLIBS	:= $(shell $(PKG_CONFIG) --libs libpng)
-TIFF_LDLIBS	:= $(shell $(PKG_CONFIG) --libs libtiff-4)
-WEBP_LDLIBS	:= $(shell $(PKG_CONFIG) --libs libwebp)
 PCD_LDLIBS	:= -lpcd
 GIF_LDLIBS	:= -lgif
 SANE_LDLIBS	:= -lsane
