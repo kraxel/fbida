@@ -44,10 +44,9 @@ HAVE_GLIBC	:= $(call ac_func,fopencookie)
 HAVE_STRSIGNAL	:= $(call ac_func,strsignal)
 HAVE_LIBPCD	:= $(call ac_lib,pcd_open,pcd)
 HAVE_LIBGIF	:= $(call ac_lib,DGifOpenFileName,gif)
-HAVE_LIBPNG	:= $(call ac_lib,png_read_info,png,-lz)
-HAVE_LIBTIFF	:= $(call ac_lib,TIFFOpen,tiff)
+HAVE_LIBPNG	:= $(call ac_pkg_config,libpng)
+HAVE_LIBTIFF	:= $(call ac_pkg_config,libtiff-4)
 HAVE_LIBWEBP	:= $(call ac_lib,WebPDecodeRGBA,webp)
-#HAVE_LIBMAGICK	:= $(call ac_binary,Magick-config)
 HAVE_LIBSANE	:= $(call ac_lib,sane_init,sane)
 HAVE_LIBCURL	:= $(call ac_lib,curl_easy_init,curl)
 HAVE_LIBLIRC	:= $(call ac_lib,lirc_init,lirc_client)
@@ -79,13 +78,8 @@ libraries       = PCD GIF PNG TIFF WEBP CURL SANE LIRC
 ida_libs	= PCD GIF PNG TIFF WEBP CURL SANE
 fbi_libs	= PCD GIF PNG TIFF WEBP CURL LIRC
 
-#MAGICK_CFLAGS	= $(shell Magick-config --cflags)
-#MAGICK_LDFLAGS	= $(shell Magick-config --ldflags)
-#MAGICK_LDLIBS	= $(shell Magick-config --libs)
-#MAGICK_OBJS	:= rd/magick.o
-
-PNG_LDLIBS	:= -lpng -lz
-TIFF_LDLIBS	:= -ltiff
+PNG_LDLIBS	:= $(shell $(PKG_CONFIG) --libs libpng)
+TIFF_LDLIBS	:= $(shell $(PKG_CONFIG) --libs libtiff-4)
 WEBP_LDLIBS	:= -lwebp
 PCD_LDLIBS	:= -lpcd
 GIF_LDLIBS	:= -lgif
@@ -176,12 +170,13 @@ OBJS_FBI := \
 	parseconfig.o fbiconfig.o \
 	jpegtools.o jpeg/$(JPEG_VER)/transupp.o \
 	dither.o filter.o op.o
-
 OBJS_FBI += $(filter-out wr/%,$(call ac_lib_mkvar,$(fbi_libs),OBJS))
 
+PKGS_FBI := freetype2 fontconfig libdrm
+
 # font + drm + jpeg/exif libs
-fbi : CFLAGS += $(shell $(PKG_CONFIG) --cflags freetype2 fontconfig libdrm)
-fbi : LDLIBS += $(shell $(PKG_CONFIG) --libs   freetype2 fontconfig libdrm)
+fbi : CFLAGS += $(shell $(PKG_CONFIG) --cflags $(PKGS_FBI))
+fbi : LDLIBS += $(shell $(PKG_CONFIG) --libs   $(PKGS_FBI))
 fbi : LDLIBS += -ljpeg -lexif -lm
 
 fbi: $(OBJS_FBI) $(OBJS_READER)
@@ -194,6 +189,7 @@ fbi: $(OBJS_FBI) $(OBJS_READER)
 OBJS_FBPDF := \
 	fbpdf.o vt.o kbd.o fbtools.o drmtools.o drmtools-egl.o \
 	fbiconfig.o parseconfig.o
+
 PKGS_FBPDF := libdrm poppler-glib gbm epoxy cairo-gl
 
 # font + drm + jpeg/exif libs
