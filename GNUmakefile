@@ -46,7 +46,7 @@ HAVE_LIBPCD	:= $(call ac_lib,pcd_open,pcd)
 HAVE_LIBGIF	:= $(call ac_lib,DGifOpenFileName,gif)
 HAVE_LIBPNG	:= $(call ac_pkg_config,libpng)
 HAVE_LIBTIFF	:= $(call ac_pkg_config,libtiff-4)
-HAVE_LIBWEBP	:= $(call ac_lib,WebPDecodeRGBA,webp)
+HAVE_LIBWEBP	:= $(call ac_pkg_config,libwebp)
 HAVE_LIBSANE	:= $(call ac_lib,sane_init,sane)
 HAVE_LIBCURL	:= $(call ac_lib,curl_easy_init,curl)
 HAVE_LIBLIRC	:= $(call ac_lib,lirc_init,lirc_client)
@@ -80,7 +80,7 @@ fbi_libs	= PCD GIF PNG TIFF WEBP CURL LIRC
 
 PNG_LDLIBS	:= $(shell $(PKG_CONFIG) --libs libpng)
 TIFF_LDLIBS	:= $(shell $(PKG_CONFIG) --libs libtiff-4)
-WEBP_LDLIBS	:= -lwebp
+WEBP_LDLIBS	:= $(shell $(PKG_CONFIG) --libs libwebp)
 PCD_LDLIBS	:= -lpcd
 GIF_LDLIBS	:= -lgif
 SANE_LDLIBS	:= -lsane
@@ -135,7 +135,6 @@ OBJS_IDA := \
 	filebutton.o filelist.o browser.o jpegtools.o \
 	op.o filter.o lut.o color.o \
 	rd/read-xwd.o rd/read-xpm.o 
-
 OBJS_IDA += $(call ac_lib_mkvar,$(ida_libs),OBJS)
 
 # for X11 + Motif
