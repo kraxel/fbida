@@ -12,7 +12,8 @@ CFLAGS	+= -Wno-pointer-sign
 
 # hard build deps
 PKG_CONFIG = pkg-config
-PKGS_FBI := freetype2 fontconfig libdrm
+PKGS_IDA := libexif
+PKGS_FBI := freetype2 fontconfig libdrm libexif
 PKGS_FBPDF := libdrm poppler-glib gbm epoxy cairo-gl
 HAVE_DEPS := $(shell $(PKG_CONFIG) $(PKGS_FBI) $(PKGS_FBPDF) && echo yes)
 
@@ -159,7 +160,9 @@ ida : LDFLAGS	+= -L/usr/X11R6/$(LIB)
 ida : LDLIBS	+= -lXm -lXpm -lXt -lXext -lX11
 
 # jpeg/exif libs
-ida : LDLIBS	+= -ljpeg -lexif -lm
+ida : CFLAGS += $(shell $(PKG_CONFIG) --cflags $(PKGS_IDA))
+ida : LDLIBS += $(shell $(PKG_CONFIG) --libs   $(PKGS_IDA))
+ida : LDLIBS += -ljpeg -lm
 
 # RegEdit.c is good old K&R ...
 RegEdit.o : CFLAGS += -Wno-missing-prototypes -Wno-strict-prototypes -Wno-maybe-uninitialized
@@ -190,7 +193,7 @@ OBJS_FBI += $(filter-out wr/%,$(call ac_lib_mkvar,$(fbi_libs),OBJS))
 # font + drm + jpeg/exif libs
 fbi : CFLAGS += $(shell $(PKG_CONFIG) --cflags $(PKGS_FBI))
 fbi : LDLIBS += $(shell $(PKG_CONFIG) --libs   $(PKGS_FBI))
-fbi : LDLIBS += -ljpeg -lexif -lm
+fbi : LDLIBS += -ljpeg -lm
 
 fbi: $(OBJS_FBI) $(OBJS_READER)
 
