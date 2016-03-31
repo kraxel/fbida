@@ -195,7 +195,15 @@ PKGS_FBPDF := libdrm poppler-glib gbm epoxy cairo-gl
 fbpdf : CFLAGS += $(shell $(PKG_CONFIG) --cflags $(PKGS_FBPDF))
 fbpdf : LDLIBS += $(shell $(PKG_CONFIG) --libs   $(PKGS_FBPDF))
 
+ifeq ($(shell $(PKG_CONFIG) $(PKGS_FBPDF) && echo ok),ok)
 fbpdf: $(OBJS_FBPDF)
+else
+.PHONY: fbpdf
+fbpdf:
+	@echo "Build dependencies missing for fbpdf"
+	@echo "needed: $(PKGS_FBPDF)"
+	false
+endif
 
 
 ########################################################################
