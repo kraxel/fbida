@@ -24,8 +24,12 @@ deps:
 	@echo "Build dependencies missing for fbi and/or fbpdf."
 	@echo "  fbi   needs:  $(PKGS_FBI)"
 	@echo "  fbpdf needs:  $(PKGS_FBPDF)"
-	@echo "Please install."
+	@echo "Please install.  You can try 'make yum' (needs sudo)."
 	@false
+
+yum dnf:
+	sudo $@ install $(patsubst %,"pkgconfig(%)",$(PKGS_FBI) $(PKGS_FBPDF))
+
 endif
 endif
 
