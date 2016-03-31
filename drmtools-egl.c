@@ -176,6 +176,9 @@ gfxstate *drm_init_egl(const char *device, const char *output)
     if (drm_setup_egl() < 0)
         return NULL;
 
+    fprintf(stderr, "%s: %s\n",
+            glGetString(GL_VENDOR), glGetString(GL_RENDERER));
+
     /* prepare gfx */
     gfx = malloc(sizeof(*gfx));
     memset(gfx, 0, sizeof(*gfx));

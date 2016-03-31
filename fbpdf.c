@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
 {
     GError *err = NULL;
     bool framebuffer = false;
-    bool quit, newpage;
+    bool quit, newpage, opengl, pageflip;
     char cwd[1024];
     char uri[1024];
     char key[32];
@@ -271,6 +271,8 @@ int main(int argc, char *argv[])
         drm_info(cfg_get_str(O_DEVICE));
         exit(0);
     }
+    if (GET_WRITECONF())
+	fbi_write_config();
 
     if (optind+1 != argc ) {
 	usage(stderr, argv[0]);
@@ -300,15 +302,17 @@ int main(int argc, char *argv[])
     output = cfg_get_str(O_OUTPUT);
     mode = cfg_get_str(O_VIDEO_MODE);
     fitwidth = GET_FIT_WIDTH();
+    opengl = GET_OPENGL();
+    pageflip = GET_PAGEFLIP();
 
     if (device) {
         /* device specified */
         if (strncmp(device, "/dev/d", 6) == 0) {
-            if (GET_OPENGL()) {
+            if (opengl) {
                 gfx = drm_init_egl(device, output);
             }
             if (!gfx) {
-                gfx = drm_init(device, output, true);
+                gfx = drm_init(device, output, pageflip);
             }
         } else {
             framebuffer = true;
@@ -316,11 +320,11 @@ int main(int argc, char *argv[])
         }
     } else {
         /* try drm first, failing that fb */
-        if (GET_OPENGL()) {
+        if (opengl) {
             gfx = drm_init_egl(NULL, output);
         }
         if (!gfx) {
-            gfx = drm_init(NULL, output, true);
+            gfx = drm_init(NULL, output, pageflip);
         }
         if (!gfx) {
             framebuffer = true;

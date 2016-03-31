@@ -205,6 +205,11 @@ struct cfg_cmdline fbpdf_cmd[] = {
 	.value    = "1",
 	.desc     = "print device info",
     },{
+	.cmdline  = "store",
+	.option   = { O_WRITECONF },
+	.value    = "1",
+	.desc     = "write cmd line args to config file",
+    },{
 	/* end of list */
     }
 };
@@ -229,11 +234,16 @@ struct cfg_cmdline fbpdf_cfg[] = {
 	.needsarg = 1,
 	.desc     = "use drm output <arg> (try -info for a list)",
     },{
+	.cmdline  = "pageflip",
+	.option   = { O_PAGEFLIP },
+	.yesno    = 1,
+	.desc     = "use pageflip (drm only)",
+    },{
 	.letter   = 'g',
 	.cmdline  = "opengl",
 	.option   = { O_OPENGL },
 	.yesno    = 1,
-	.desc     = "use opengl",
+	.desc     = "use opengl (drm only)",
     },{
 	.letter   = 'm',
 	.cmdline  = "mode",

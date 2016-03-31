@@ -34,6 +34,7 @@
 #define O_DEVICE                O_OPTIONS, "device"
 #define O_OUTPUT                O_OPTIONS, "output"
 #define O_OPENGL                O_OPTIONS, "opengl"
+#define O_PAGEFLIP              O_OPTIONS, "pageflip"
 #define O_FONT                  O_OPTIONS, "font"
 #define O_VIDEO_MODE            O_OPTIONS, "video-mode"
 
@@ -65,6 +66,7 @@
 #define GET_PCD_RES()           cfg_get_int(O_PCD_RES,        3)
 
 #define GET_OPENGL()       	cfg_get_bool(O_OPENGL,        0)
+#define GET_PAGEFLIP()       	cfg_get_bool(O_PAGEFLIP,      1)
 
 /* -------------------------------------------------------------------------- */
 
