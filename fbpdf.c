@@ -31,6 +31,10 @@
 #include <linux/fb.h>
 
 #include <poppler.h>
+#include <cairo.h>
+
+#include <epoxy/egl.h>
+#include <cairo-gl.h>
 
 #include "vt.h"
 #include "kbd.h"
@@ -52,6 +56,7 @@ int                        debug;
 PopplerDocument            *doc;
 cairo_surface_t            *surface1;
 cairo_surface_t            *surface2;
+cairo_surface_t            *surfacegl;
 
 /* pdf render state */
 PopplerPage                *page;
@@ -132,19 +137,25 @@ static void page_render(void)
     static bool second;
     cairo_t *context;
 
-    if (surface2)
-        second = !second;
-    context = cairo_create(second ? surface2 : surface1);
-
-    cairo_set_source_rgb(context, 1, 1, 1);
-    cairo_paint(context);
+    if (surfacegl) {
+        context = cairo_create(surfacegl);
+    } else {
+        if (surface2)
+            second = !second;
+        context = cairo_create(second ? surface2 : surface1);
+    }
 
     cairo_translate(context, tx, ty);
     cairo_scale(context, scale, scale);
+    cairo_set_source_rgb(context, 1, 1, 1);
+    cairo_paint(context);
     poppler_page_render(page, context);
     cairo_show_page(context);
     cairo_destroy(context);
 
+    if (surfacegl) {
+        cairo_gl_surface_swapbuffers(surfacegl);
+    }
     if (gfx->flush_display)
         gfx->flush_display(second);
 }
@@ -293,14 +304,24 @@ int main(int argc, char *argv[])
     if (device) {
         /* device specified */
         if (strncmp(device, "/dev/d", 6) == 0) {
-            gfx = drm_init(device, output, true);
+            if (GET_OPENGL()) {
+                gfx = drm_init_egl(device, output);
+            }
+            if (!gfx) {
+                gfx = drm_init(device, output, true);
+            }
         } else {
             framebuffer = true;
             gfx = fb_init(device, mode, GET_VT());
         }
     } else {
         /* try drm first, failing that fb */
-        gfx = drm_init(NULL, output, true);
+        if (GET_OPENGL()) {
+            gfx = drm_init_egl(NULL, output);
+        }
+        if (!gfx) {
+            gfx = drm_init(NULL, output, true);
+        }
         if (!gfx) {
             framebuffer = true;
             gfx = fb_init(NULL, mode, GET_VT());
@@ -322,17 +343,25 @@ int main(int argc, char *argv[])
         }
     }
 
-    surface1 = cairo_image_surface_create_for_data(gfx->mem,
-                                                  CAIRO_FORMAT_ARGB32,
-                                                  gfx->hdisplay,
-                                                  gfx->vdisplay,
-                                                  gfx->stride);
-    if (gfx->mem2) {
-        surface2 = cairo_image_surface_create_for_data(gfx->mem2,
+    if (gfx->mem) {
+        surface1 = cairo_image_surface_create_for_data(gfx->mem,
                                                        CAIRO_FORMAT_ARGB32,
                                                        gfx->hdisplay,
                                                        gfx->vdisplay,
                                                        gfx->stride);
+        if (gfx->mem2) {
+            surface2 = cairo_image_surface_create_for_data(gfx->mem2,
+                                                           CAIRO_FORMAT_ARGB32,
+                                                           gfx->hdisplay,
+                                                           gfx->vdisplay,
+                                                           gfx->stride);
+        }
+    } else {
+        cairo_device_t *dev;
+        dev = cairo_egl_device_create(gfx->dpy, gfx->ctx);
+        surfacegl = cairo_gl_surface_create_for_egl(dev, gfx->surface,
+                                                    gfx->hdisplay,
+                                                    gfx->vdisplay);
     }
 
     tty_raw();

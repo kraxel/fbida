@@ -192,12 +192,13 @@ fbi: $(OBJS_FBI) $(OBJS_READER)
 
 # object files
 OBJS_FBPDF := \
-	fbpdf.o vt.o kbd.o fbtools.o drmtools.o \
+	fbpdf.o vt.o kbd.o fbtools.o drmtools.o drmtools-egl.o \
 	fbiconfig.o parseconfig.o
+PKGS_FBPDF := libdrm poppler-glib gbm epoxy cairo-gl
 
 # font + drm + jpeg/exif libs
-fbpdf : CFLAGS += $(shell $(PKG_CONFIG) --cflags libdrm poppler-glib)
-fbpdf : LDLIBS += $(shell $(PKG_CONFIG) --libs   libdrm poppler-glib)
+fbpdf : CFLAGS += $(shell $(PKG_CONFIG) --cflags $(PKGS_FBPDF))
+fbpdf : LDLIBS += $(shell $(PKG_CONFIG) --libs   $(PKGS_FBPDF))
 
 fbpdf: $(OBJS_FBPDF)
 

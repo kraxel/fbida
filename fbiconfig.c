@@ -229,6 +229,12 @@ struct cfg_cmdline fbpdf_cfg[] = {
 	.needsarg = 1,
 	.desc     = "use drm output <arg> (try -info for a list)",
     },{
+	.letter   = 'g',
+	.cmdline  = "opengl",
+	.option   = { O_OPENGL },
+	.yesno    = 1,
+	.desc     = "use opengl",
+    },{
 	.letter   = 'm',
 	.cmdline  = "mode",
 	.option   = { O_VIDEO_MODE },

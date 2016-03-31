@@ -33,6 +33,7 @@
 
 #define O_DEVICE                O_OPTIONS, "device"
 #define O_OUTPUT                O_OPTIONS, "output"
+#define O_OPENGL                O_OPTIONS, "opengl"
 #define O_FONT                  O_OPTIONS, "font"
 #define O_VIDEO_MODE            O_OPTIONS, "video-mode"
 
@@ -62,6 +63,8 @@
 #define GET_SCROLL()            cfg_get_int(O_SCROLL,        50)
 #define GET_TIMEOUT()           cfg_get_int(O_TIMEOUT,        0)
 #define GET_PCD_RES()           cfg_get_int(O_PCD_RES,        3)
+
+#define GET_OPENGL()       	cfg_get_bool(O_OPENGL,        0)
 
 /* -------------------------------------------------------------------------- */
 
