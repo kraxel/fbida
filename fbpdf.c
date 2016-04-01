@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
 
     setlocale(LC_ALL,"");
 
-    fbi_read_config();
+    fbi_read_config(".fbpdf.rc");
     cfg_parse_cmdline(&argc,argv,fbpdf_cmd);
     cfg_parse_cmdline(&argc,argv,fbpdf_cfg);
 

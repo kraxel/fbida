@@ -259,7 +259,7 @@ struct cfg_cmdline fbpdf_cfg[] = {
 
 static char *fbi_config = NULL;
 
-static void init_config(void)
+static void init_config(const char *name)
 {
     char *home;
 
@@ -267,13 +267,13 @@ static void init_config(void)
     if (NULL == home)
 	return;
 
-    fbi_config = malloc(strlen(home) + 16);
-    sprintf(fbi_config,"%s/.fbirc", home);
+    fbi_config = malloc(strlen(home) + strlen(name) + 2);
+    sprintf(fbi_config,"%s/%s", home, name);
 }
 
-void fbi_read_config(void)
+void fbi_read_config(const char *name)
 {
-    init_config();
+    init_config(name);
     if (fbi_config)
 	cfg_parse_file("config", fbi_config);
 }

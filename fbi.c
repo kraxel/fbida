@@ -1342,7 +1342,7 @@ int main(int argc, char *argv[])
 #ifdef HAVE_LIBLIRC
     lirc = lirc_fbi_init();
 #endif
-    fbi_read_config();
+    fbi_read_config(".fbirc");
     cfg_parse_cmdline(&argc,argv,fbi_cmd);
     cfg_parse_cmdline(&argc,argv,fbi_cfg);
 
