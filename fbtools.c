@@ -198,6 +198,7 @@ fb_setmode(char *name)
 	    return 0;
 	}
     }
+    fclose(fp);
     return -1;
 }
 
