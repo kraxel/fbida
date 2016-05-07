@@ -789,6 +789,12 @@ svga_show(struct flist *f, struct flist *prev,
         if (check_console_switch()) {
 	    continue;
 	}
+
+	if (!interactive) {
+	    sleep(timeout);
+	    return -1;
+	}
+
 	FD_ZERO(&set);
 	FD_SET(0, &set);
 	fdmax = 1;
