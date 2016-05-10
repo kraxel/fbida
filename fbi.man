@@ -126,6 +126,10 @@ is mapped to.
 .BI "-m" "\ videomode" ", --mode" "\ videomode"
 Name of the video mode to use (video mode must be listed in
 \fI/etc/fb.modes\fP). Default is not to change the video mode.
+.TP
+.B --(no)interactive
+Allow interactively controlling the program from the keyboard. This requires
+that \fIstdin\fP is a TTY. Default is to allow interactive control.
 \#
 \#
 .SH ENVIRONMENT

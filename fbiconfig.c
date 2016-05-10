@@ -172,6 +172,11 @@ struct cfg_cmdline fbi_cfg[] = {
 	.needsarg = 1,
 	.desc     = "use drm output <arg> (try -info for a list)",
     },{
+	.cmdline  = "interactive",
+	.option   = { O_INTERACTIVE },
+	.yesno    = 1,
+	.desc     = "allow keyboard interaction",
+    },{
 	.letter   = 'm',
 	.cmdline  = "mode",
 	.option   = { O_VIDEO_MODE },

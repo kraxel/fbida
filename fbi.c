@@ -121,6 +121,7 @@ int read_ahead;
 int editable;
 int blend_msecs;
 int perfmon = 0;
+int interactive = 0;
 
 /* font handling */
 static char *fontname = NULL;
@@ -788,6 +789,12 @@ svga_show(struct flist *f, struct flist *prev,
         if (check_console_switch()) {
 	    continue;
 	}
+
+	if (!interactive) {
+	    sleep(timeout);
+	    return -1;
+	}
+
 	FD_ZERO(&set);
 	FD_SET(0, &set);
 	fdmax = 1;
@@ -1383,6 +1390,7 @@ int main(int argc, char *argv[])
     h_steps     = GET_SCROLL();
     timeout     = GET_TIMEOUT();
     pcd_res     = GET_PCD_RES();
+    interactive = GET_INTERACTIVE();
 
     fontname    = cfg_get_str(O_FONT);
     filelist    = cfg_get_str(O_FILE_LIST);
