@@ -2,31 +2,18 @@
 ! fonts
 
 *renderTable: small
-*renderTable.fontType: FONT_IS_FONTSET
-*renderTable.fontName: \
-             -*-helvetica-medium-r-normal-*-*-140-*-*-p-*-*-*, \
-                -*-lucida-medium-r-normal-*-*-140-*-*-p-*-*-*, \
-       -*-liberation sans-medium-r-normal-*-*-140-*-*-p-*-*-*, \
-                     -*-*-medium-r-normal-*-*-140-*-*-p-*-*-*, \
-                     -*-*-medium-r-normal-*-*-160-*-*-p-*-*-*, *
+*renderTable.fontType: FONT_IS_XFT
+*renderTable.fontName: Sans
+*renderTable.fontSize: 14
 
-*renderTable.small.fontType: FONT_IS_FONTSET
-*renderTable.small.fontName: \
-             -*-helvetica-medium-r-normal-*-*-100-*-*-p-*-*-*, \
-                -*-lucida-medium-r-normal-*-*-100-*-*-p-*-*-*, \
-       -*-liberation sans-medium-r-normal-*-*-100-*-*-p-*-*-*, \
-                     -*-*-medium-r-normal-*-*-100-*-*-p-*-*-*, \
-                     -*-*-medium-r-normal-*-*-120-*-*-p-*-*-*, *
+*renderTable.small.fontType: FONT_IS_XFT
+*renderTable.small.fontName: Sans
+*renderTable.small.fontSize: 10
 
 *XmTextField.renderTable: 
-*XmTextField.renderTable.fontType: FONT_IS_FONTSET
-*XmTextField.renderTable.fontName: \
-                    -*-courier-medium-r-normal-*-*-140-*-*-m-*-*-*, \
-           -*-lucidatypewriter-medium-r-normal-*-*-140-*-*-m-*-*-*, \
-            -*-liberation mono-medium-r-normal-*-*-140-*-*-*-*-*-*, \
-                          -*-*-medium-r-normal-*-*-140-*-*-m-*-*-*, \
-                          -*-*-medium-r-normal-*-*-160-*-*-m-*-*-*, *
-
+*XmTextField.renderTable.fontType: FONT_IS_XFT
+*XmTextField.renderTable.fontName: Mono
+*XmTextField.renderTable.fontSize: 14
 
 *background:		gray77
 !*shadowThickness:	2
@@ -483,17 +470,13 @@ Ida.man_popup*label.alignment:			ALIGNMENT_BEGINNING
 Ida.man_popup*label.marginWidth:			5
 Ida.man_popup*label.marginHeight:		5
 Ida.man_popup*label.renderTable: bold,underline
-Ida.man_popup*label.renderTable.fontType: FONT_IS_FONTSET
-Ida.man_popup*label.renderTable.fontName: \
-      -*-fixed-medium-r-normal--13-*-*-*-*-*-iso8859-*, \
-    -*-fixed-medium-r-normal-ja-13-*-*-*-*-*-iso10646-1, \
-  -gnu-unifont-medium-r-normal--16-*-*-*-*-*-*-*,*
+Ida.man_popup*label.renderTable.fontType: FONT_IS_XFT
+Ida.man_popup*label.renderTable.fontName: Mono
+Ida.man_popup*label.renderTable.fontSize: 10
 
-Ida.man_popup*label.renderTable.bold.fontType: FONT_IS_FONTSET
-Ida.man_popup*label.renderTable.bold.fontName: \
-       -*-fixed-bold-r-normal--13-*-*-*-*-*-iso8859-*, \
-   -*-fixed-medium-r-normal-ja-13-*-*-*-*-*-iso10646-1, \
-   -gnu-unifont-bold-r-normal--16-*-*-*-*-*-*-*,*
+Ida.man_popup*label.renderTable.bold.fontType: FONT_IS_XFT
+Ida.man_popup*label.renderTable.bold.fontName: Mono:style=Bold
+Ida.man_popup*label.renderTable.bold.fontSize: 10
 
 Ida.man_popup*label.renderTable.underline.underlineType: SINGLE_LINE
 
@@ -511,17 +494,13 @@ Ida.hex_popup*label.alignment:			ALIGNMENT_BEGINNING
 Ida.hex_popup*label.marginWidth:		5
 Ida.hex_popup*label.marginHeight:		5
 Ida.hex_popup*label.renderTable: bold,underline
-Ida.hex_popup*label.renderTable.fontType: FONT_IS_FONTSET
-Ida.hex_popup*label.renderTable.fontName: \
-      -*-fixed-medium-r-normal--13-*-*-*-*-*-iso8859-*, \
-    -*-fixed-medium-r-normal-ja-13-*-*-*-*-*-iso10646-1, \
-  -gnu-unifont-medium-r-normal--16-*-*-*-*-*-*-*,*
+Ida.hex_popup*label.renderTable.fontType: FONT_IS_XFT
+Ida.hex_popup*label.renderTable.fontName: Mono
+Ida.hex_popup*label.renderTable.fontSize: 10
 
-Ida.hex_popup*label.renderTable.bold.fontType: FONT_IS_FONTSET
-Ida.hex_popup*label.renderTable.bold.fontName: \
-      -*-fixed-bold-r-normal--13-*-*-*-*-*-iso8859-*, \
-  -*-fixed-medium-r-normal-ja-13-*-*-*-*-*-iso10646-1, \
-  -gnu-unifont-bold-r-normal--16-*-*-*-*-*-*-*,*
+Ida.hex_popup*label.renderTable.bold.fontType: FONT_IS_XFT
+Ida.hex_popup*label.renderTable.bold.fontName: Mono:style=Bold
+Ida.hex_popup*label.renderTable.bold.fontSize: 10
 
 Ida.hex_popup*label.renderTable.underline.underlineType: SINGLE_LINE
 
