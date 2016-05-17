@@ -292,24 +292,24 @@ void drm_info(const char *device)
         conn = drmModeGetConnector(drm_fd, res->connectors[i]);
         if (!conn)
             continue;
-        if (!drm_conn->count_encoders)
+        if (!conn->count_encoders)
             return;
         drm_conn_name(conn, name, sizeof(name));
 
         enc = NULL;
         crtc = NULL;
-        if (drm_conn->encoder_id) {
-            enc = drmModeGetEncoder(drm_fd, drm_conn->encoder_id);
+        if (conn->encoder_id) {
+            enc = drmModeGetEncoder(drm_fd, conn->encoder_id);
             if (enc && enc->crtc_id) {
                 crtc = drmModeGetCrtc(drm_fd, enc->crtc_id);
             }
         }
 
-        if (drm_conn->connection == DRM_MODE_CONNECTED && crtc) {
-            fprintf(stdout, "    %s, connected, %dx%d\n", name,
+        if (conn->connection == DRM_MODE_CONNECTED && crtc) {
+            fprintf(stdout, "    %-10s: %dx%d\n", name,
                     crtc->width, crtc->height);
         } else {
-            fprintf(stdout, "    %s, disconnected\n", name);
+            fprintf(stdout, "    %-10s: disconnected\n", name);
         }
 
         drmModeFreeCrtc(crtc);
