@@ -1378,6 +1378,7 @@ int main(int argc, char *argv[])
     autodown    = GET_AUTO_DOWN();
     fitwidth    = GET_FIT_WIDTH();
     statusline  = GET_VERBOSE();
+    comments    = GET_COMMENTS();
     textreading = GET_TEXT_MODE();
     editable    = GET_EDIT();
     backup      = GET_BACKUP();
