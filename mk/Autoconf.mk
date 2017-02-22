@@ -162,7 +162,7 @@ config: Make.config
 	@true
 
 Make.config: $(srcdir)/GNUmakefile
-	@printf "$(make-config-q)" > $@
+	@echo -e "$(make-config-q)" > $@
 	@echo
 	@echo "Make.config written, edit if needed"
 	@echo
