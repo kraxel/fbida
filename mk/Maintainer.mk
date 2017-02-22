@@ -20,9 +20,8 @@ tarball      = $(release-dir)/$(repository)-$(VERSION).tar
 
 ifeq ($(usetito),yes)
 
-.PHONY: release
-release:
-	@echo "tito config found, so use this ;)"
+$(tarball).gz:
+	tito build --output $(release-dir) --tgz
 
 else
 
@@ -33,11 +32,12 @@ $(tarball).gz:
 		-o $(tarball) $(VERSION)
 	gzip $(tarball)
 
+endif
+
 $(tarball).gz.asc: $(tarball).gz
 	gpg --detach-sign --armor $(tarball).gz
 
 .PHONY: release
-release: $(tarball).gz
+release: $(tarball).gz.asc
 	scp $(tarball).gz* $(release-pub)
 
-endif
