@@ -6,7 +6,6 @@ Summary:      fbida
 Group:        Applications/Multimedia
 URL:          http://www.kraxel.org/blog/linux/%{name}/
 Source:       http://www.kraxel.org/releases/%{name}/%{name}-%{version}.tar.gz
-Patch1:       0001-update-fsf-address.patch
 
 # image format libs
 BuildRequires: libjpeg-devel
@@ -59,7 +58,6 @@ jpegtran it also handles the exif metadata.
 
 %prep
 %setup -q
-%patch1 -p1
 
 %build
 export CFLAGS="%{optflags}"
