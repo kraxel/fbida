@@ -1,6 +1,6 @@
 Name:         fbida
 License:      GPLv2+
-Version:      2.12
+Version:      2.13
 Release:      1%{?dist}
 Summary:      fbida
 Group:        Applications/Multimedia
@@ -89,3 +89,6 @@ make prefix=/usr DESTDIR=%{buildroot} STRIP="" install
 %{_mandir}/man1/exiftran.1*
 
 %changelog
+* Wed Feb 22 2017 Gerd Hoffmann <kraxel@redhat.com> 2.13-1
+- new package built with tito
+
