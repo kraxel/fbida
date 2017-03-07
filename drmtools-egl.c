@@ -63,7 +63,11 @@ static int drm_setup_egl(void)
         return -1;
     }
 
+#ifdef EGL_MESA_platform_gbm
+    dpy = eglGetPlatformDisplayEXT(EGL_PLATFORM_GBM_MESA, gbm_dev, NULL);
+#else
     dpy = eglGetDisplay(gbm_dev);
+#endif
     if (dpy == EGL_NO_DISPLAY) {
         fprintf(stderr, "egl: eglGetDisplay failed\n");
         return -1;
