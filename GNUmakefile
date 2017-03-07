@@ -17,6 +17,10 @@ PKGS_FBI := freetype2 fontconfig libdrm libexif
 PKGS_FBPDF := libdrm poppler-glib gbm epoxy cairo-gl
 HAVE_DEPS := $(shell $(PKG_CONFIG) $(PKGS_FBI) $(PKGS_FBPDF) && echo yes)
 
+# map pkg-config names to debian packages using apt-file
+APT_REGEX = /($(shell echo $(PKGS_FBI) $(PKGS_FBPDF) | sed -e 's/ /|/g')).pc
+APT_DEBS  = $(shell apt-file search --package-only --regex "$(APT_REGEX)")
+
 ifeq ($(HAVE_LINUX_FB_H),yes)
 ifneq ($(HAVE_DEPS),yes)
 .PHONY: deps
@@ -24,11 +28,14 @@ deps:
 	@echo "Build dependencies missing for fbi and/or fbpdf."
 	@echo "  fbi   needs:  $(PKGS_FBI)"
 	@echo "  fbpdf needs:  $(PKGS_FBPDF)"
-	@echo "Please install.  You can try 'make yum' (needs sudo)."
+	@echo "Please install.  Try 'make yum', 'make dnf' or 'make apt-get' (needs sudo)."
 	@false
 
 yum dnf:
 	sudo $@ install $(patsubst %,"pkgconfig(%)",$(PKGS_FBI) $(PKGS_FBPDF))
+
+apt-get:
+	sudo apt-get install $(APT_DEBS)
 
 endif
 endif
