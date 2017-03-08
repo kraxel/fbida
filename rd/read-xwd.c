@@ -5,9 +5,7 @@
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/XWDFile.h>
-#ifdef HAVE_ENDIAN_H
-# include <endian.h>
-#endif
+#include <endian.h>
 
 #include "readers.h"
 #include "viewer.h"

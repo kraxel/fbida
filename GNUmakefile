@@ -67,7 +67,6 @@ ac_jpeg_ver = $(shell \
 define make-config
 LIB		:= $(LIB)
 RESDIR		:= $(call ac_resdir)
-HAVE_ENDIAN_H	:= $(call ac_header,endian.h)
 HAVE_LINUX_FB_H	:= $(call ac_header,linux/fb.h)
 HAVE_NEW_EXIF	:= $(call ac_header,libexif/exif-log.h)
 HAVE_GLIBC	:= $(call ac_func,fopencookie)

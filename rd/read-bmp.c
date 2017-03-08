@@ -3,9 +3,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <errno.h>
-#ifdef HAVE_ENDIAN_H
-# include <endian.h>
-#endif
+#include <endian.h>
 
 #include "readers.h"
 
