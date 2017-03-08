@@ -467,12 +467,8 @@ static void show_exif(struct flist *f)
 	    continue;
 	}
 	title[tag] = exif_tag_get_title(tags[tag]);
-#ifdef HAVE_NEW_EXIF
 	value[tag] = malloc(128);
 	exif_entry_get_value(ee, value[tag], 128);
-#else
-	value[tag] = strdup(exif_entry_get_value(ee));
-#endif
 	len = strlen(title[tag]);
 	if (l1 < len)
 	    l1 = len;

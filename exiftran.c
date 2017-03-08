@@ -23,9 +23,7 @@
 static void dump_exif(FILE *out, ExifData *ed)
 {
     const char *title, *value;
-#ifdef HAVE_NEW_EXIF
     char buffer[256];
-#endif
     ExifEntry  *ee;
     int tag,i;
 
@@ -38,11 +36,7 @@ static void dump_exif(FILE *out, ExifData *ed)
 	    ee = exif_content_get_entry (ed->ifd[i], tag);
 	    if (NULL == ee)
 		continue;
-#ifdef HAVE_NEW_EXIF
 	    value = exif_entry_get_value(ee, buffer, sizeof(buffer));
-#else
-	    value = exif_entry_get_value(ee);
-#endif
 	    fprintf(out,"      0x%04x  %-30s %s\n", tag, title, value);
 	}
     }
