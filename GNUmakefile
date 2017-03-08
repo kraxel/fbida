@@ -147,6 +147,8 @@ fbi : LDLIBS += $(call ac_lib_mkvar,$(fbi_libs),LDLIBS)
 
 # jpeg/exif libs
 exiftran      : LDLIBS += -ljpeg -lexif -lm
+exiftran      : CFLAGS += $(shell $(PKG_CONFIG) --cflags pixman-1)
+exiftran      : LDLIBS += $(shell $(PKG_CONFIG) --libs   pixman-1)
 thumbnail.cgi : LDLIBS += -lexif -lm
 
 exiftran: exiftran.o genthumbnail.o jpegtools.o \
