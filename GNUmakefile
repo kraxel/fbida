@@ -14,7 +14,7 @@ CFLAGS	+= -Wno-pointer-sign
 PKG_CONFIG = pkg-config
 PKGS_IDA := libexif libpng libtiff-4
 PKGS_FBI := freetype2 fontconfig libdrm libexif libpng libtiff-4
-PKGS_FBPDF := libdrm poppler-glib gbm epoxy
+PKGS_FBPDF := libdrm poppler-glib gbm egl epoxy
 HAVE_DEPS := $(shell $(PKG_CONFIG) $(PKGS_FBI) $(PKGS_FBPDF) && echo yes)
 
 # map pkg-config names to debian packages using apt-file
