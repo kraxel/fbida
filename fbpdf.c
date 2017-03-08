@@ -34,7 +34,9 @@
 #include <cairo.h>
 
 #include <epoxy/egl.h>
-#include <cairo-gl.h>
+#ifdef HAVE_CAIRO_GL
+# include <cairo-gl.h>
+#endif
 
 #include "vt.h"
 #include "kbd.h"
@@ -154,7 +156,9 @@ static void page_render(void)
     cairo_destroy(context);
 
     if (surfacegl) {
+#ifdef HAVE_CAIRO_GL
         cairo_gl_surface_swapbuffers(surfacegl);
+#endif
     }
     if (gfx->flush_display)
         gfx->flush_display(second);
@@ -302,7 +306,11 @@ int main(int argc, char *argv[])
     output = cfg_get_str(O_OUTPUT);
     mode = cfg_get_str(O_VIDEO_MODE);
     fitwidth = GET_FIT_WIDTH();
+#ifdef HAVE_CAIRO_GL
     opengl = GET_OPENGL();
+#else
+    opengl = 0;
+#endif
     pageflip = GET_PAGEFLIP();
 
     if (device) {
@@ -361,11 +369,15 @@ int main(int argc, char *argv[])
                                                            gfx->stride);
         }
     } else {
+#ifdef HAVE_CAIRO_GL
         cairo_device_t *dev;
         dev = cairo_egl_device_create(gfx->dpy, gfx->ctx);
         surfacegl = cairo_gl_surface_create_for_egl(dev, gfx->surface,
                                                     gfx->hdisplay,
                                                     gfx->vdisplay);
+#else
+        exit(1);
+#endif
     }
 
     tty_raw();

@@ -243,12 +243,14 @@ struct cfg_cmdline fbpdf_cfg[] = {
 	.option   = { O_PAGEFLIP },
 	.yesno    = 1,
 	.desc     = "use pageflip (drm only)",
+#ifdef HAVE_CAIRO_GL
     },{
 	.letter   = 'g',
 	.cmdline  = "opengl",
 	.option   = { O_OPENGL },
 	.yesno    = 1,
 	.desc     = "use opengl (drm only)",
+#endif
     },{
 	.letter   = 'm',
 	.cmdline  = "mode",

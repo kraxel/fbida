@@ -14,7 +14,7 @@ CFLAGS	+= -Wno-pointer-sign
 PKG_CONFIG = pkg-config
 PKGS_IDA := libexif libpng libtiff-4
 PKGS_FBI := freetype2 fontconfig libdrm libexif libpng libtiff-4
-PKGS_FBPDF := libdrm poppler-glib gbm epoxy cairo-gl
+PKGS_FBPDF := libdrm poppler-glib gbm epoxy
 HAVE_DEPS := $(shell $(PKG_CONFIG) $(PKGS_FBI) $(PKGS_FBPDF) && echo yes)
 
 # map pkg-config names to debian packages using apt-file
@@ -70,6 +70,7 @@ RESDIR		:= $(call ac_resdir)
 HAVE_LINUX_FB_H	:= $(call ac_header,linux/fb.h)
 HAVE_GLIBC	:= $(call ac_func,fopencookie)
 HAVE_STRSIGNAL	:= $(call ac_func,strsignal)
+HAVE_CAIRO_GL	:= $(call ac_pkg_config,cairo-gl)
 HAVE_LIBPCD	:= $(call ac_lib,pcd_open,pcd)
 HAVE_LIBGIF	:= $(call ac_lib,DGifOpenFileName,gif)
 HAVE_LIBWEBP	:= $(call ac_pkg_config,libwebp)
@@ -102,7 +103,11 @@ ifeq ($(HAVE_LIBWEBP),yes)
   PKGS_FBI += libwebp
 endif
 
-includes        = ENDIAN_H STRSIGNAL NEW_EXIF
+ifeq ($(HAVE_CAIRO_GL),yes)
+  PKGS_FBPDF += cairo-gl
+endif
+
+includes        = STRSIGNAL CAIRO_GL
 libraries       = PCD GIF CURL SANE LIRC
 ida_libs	= PCD GIF WEBP CURL SANE
 fbi_libs	= PCD GIF WEBP CURL LIRC
