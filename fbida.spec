@@ -14,6 +14,7 @@ BuildRequires: pkgconfig(libexif)
 BuildRequires: pkgconfig(libpng)
 BuildRequires: pkgconfig(libtiff-4)
 BuildRequires: pkgconfig(libwebp)
+BuildRequires: pkgconfig(pixman-1)
 
 # ida
 BuildRequires: motif-devel
@@ -27,6 +28,7 @@ BuildRequires: pkgconfig(fontconfig)
 BuildRequires: pkgconfig(libdrm)
 BuildRequires: pkgconfig(poppler-glib)
 BuildRequires: pkgconfig(gbm)
+BuildRequires: pkgconfig(egl)
 BuildRequires: pkgconfig(epoxy)
 BuildRequires: pkgconfig(cairo-gl)
 
