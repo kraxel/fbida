@@ -12,8 +12,8 @@ CFLAGS	+= -Wno-pointer-sign
 
 # hard build deps
 PKG_CONFIG = pkg-config
-PKGS_IDA := libexif
-PKGS_FBI := freetype2 fontconfig libdrm libexif
+PKGS_IDA := libexif libpng
+PKGS_FBI := freetype2 fontconfig libdrm libexif libpng
 PKGS_FBPDF := libdrm poppler-glib gbm epoxy cairo-gl
 HAVE_DEPS := $(shell $(PKG_CONFIG) $(PKGS_FBI) $(PKGS_FBPDF) && echo yes)
 
@@ -72,7 +72,6 @@ HAVE_GLIBC	:= $(call ac_func,fopencookie)
 HAVE_STRSIGNAL	:= $(call ac_func,strsignal)
 HAVE_LIBPCD	:= $(call ac_lib,pcd_open,pcd)
 HAVE_LIBGIF	:= $(call ac_lib,DGifOpenFileName,gif)
-HAVE_LIBPNG	:= $(call ac_pkg_config,libpng)
 HAVE_LIBTIFF	:= $(call ac_pkg_config,libtiff-4)
 HAVE_LIBWEBP	:= $(call ac_pkg_config,libwebp)
 HAVE_LIBSANE	:= $(call ac_lib,sane_init,sane)
@@ -99,10 +98,6 @@ endif
 ########################################################################
 # conditional stuff
 
-ifeq ($(HAVE_LIBPNG),yes)
-  PKGS_IDA += libpng
-  PKGS_FBI += libpng
-endif
 ifeq ($(HAVE_LIBTIFF),yes)
   PKGS_IDA += libtiff-4
   PKGS_FBI += libtiff-4
@@ -114,8 +109,8 @@ endif
 
 includes        = ENDIAN_H STRSIGNAL NEW_EXIF
 libraries       = PCD GIF CURL SANE LIRC
-ida_libs	= PCD GIF PNG TIFF WEBP CURL SANE
-fbi_libs	= PCD GIF PNG TIFF WEBP CURL LIRC
+ida_libs	= PCD GIF TIFF WEBP CURL SANE
+fbi_libs	= PCD GIF TIFF WEBP CURL LIRC
 
 PCD_LDLIBS	:= -lpcd
 GIF_LDLIBS	:= -lgif
@@ -123,7 +118,6 @@ SANE_LDLIBS	:= -lsane
 CURL_LDLIBS	:= -lcurl
 LIRC_LDLIBS     := -llirc_client
 
-PNG_OBJS	:= rd/read-png.o  wr/write-png.o
 TIFF_OBJS	:= rd/read-tiff.o wr/write-tiff.o
 WEBP_OBJS	:= rd/read-webp.o
 PCD_OBJS	:= rd/read-pcd.o
@@ -133,8 +127,10 @@ CURL_OBJS	:= curl.o
 LIRC_OBJS       := lirc.o
 
 # common objs
-OBJS_READER	:= readers.o rd/read-ppm.o rd/read-bmp.o rd/read-jpeg.o
-OBJS_WRITER	:= writers.o wr/write-ppm.o wr/write-ps.o wr/write-jpeg.o
+OBJS_READER	:= readers.o rd/read-ppm.o rd/read-bmp.o rd/read-jpeg.o \
+                   rd/read-png.o
+OBJS_WRITER	:= writers.o wr/write-ppm.o wr/write-ps.o wr/write-jpeg.o \
+                   wr/write-png.o
 
 # update various flags depending on HAVE_*
 CFLAGS		+= $(call ac_inc_cflags,$(includes))
