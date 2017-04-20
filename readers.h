@@ -89,6 +89,8 @@ int load_free_extras(struct ida_image_info *info);
 
 void ida_image_alloc(struct ida_image *img);
 uint8_t *ida_image_scanline(struct ida_image *img, int y);
+uint32_t ida_image_stride(struct ida_image *img);
+uint32_t ida_image_bpp(struct ida_image *img);
 void ida_image_free(struct ida_image *img);
 
 /* ----------------------------------------------------------------------- */

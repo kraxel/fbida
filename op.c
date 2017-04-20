@@ -19,7 +19,7 @@ op_flip_vert(struct ida_image *src, struct ida_rect *rect,
     char *scanline;
 
     scanline = ida_image_scanline(src, src->i.height - line - 1);
-    memcpy(dst,scanline,src->i.width*3);
+    memcpy(dst, scanline, ida_image_stride(src));
 }
 
 static void
@@ -27,15 +27,15 @@ op_flip_horz(struct ida_image *src, struct ida_rect *rect,
 	     unsigned char *dst, int line, void *data)
 {
     char *scanline;
-    unsigned int i;
+    unsigned int i, bpp;
 
-    scanline = ida_image_scanline(src, line+1);
+    bpp = ida_image_bpp(src);
+    scanline = ida_image_scanline(src, line);
+    scanline += src->i.width * bpp;
     for (i = 0; i < src->i.width; i++) {
-	scanline -= 3;
-	dst[0] = scanline[0];
-	dst[1] = scanline[1];
-	dst[2] = scanline[2];
-	dst += 3;
+	scanline -= bpp;
+        memcpy(dst, scanline, bpp);
+	dst += bpp;
     }
 }
 
@@ -55,15 +55,14 @@ op_rotate_cw(struct ida_image *src, struct ida_rect *rect,
 	     unsigned char *dst, int line, void *data)
 {
     char *pix;
-    unsigned int i;
+    unsigned int i, bpp;
 
-    pix = ida_image_scanline(src, src->i.height) + line * 3;
+    bpp = ida_image_bpp(src);
+    pix = ida_image_scanline(src, src->i.height) + line * bpp;
     for (i = 0; i < src->i.height; i++) {
-	pix -= src->i.width * 3;
-	dst[0] = pix[0];
-	dst[1] = pix[1];
-	dst[2] = pix[2];
-	dst += 3;
+	pix -= ida_image_stride(src);
+        memcpy(dst, pix, bpp);
+	dst += bpp;
     }
 }
 
@@ -72,15 +71,14 @@ op_rotate_ccw(struct ida_image *src, struct ida_rect *rect,
 	      unsigned char *dst, int line, void *data)
 {
     char *pix;
-    unsigned int i;
+    unsigned int i, bpp;
 
-    pix = ida_image_scanline(src, 0) + (src->i.width-line-1) * 3;
+    bpp = ida_image_bpp(src);
+    pix = ida_image_scanline(src, 0) + (src->i.width-line-1) * bpp;
     for (i = 0; i < src->i.height; i++) {
-	dst[0] = pix[0];
-	dst[1] = pix[1];
-	dst[2] = pix[2];
-	pix += src->i.width * 3;
-	dst += 3;
+        memcpy(dst, pix, bpp);
+	pix += ida_image_stride(src);
+	dst += bpp;
     }
 }
 

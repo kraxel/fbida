@@ -144,6 +144,19 @@ uint8_t *ida_image_scanline(struct ida_image *img, int y)
     return scanline;
 }
 
+uint32_t ida_image_stride(struct ida_image *img)
+{
+    return pixman_image_get_stride(img->p);
+}
+
+uint32_t ida_image_bpp(struct ida_image *img)
+{
+    uint32_t bits = PIXMAN_FORMAT_BPP(pixman_image_get_format(img->p));
+    uint32_t bytes = bits / 8;
+    assert(bytes * 8 == bits);
+    return bytes;
+}
+
 void ida_image_free(struct ida_image *img)
 {
     assert(img->p != NULL);
