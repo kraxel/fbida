@@ -87,20 +87,24 @@ op_invert(struct ida_image *src, struct ida_rect *rect,
 	  unsigned char *dst, int line, void *data)
 {
     unsigned char *scanline;
-    int i;
+    int i, bpp;
 
+    bpp = ida_image_bpp(src);
     scanline = ida_image_scanline(src, line);
-    memcpy(dst,scanline,src->i.width * 3);
+    memcpy(dst, scanline, ida_image_stride(src));
     if (line < rect->y1 || line >= rect->y2)
 	return;
-    dst      += 3*rect->x1;
-    scanline += 3*rect->x1;
+    dst      += bpp*rect->x1;
+    scanline += bpp*rect->x1;
     for (i = rect->x1; i < rect->x2; i++) {
+
+        /* FIXME for bpp != 3 */
 	dst[0] = 255-scanline[0];
 	dst[1] = 255-scanline[1];
 	dst[2] = 255-scanline[2];
-	scanline += 3;
-	dst += 3;
+
+	scanline += bpp;
+	dst += bpp;
     }
 }
 
