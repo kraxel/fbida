@@ -67,3 +67,6 @@ fbpdf_srcs   = [ 'fbpdf.c', 'parseconfig.c', 'fbiconfig.c',
 executable('fbpdf',
            sources             : fbpdf_srcs,
            dependencies        : fbpdf_deps)
+
+# build kbdtest
+executable('kbdtest', [ 'kbdtest.c', 'kbd.c' ])
