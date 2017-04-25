@@ -12,6 +12,7 @@ config.set_quoted('VERSION', version.stdout().strip())
 freetype_dep = dependency('freetype2')
 fontconf_dep = dependency('fontconfig')
 pixman_dep   = dependency('pixman-1')
+poppler_dep  = dependency('poppler-glib')
 drm_dep      = dependency('libdrm')
 gbm_dep      = dependency('gbm')
 epoxy_dep    = dependency('epoxy')
@@ -56,3 +57,13 @@ executable('fbi',
            sources             : fbi_srcs,
            dependencies        : fbi_deps,
            include_directories : trans_inc)
+
+# build fbpdf
+fbpdf_deps   = [ drm_dep, gbm_dep, epoxy_dep,
+                 pixman_dep, poppler_dep ]
+fbpdf_srcs   = [ 'fbpdf.c', 'parseconfig.c', 'fbiconfig.c',
+                 'vt.c', 'kbd.c', 'fbtools.c', 'drmtools.c', 'drmtools-egl.c' ]
+
+executable('fbpdf',
+           sources             : fbpdf_srcs,
+           dependencies        : fbpdf_deps)
