@@ -19,6 +19,7 @@ epoxy_dep    = dependency('epoxy')
 exif_dep     = dependency('libexif')
 png_dep      = dependency('libpng')
 tiff_dep     = dependency('libtiff-4')
+webp_dep     = dependency('libwebp', required : false)
 
 # other library deps
 cc           = meson.get_compiler('c')
@@ -30,7 +31,13 @@ read_srcs    = [ 'readers.c', 'rd/read-ppm.c', 'rd/read-bmp.c',
                  'rd/read-jpeg.c', 'rd/read-png.c', 'rd/read-tiff.c' ]
 write_srcs   = [ 'writers.c', 'wr/write-ppm.c', 'wr/write-ps.c',
                  'wr/write-jpeg.c', 'wr/write-png.c', 'wr/write-tiff.c' ]
-image_deps   = [ jpeg_dep, png_dep, tiff_dep ]
+image_deps   = [ jpeg_dep, png_dep, tiff_dep,
+                 webp_dep ]
+
+if webp_dep.found()
+    read_srcs += 'rd/read-webp.c'
+    config.set('HAVE_LIBWEBP', true)
+endif
 
 # jpeg transformation support (FIXME: detect version)
 trans_srcs   = 'jpeg/62/transupp.c'
