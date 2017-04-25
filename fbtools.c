@@ -25,13 +25,6 @@
 #include "vt.h"
 #include "fbtools.h"
 
-#ifndef HAVE_STRSIGNAL
-static const char *strsignal(int signr)
-{
-    return sys_siglist[signr];
-}
-#endif
-
 /* -------------------------------------------------------------------- */
 /* internal variables                                                   */
 

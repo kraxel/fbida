@@ -69,7 +69,6 @@ LIB		:= $(LIB)
 RESDIR		:= $(call ac_resdir)
 HAVE_LINUX_FB_H	:= $(call ac_header,linux/fb.h)
 HAVE_GLIBC	:= $(call ac_func,fopencookie)
-HAVE_STRSIGNAL	:= $(call ac_func,strsignal)
 HAVE_CAIRO_GL	:= $(call ac_pkg_config,cairo-gl)
 HAVE_LIBPCD	:= $(call ac_lib,pcd_open,pcd)
 HAVE_LIBGIF	:= $(call ac_lib,DGifOpenFileName,gif)
@@ -107,7 +106,7 @@ ifeq ($(HAVE_CAIRO_GL),yes)
   PKGS_FBPDF += cairo-gl
 endif
 
-includes        = STRSIGNAL CAIRO_GL
+includes        = CAIRO_GL
 libraries       = PCD GIF CURL SANE LIRC
 ida_libs	= PCD GIF WEBP CURL SANE
 fbi_libs	= PCD GIF WEBP CURL LIRC
