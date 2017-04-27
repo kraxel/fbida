@@ -187,8 +187,7 @@ Ida.ad.h: Ida.ad $(srcdir)/scripts/fallback.pl
 	perl $(srcdir)/scripts/fallback.pl $< $@
 
 logo.h: logo.jpg
-	hexdump -v -e '1/1 "0x%02x,"' < $< > $@
-	echo >> $@ # make gcc 3.x happy
+	scripts/hexify.sh $< $@
 
 ida.o: Ida.ad.h logo.h
 
