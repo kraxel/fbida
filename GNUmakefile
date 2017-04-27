@@ -60,7 +60,7 @@ include $(srcdir)/mk/Autoconf.mk
 
 ac_jpeg_ver = $(shell \
 	$(call ac_init,for libjpeg version);\
-	$(call ac_s_cmd,scripts/jpeg-version.sh);\
+	$(call ac_s_cmd, $(srcdir)/scripts/jpeg-version.sh);\
 	$(call ac_fini))
 
 define make-config
@@ -183,8 +183,8 @@ RegEdit.o : CFLAGS += -Wno-missing-prototypes -Wno-strict-prototypes -Wno-maybe-
 
 ida: $(OBJS_IDA) $(OBJS_READER) $(OBJS_WRITER)
 
-Ida.ad.h: Ida.ad $(srcdir)/fallback.pl
-	perl $(srcdir)/fallback.pl < $< > $@
+Ida.ad.h: Ida.ad $(srcdir)/scripts/fallback.pl
+	perl $(srcdir)/scripts/fallback.pl < $< > $@
 
 logo.h: logo.jpg
 	hexdump -v -e '1/1 "0x%02x,"' < $< > $@
