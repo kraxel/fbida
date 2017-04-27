@@ -25,6 +25,8 @@ webp_dep     = dependency('libwebp', required : false)
 cc           = meson.get_compiler('c')
 jpeg_dep     = cc.find_library('jpeg')
 math_dep     = cc.find_library('m', required : false)
+pcd_dep      = cc.find_library('pcd', required : false)
+gif_dep      = cc.find_library('gif', required : false)
 
 # image formats
 read_srcs    = [ 'readers.c', 'rd/read-ppm.c', 'rd/read-bmp.c',
@@ -32,8 +34,16 @@ read_srcs    = [ 'readers.c', 'rd/read-ppm.c', 'rd/read-bmp.c',
 write_srcs   = [ 'writers.c', 'wr/write-ppm.c', 'wr/write-ps.c',
                  'wr/write-jpeg.c', 'wr/write-png.c', 'wr/write-tiff.c' ]
 image_deps   = [ jpeg_dep, png_dep, tiff_dep,
-                 webp_dep ]
+                 pcd_dep, gif_dep, webp_dep ]
 
+if pcd_dep.found()
+    read_srcs += 'rd/read-pcd.c'
+    config.set('HAVE_LIBPCD', true)
+endif
+if gif_dep.found()
+    read_srcs += 'rd/read-gif.c'
+    config.set('HAVE_LIBGIF', true)
+endif
 if webp_dep.found()
     read_srcs += 'rd/read-webp.c'
     config.set('HAVE_LIBWEBP', true)
