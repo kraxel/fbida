@@ -1,3 +1,4 @@
+# -*-python-*-
 project('fbida', 'c')
 
 # tweak warnings
