@@ -30,6 +30,13 @@ math_dep     = cc.find_library('m', required : false)
 pcd_dep      = cc.find_library('pcd', required : false)
 gif_dep      = cc.find_library('gif', required : false)
 
+# motif + x11 libs
+motif_dep    = cc.find_library('Xm', required : false)
+xpm_dep      = cc.find_library('Xpm', required : false)
+xt_dep       = cc.find_library('Xt', required : false)
+xext_dep     = cc.find_library('Xext', required : false)
+x11_dep      = cc.find_library('X11', required : false)
+
 # image formats
 read_srcs    = [ 'readers.c', 'rd/read-ppm.c', 'rd/read-bmp.c',
                  'rd/read-jpeg.c', 'rd/read-png.c', 'rd/read-tiff.c' ]
@@ -60,6 +67,9 @@ trans_inc    = include_directories(''.join(['jpeg/', jpeg_ver]))
 # finish & write configuration
 if cairo_gl_dep.found()
     config.set('HAVE_CAIRO_GL', true)
+endif
+if motif_dep.found()
+    config.set('HAVE_MOTIF', true)
 endif
 configure_file(output : 'config.h', configuration : config)
 add_global_arguments(['-include', 'config.h'], language : 'c')
@@ -110,3 +120,30 @@ executable('fbpdf',
 
 # build kbdtest
 executable('kbdtest', [ 'kbdtest.c', 'kbd.c' ])
+
+# build ida
+mkfallback   = find_program('scripts/fallback.pl')
+hexify       = find_program('scripts/hexify.sh')
+ida_ad       = custom_target('ida-app-defaults',
+                             input   : ['Ida.ad'],
+                             output  : ['Ida.ad.h'],
+                             command : [ mkfallback, '@INPUT@', '@OUTPUT@'])
+ida_logo     = custom_target('ida-logo',
+                             input   : ['logo.jpg'],
+                             output  : ['logo.h'],
+                             command : [ hexify, '@INPUT@', '@OUTPUT@'])
+ida_srcs     = [ 'ida.c', 'man.c', 'hex.c', 'x11.c', 'viewer.c',
+                 'dither.c', 'icons.c', 'parseconfig.c', 'idaconfig.c',
+                 'fileops.c', 'desktop.c', 'RegEdit.c', 'selections.c',
+                 'xdnd.c', 'filebutton.c', 'filelist.c', 'browser.c',
+                 'jpegtools.c', 'op.c', 'filter.c', 'lut.c', 'color.c',
+                 trans_src, read_srcs, write_srcs,
+                 'rd/read-xwd.c', 'rd/read-xpm.c',
+                 ida_ad, ida_logo ]
+ida_deps     = [ pixman_dep, exif_dep, image_deps, math_dep,
+                 motif_dep, xpm_dep, xt_dep, xext_dep, x11_dep ]
+
+executable('ida',
+           sources             : ida_srcs,
+           dependencies        : ida_deps,
+           include_directories : trans_inc)
