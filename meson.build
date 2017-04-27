@@ -67,15 +67,15 @@ add_global_arguments(['-include', 'config.h'], language : 'c')
 ########################################################################
 
 # build fbi
-fbi_deps     = [ freetype_dep, fontconf_dep,
-                 drm_dep, pixman_dep,
-                 exif_dep, image_deps,
-                 math_dep ]
 fbi_srcs     = [ 'fbi.c', 'fb-gui.c', 'desktop.c',
                  'parseconfig.c', 'fbiconfig.c',
                  'vt.c', 'kbd.c', 'fbtools.c', 'drmtools.c',
                  'dither.c', 'filter.c', 'op.c', 'jpegtools.c', 
                  trans_src, read_srcs ]
+fbi_deps     = [ freetype_dep, fontconf_dep,
+                 drm_dep, pixman_dep,
+                 exif_dep, image_deps,
+                 math_dep ]
 
 executable('fbi',
            sources             : fbi_srcs,
@@ -99,10 +99,10 @@ executable('thumbnail.cgi',
            dependencies        : exif_dep)
 
 # build fbpdf
-fbpdf_deps   = [ drm_dep, gbm_dep, epoxy_dep,
-                 pixman_dep, poppler_dep, cairo_dep, cairo_gl_dep ]
 fbpdf_srcs   = [ 'fbpdf.c', 'parseconfig.c', 'fbiconfig.c',
                  'vt.c', 'kbd.c', 'fbtools.c', 'drmtools.c', 'drmtools-egl.c' ]
+fbpdf_deps   = [ drm_dep, gbm_dep, epoxy_dep,
+                 pixman_dep, poppler_dep, cairo_dep, cairo_gl_dep ]
 
 executable('fbpdf',
            sources             : fbpdf_srcs,
