@@ -4,7 +4,13 @@
 #
 use strict;
 
-while (my $line = <>) {
+my $in  = shift;
+my $out = shift;
+
+open(IN, "<", $in) or die "open (read): $in";
+open(OUT, ">", $out) or die "open (write): $out";
+
+while (my $line = <IN>) {
 	chomp $line;
 
 	# ignore comments
@@ -17,10 +23,10 @@ while (my $line = <>) {
 
 	# continued line?
 	if ($line =~ s/\\\\$//) {
-		printf "\"%s\"\n",$line;
+		printf OUT "\"%s\"\n",$line;
 		next;
 	}
 
 	# write out
-	printf "\"%s\",\n",$line;
+	printf OUT "\"%s\",\n",$line;
 }

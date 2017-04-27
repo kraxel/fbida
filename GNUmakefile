@@ -184,7 +184,7 @@ RegEdit.o : CFLAGS += -Wno-missing-prototypes -Wno-strict-prototypes -Wno-maybe-
 ida: $(OBJS_IDA) $(OBJS_READER) $(OBJS_WRITER)
 
 Ida.ad.h: Ida.ad $(srcdir)/scripts/fallback.pl
-	perl $(srcdir)/scripts/fallback.pl < $< > $@
+	perl $(srcdir)/scripts/fallback.pl $< $@
 
 logo.h: logo.jpg
 	hexdump -v -e '1/1 "0x%02x,"' < $< > $@
