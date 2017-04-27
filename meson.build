@@ -49,9 +49,11 @@ if webp_dep.found()
     config.set('HAVE_LIBWEBP', true)
 endif
 
-# jpeg transformation support (FIXME: detect version)
-trans_srcs   = 'jpeg/62/transupp.c'
-trans_inc    =  include_directories('jpeg/62')
+# jpeg transformation support
+jpeg_run     = run_command('scripts/jpeg-version.sh')
+jpeg_ver     = jpeg_run.stdout().strip()
+trans_src    = ''.join(['jpeg/', jpeg_ver,  '/transupp.c'])
+trans_inc    = include_directories(''.join(['jpeg/', jpeg_ver]))
 
 # write configuration
 configure_file(output : 'config.h', configuration : config)
@@ -68,7 +70,7 @@ fbi_srcs     = [ 'fbi.c', 'fb-gui.c', 'desktop.c',
                  'parseconfig.c', 'fbiconfig.c',
                  'vt.c', 'kbd.c', 'fbtools.c', 'drmtools.c',
                  'dither.c', 'filter.c', 'op.c', 'jpegtools.c', 
-                 trans_srcs, read_srcs ]
+                 trans_src, read_srcs ]
 
 executable('fbi',
            sources             : fbi_srcs,
