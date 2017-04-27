@@ -60,8 +60,7 @@ include $(srcdir)/mk/Autoconf.mk
 
 ac_jpeg_ver = $(shell \
 	$(call ac_init,for libjpeg version);\
-	$(call ac_s_cmd,echo JPEG_LIB_VERSION \
-		| cpp -include jpeglib.h | tail -n 1);\
+	$(call ac_s_cmd,scripts/jpeg-version.sh);\
 	$(call ac_fini))
 
 define make-config
