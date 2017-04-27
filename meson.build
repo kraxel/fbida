@@ -93,6 +93,11 @@ executable('exiftran',
            dependencies        : exiftr_deps,
            include_directories : trans_inc)
 
+# build thumbnail.cgi
+executable('thumbnail.cgi',
+           sources             : 'thumbnail.cgi.c',
+           dependencies        : exif_dep)
+
 # build fbpdf
 fbpdf_deps   = [ drm_dep, gbm_dep, epoxy_dep,
                  pixman_dep, poppler_dep, cairo_dep, cairo_gl_dep ]
