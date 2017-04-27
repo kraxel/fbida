@@ -82,6 +82,17 @@ executable('fbi',
            dependencies        : fbi_deps,
            include_directories : trans_inc)
 
+# build exiftran
+exiftr_srcs  = [ 'exiftran.c', 'genthumbnail.c', 'jpegtools.c',
+                 'filter.c', 'op.c', 'readers.c', 'rd/read-jpeg.c',
+                 trans_src ]
+exiftr_deps  = [ jpeg_dep, exif_dep, math_dep, pixman_dep ]
+
+executable('exiftran',
+           sources             : exiftr_srcs,
+           dependencies        : exiftr_deps,
+           include_directories : trans_inc)
+
 # build fbpdf
 fbpdf_deps   = [ drm_dep, gbm_dep, epoxy_dep,
                  pixman_dep, poppler_dep, cairo_dep, cairo_gl_dep ]
