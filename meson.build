@@ -13,6 +13,8 @@ freetype_dep = dependency('freetype2')
 fontconf_dep = dependency('fontconfig')
 pixman_dep   = dependency('pixman-1')
 poppler_dep  = dependency('poppler-glib')
+cairo_dep    = dependency('cairo')
+cairo_gl_dep = dependency('cairo-gl')
 drm_dep      = dependency('libdrm')
 gbm_dep      = dependency('gbm')
 epoxy_dep    = dependency('epoxy')
@@ -55,7 +57,10 @@ jpeg_ver     = jpeg_run.stdout().strip()
 trans_src    = ''.join(['jpeg/', jpeg_ver,  '/transupp.c'])
 trans_inc    = include_directories(''.join(['jpeg/', jpeg_ver]))
 
-# write configuration
+# finish & write configuration
+if cairo_gl_dep.found()
+    config.set('HAVE_CAIRO_GL', true)
+endif
 configure_file(output : 'config.h', configuration : config)
 add_global_arguments(['-include', 'config.h'], language : 'c')
 
