@@ -84,7 +84,7 @@ executable('fbi',
 
 # build fbpdf
 fbpdf_deps   = [ drm_dep, gbm_dep, epoxy_dep,
-                 pixman_dep, poppler_dep ]
+                 pixman_dep, poppler_dep, cairo_dep, cairo_gl_dep ]
 fbpdf_srcs   = [ 'fbpdf.c', 'parseconfig.c', 'fbiconfig.c',
                  'vt.c', 'kbd.c', 'fbtools.c', 'drmtools.c', 'drmtools-egl.c' ]
 
