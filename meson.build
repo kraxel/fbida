@@ -91,7 +91,9 @@ fbi_deps     = [ freetype_dep, fontconf_dep,
 executable('fbi',
            sources             : fbi_srcs,
            dependencies        : fbi_deps,
-           include_directories : trans_inc)
+           include_directories : trans_inc,
+           install             : true)
+install_man('man/fbi.1')
 
 # build exiftran
 exiftr_srcs  = [ 'exiftran.c', 'genthumbnail.c', 'jpegtools.c',
@@ -102,7 +104,9 @@ exiftr_deps  = [ jpeg_dep, exif_dep, math_dep, pixman_dep ]
 executable('exiftran',
            sources             : exiftr_srcs,
            dependencies        : exiftr_deps,
-           include_directories : trans_inc)
+           include_directories : trans_inc,
+           install             : true)
+install_man('man/exiftran.1')
 
 # build thumbnail.cgi
 executable('thumbnail.cgi',
@@ -117,7 +121,8 @@ fbpdf_deps   = [ drm_dep, gbm_dep, epoxy_dep,
 
 executable('fbpdf',
            sources             : fbpdf_srcs,
-           dependencies        : fbpdf_deps)
+           dependencies        : fbpdf_deps,
+           install             : true)
 
 # build kbdtest
 executable('kbdtest', [ 'kbdtest.c', 'kbd.c' ])
@@ -147,4 +152,6 @@ ida_deps     = [ pixman_dep, exif_dep, image_deps, math_dep,
 executable('ida',
            sources             : ida_srcs,
            dependencies        : ida_deps,
-           include_directories : trans_inc)
+           include_directories : trans_inc,
+           install             : true)
+install_man('man/ida.1')
