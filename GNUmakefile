@@ -67,16 +67,17 @@ define make-config
 LIB		:= $(LIB)
 RESDIR		:= $(call ac_resdir)
 HAVE_LINUX_FB_H	:= $(call ac_header,linux/fb.h)
-HAVE_GLIBC	:= $(call ac_func,fopencookie)
 HAVE_CAIRO_GL	:= $(call ac_pkg_config,cairo-gl)
 HAVE_LIBPCD	:= $(call ac_lib,pcd_open,pcd)
 HAVE_LIBGIF	:= $(call ac_lib,DGifOpenFileName,gif)
 HAVE_LIBWEBP	:= $(call ac_pkg_config,libwebp)
-HAVE_LIBSANE	:= $(call ac_lib,sane_init,sane)
-HAVE_LIBCURL	:= $(call ac_lib,curl_easy_init,curl)
-HAVE_LIBLIRC	:= $(call ac_lib,lirc_init,lirc_client)
 HAVE_MOTIF	:= $(call ac_lib,XmStringGenerate,Xm,-L/usr/X11R6/$(LIB) -lXpm -lXt -lXext -lX11)
 JPEG_VER        := $(call ac_jpeg_ver)
+# deprecated
+#HAVE_GLIBC	:= $(call ac_func,fopencookie)
+#HAVE_LIBSANE	:= $(call ac_lib,sane_init,sane)
+#HAVE_LIBCURL	:= $(call ac_lib,curl_easy_init,curl)
+#HAVE_LIBLIRC	:= $(call ac_lib,lirc_init,lirc_client)
 endef
 
 # transposing
