@@ -246,17 +246,17 @@ install: build
 	$(INSTALL_DIR) $(bindir)
 	$(INSTALL_DIR) $(mandir)/man1
 	$(INSTALL_BINARY) exiftran $(bindir)
-	$(INSTALL_DATA) $(srcdir)/exiftran.man $(mandir)/man1/exiftran.1
+	$(INSTALL_DATA) $(srcdir)/man/exiftran.1 $(mandir)/man1
 ifeq ($(HAVE_LINUX_FB_H),yes)
 	$(INSTALL_BINARY) fbi $(bindir)
 	$(INSTALL_SCRIPT) fbgs $(bindir)
 	$(INSTALL_SCRIPT) fbpdf $(bindir)
-	$(INSTALL_DATA) $(srcdir)/fbi.man $(mandir)/man1/fbi.1
-	$(INSTALL_DATA) $(srcdir)/fbgs.man $(mandir)/man1/fbgs.1
+	$(INSTALL_DATA) $(srcdir)/man/fbi.1 $(mandir)/man1
+	$(INSTALL_DATA) $(srcdir)/man/fbgs.1 $(mandir)/man1
 endif
 ifeq ($(HAVE_MOTIF),yes)
 	$(INSTALL_BINARY) ida $(bindir)
-	$(INSTALL_DATA) $(srcdir)/ida.man $(mandir)/man1/ida.1
+	$(INSTALL_DATA) $(srcdir)/man/ida.1 $(mandir)/man1
 	$(INSTALL_DIR) $(resdir)/app-defaults
 	$(INSTALL_DATA) $(srcdir)/Ida.ad $(resdir)/app-defaults/Ida
 endif
