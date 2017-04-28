@@ -1,2 +1,2 @@
 #!/bin/sh
-echo JPEG_LIB_VERSION | cpp -include jpeglib.h | tail -1
+echo JPEG_LIB_VERSION | cpp $CFLAGS -include jpeglib.h | tail -1
