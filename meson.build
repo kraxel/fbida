@@ -151,10 +151,12 @@ ida_srcs     = [ 'ida.c', 'man.c', 'hex.c', 'x11.c', 'viewer.c',
 ida_deps     = [ pixman_dep, exif_dep, image_deps, math_dep,
                  motif_dep, xpm_dep, xt_dep, xext_dep, x11_dep ]
 
-executable('ida',
-           sources             : ida_srcs,
-           dependencies        : ida_deps,
-           include_directories : trans_inc,
-           install             : true)
-install_man('man/ida.1')
-install_data('Ida.ad', install_dir : x11resdir)
+if motif_dep.found()
+    executable('ida',
+               sources             : ida_srcs,
+               dependencies        : ida_deps,
+               include_directories : trans_inc,
+               install             : true)
+    install_man('man/ida.1')
+    install_data('Ida.ad', install_dir : x11resdir)
+endif
