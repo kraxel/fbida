@@ -8,6 +8,8 @@ add_global_arguments('-Wno-pointer-sign', language : 'c')
 config       = configuration_data()
 version      = run_command('cat', 'VERSION')
 config.set_quoted('VERSION', version.stdout().strip())
+x11resrun    = run_command('scripts/x11resdir.sh', get_option('prefix'))
+x11resdir    = x11resrun.stdout().strip()
 
 # pkg-config deps
 freetype_dep = dependency('freetype2')
@@ -155,3 +157,4 @@ executable('ida',
            include_directories : trans_inc,
            install             : true)
 install_man('man/ida.1')
+install_data('Ida.ad', install_dir : x11resdir)
