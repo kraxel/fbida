@@ -60,7 +60,7 @@ static const char *footer =
 "showpage\n"
 "end\n"
 "origstate restore\n"
-"%%%%Trailer\n";
+"%%Trailer\n";
 
 /* taken from xwd2ps, ftp://ftp.x.org/R5contrib/xwd2ps.tar.Z */
 static const char *ColorImage =
@@ -458,7 +458,7 @@ ps_write(FILE *fp, struct ida_image *img)
 	    fprintf(fp,"\n");
 	}
     }
-    fprintf(fp,footer);
+    fprintf(fp, "%s", footer);
     return 0;
 }
 
