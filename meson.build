@@ -132,7 +132,8 @@ executable('kbdtest', [ 'kbdtest.c', 'kbd.c' ])
 # build ida
 mkfallback   = find_program('scripts/fallback.pl')
 hexify       = find_program('scripts/hexify.sh')
-ida_ad       = custom_target('ida-app-defaults',
+copy         = find_program('cp')
+ida_ad       = custom_target('ida-app-defaults-fallback',
                              input   : ['Ida.ad'],
                              output  : ['Ida.ad.h'],
                              command : [ mkfallback, '@INPUT@', '@OUTPUT@'])
@@ -158,5 +159,9 @@ if motif_dep.found()
                include_directories : trans_inc,
                install             : true)
     install_man('man/ida.1')
-    install_data('Ida.ad', install_dir : x11resdir)
+    custom_target('ida-app-defaults',
+                  input   : ['Ida.ad'],
+                  output  : ['Ida'],
+                  command : [ copy, '@INPUT@', '@OUTPUT@'],
+                  install : true, install_dir : x11resdir)
 endif
