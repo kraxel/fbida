@@ -7,6 +7,9 @@ Group:        Applications/Multimedia
 URL:          http://www.kraxel.org/blog/linux/%{name}/
 Source:       http://www.kraxel.org/releases/%{name}/%{name}-%{version}.tar.gz
 
+# meson
+BuildRequires: meson ninja-build
+
 # image format libs
 BuildRequires: libjpeg-devel
 BuildRequires: libpcd-devel
@@ -63,10 +66,12 @@ jpegtran it also handles the exif metadata.
 
 %build
 export CFLAGS="%{optflags}"
-make prefix=/usr
+meson --prefix=%{_prefix} build-rpm
+ninja-build -C build-rpm
 
 %install
-make prefix=/usr DESTDIR=%{buildroot} STRIP="" install
+export DESTDIR=%{buildroot}
+ninja-build -C build-rpm install
 
 %files -n fbi
 %doc COPYING
