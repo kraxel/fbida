@@ -72,6 +72,9 @@ ninja-build -C build-rpm
 %install
 export DESTDIR=%{buildroot}
 ninja-build -C build-rpm install
+# add fbgs
+cp fbgs %{buildroot}%{_bindir}
+cp man/fbgs.1 %{buildroot}%{_mandir}/man1
 
 %files -n fbi
 %doc COPYING
