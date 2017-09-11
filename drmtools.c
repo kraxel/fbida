@@ -201,7 +201,7 @@ static int drm_show_fb(struct drmfb *fb)
 
     rc = drmModeSetCrtc(drm_fd, drm_enc->crtc_id, fb->id, 0, 0,
                         &drm_conn->connector_id, 1,
-                        &drm_conn->modes[0]);
+                        drm_mode);
     if (rc < 0) {
         fprintf(stderr, "drm: drmModeSetCrtc() failed\n");
         return -1;
