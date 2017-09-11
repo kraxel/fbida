@@ -163,7 +163,7 @@ static void drm_egl_flush_display(bool second)
     bo = newbo;
 }
 
-gfxstate *drm_init_egl(const char *device, const char *output)
+gfxstate *drm_init_egl(const char *device, const char *output, const char *mode)
 {
     gfxstate *gfx;
     char dev[64];
@@ -175,7 +175,7 @@ gfxstate *drm_init_egl(const char *device, const char *output)
     }
     fprintf(stderr, "trying drm/egl: %s ...\n", dev);
 
-    if (drm_init_dev(dev, output) < 0)
+    if (drm_init_dev(dev, output, mode) < 0)
         return NULL;
     if (drm_setup_egl() < 0)
         return NULL;

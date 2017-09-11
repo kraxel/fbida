@@ -1405,14 +1405,14 @@ int main(int argc, char *argv[])
     if (device) {
         /* device specified */
         if (strncmp(device, "/dev/d", 6) == 0) {
-            gfx = drm_init(device, output, false);
+            gfx = drm_init(device, output, mode, false);
         } else {
             framebuffer = true;
             gfx = fb_init(device, mode, GET_VT());
         }
     } else {
         /* try drm first, failing that fb */
-        gfx = drm_init(NULL, output, false);
+        gfx = drm_init(NULL, output, mode, false);
         if (!gfx) {
             framebuffer = true;
             gfx = fb_init(NULL, mode, GET_VT());

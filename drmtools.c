@@ -75,10 +75,10 @@ void drm_cleanup_display(void)
     }
 }
 
-int drm_init_dev(const char *dev, const char *output)
+int drm_init_dev(const char *dev, const char *output, const char *mode)
 {
     drmModeRes *res;
-    char name[64];
+    char name[64], m[64];
     uint64_t has_dumb;
     int i, rc;
 
@@ -127,7 +127,23 @@ int drm_init_dev(const char *dev, const char *output)
         }
         return -1;
     }
-    drm_mode = &drm_conn->modes[0];
+
+    if (mode) {
+        for (i = 0; i < drm_conn->count_modes; i++) {
+            snprintf(m, sizeof(m), "%dx%d",
+                     drm_conn->modes[i].hdisplay,
+                     drm_conn->modes[i].vdisplay);
+            if (strcmp(m, mode) == 0) {
+                fprintf(stderr, "Using mode %s\n", mode);
+                drm_mode = &drm_conn->modes[i];
+                break;
+            }
+        }
+    }
+    if (!drm_mode) {
+        drm_mode = &drm_conn->modes[0];
+    }
+
     drm_enc = drmModeGetEncoder(drm_fd, drm_conn->encoder_id);
     if (drm_enc == NULL) {
         fprintf(stderr, "drm: drmModeGetEncoder() failed\n");
@@ -207,7 +223,8 @@ static void drm_flush_display(bool second)
     drmModeDirtyFB(drm_fd, fbc->id, 0, 0);
 }
 
-gfxstate *drm_init(const char *device, const char *output, bool pageflip)
+gfxstate *drm_init(const char *device, const char *output,
+                   const char *mode, bool pageflip)
 {
     gfxstate *gfx;
     char dev[64];
@@ -219,7 +236,7 @@ gfxstate *drm_init(const char *device, const char *output, bool pageflip)
     }
     fprintf(stderr, "trying drm: %s ...\n", dev);
 
-    if (drm_init_dev(dev, output) < 0)
+    if (drm_init_dev(dev, output, mode) < 0)
         return NULL;
     if (drm_init_fb(&fb1) < 0)
         return NULL;

@@ -317,10 +317,10 @@ int main(int argc, char *argv[])
         /* device specified */
         if (strncmp(device, "/dev/d", 6) == 0) {
             if (opengl) {
-                gfx = drm_init_egl(device, output);
+                gfx = drm_init_egl(device, output, mode);
             }
             if (!gfx) {
-                gfx = drm_init(device, output, pageflip);
+                gfx = drm_init(device, output, mode, pageflip);
             }
         } else {
             framebuffer = true;
@@ -329,10 +329,10 @@ int main(int argc, char *argv[])
     } else {
         /* try drm first, failing that fb */
         if (opengl) {
-            gfx = drm_init_egl(NULL, output);
+            gfx = drm_init_egl(NULL, output, mode);
         }
         if (!gfx) {
-            gfx = drm_init(NULL, output, pageflip);
+            gfx = drm_init(NULL, output, mode, pageflip);
         }
         if (!gfx) {
             framebuffer = true;
