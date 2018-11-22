@@ -8,6 +8,7 @@ URL:          http://www.kraxel.org/blog/linux/%{name}/
 Source:       http://www.kraxel.org/releases/%{name}/%{name}-%{version}.tar.gz
 
 # meson
+BuildRequires: gcc
 BuildRequires: meson ninja-build
 
 # image format libs
