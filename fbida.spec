@@ -33,7 +33,7 @@ BuildRequires: pkgconfig(poppler-glib)
 BuildRequires: pkgconfig(gbm)
 BuildRequires: pkgconfig(egl)
 BuildRequires: pkgconfig(epoxy)
-BuildRequires: pkgconfig(cairo-gl)
+BuildRequires: pkgconfig(cairo)
 
 %description
 fbida
