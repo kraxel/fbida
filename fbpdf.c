@@ -34,9 +34,6 @@
 #include <cairo.h>
 
 #include <epoxy/egl.h>
-#ifdef HAVE_CAIRO_GL
-# include <cairo-gl.h>
-#endif
 
 #include "vt.h"
 #include "kbd.h"
@@ -58,7 +55,6 @@ int                        debug;
 PopplerDocument            *doc;
 cairo_surface_t            *surface1;
 cairo_surface_t            *surface2;
-cairo_surface_t            *surfacegl;
 
 /* pdf render state */
 PopplerPage                *page;
@@ -139,13 +135,9 @@ static void page_render(void)
     static bool second;
     cairo_t *context;
 
-    if (surfacegl) {
-        context = cairo_create(surfacegl);
-    } else {
-        if (surface2)
-            second = !second;
-        context = cairo_create(second ? surface2 : surface1);
-    }
+    if (surface2)
+        second = !second;
+    context = cairo_create(second ? surface2 : surface1);
 
     cairo_translate(context, tx, ty);
     cairo_scale(context, scale, scale);
@@ -155,11 +147,6 @@ static void page_render(void)
     cairo_show_page(context);
     cairo_destroy(context);
 
-    if (surfacegl) {
-#ifdef HAVE_CAIRO_GL
-        cairo_gl_surface_swapbuffers(surfacegl);
-#endif
-    }
     if (gfx->flush_display)
         gfx->flush_display(second);
 }
@@ -250,7 +237,7 @@ int main(int argc, char *argv[])
 {
     GError *err = NULL;
     bool framebuffer = false;
-    bool quit, newpage, opengl, pageflip;
+    bool quit, newpage, pageflip;
     char cwd[1024];
     char uri[1024];
     char key[32];
@@ -306,34 +293,19 @@ int main(int argc, char *argv[])
     output = cfg_get_str(O_OUTPUT);
     mode = cfg_get_str(O_VIDEO_MODE);
     fitwidth = GET_FIT_WIDTH();
-#ifdef HAVE_CAIRO_GL
-    opengl = GET_OPENGL();
-#else
-    opengl = 0;
-#endif
     pageflip = GET_PAGEFLIP();
 
     if (device) {
         /* device specified */
         if (strncmp(device, "/dev/d", 6) == 0) {
-            if (opengl) {
-                gfx = drm_init_egl(device, output, mode);
-            }
-            if (!gfx) {
-                gfx = drm_init(device, output, mode, pageflip);
-            }
+            gfx = drm_init(device, output, mode, pageflip);
         } else {
             framebuffer = true;
             gfx = fb_init(device, mode, GET_VT());
         }
     } else {
         /* try drm first, failing that fb */
-        if (opengl) {
-            gfx = drm_init_egl(NULL, output, mode);
-        }
-        if (!gfx) {
-            gfx = drm_init(NULL, output, mode, pageflip);
-        }
+        gfx = drm_init(NULL, output, mode, pageflip);
         if (!gfx) {
             framebuffer = true;
             gfx = fb_init(NULL, mode, GET_VT());
@@ -355,29 +327,17 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (gfx->mem) {
-        surface1 = cairo_image_surface_create_for_data(gfx->mem,
+    surface1 = cairo_image_surface_create_for_data(gfx->mem,
+                                                   CAIRO_FORMAT_ARGB32,
+                                                   gfx->hdisplay,
+                                                   gfx->vdisplay,
+                                                   gfx->stride);
+    if (gfx->mem2) {
+        surface2 = cairo_image_surface_create_for_data(gfx->mem2,
                                                        CAIRO_FORMAT_ARGB32,
                                                        gfx->hdisplay,
                                                        gfx->vdisplay,
                                                        gfx->stride);
-        if (gfx->mem2) {
-            surface2 = cairo_image_surface_create_for_data(gfx->mem2,
-                                                           CAIRO_FORMAT_ARGB32,
-                                                           gfx->hdisplay,
-                                                           gfx->vdisplay,
-                                                           gfx->stride);
-        }
-    } else {
-#ifdef HAVE_CAIRO_GL
-        cairo_device_t *dev;
-        dev = cairo_egl_device_create(gfx->dpy, gfx->ctx);
-        surfacegl = cairo_gl_surface_create_for_egl(dev, gfx->surface,
-                                                    gfx->hdisplay,
-                                                    gfx->vdisplay);
-#else
-        exit(1);
-#endif
     }
 
     tty_raw();
