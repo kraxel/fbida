@@ -1544,9 +1544,11 @@ int main(int argc, char *argv[])
 	    cleanup_and_exit(0);
 	    break;
 	case KEY_PAGEDOWN:
+        case BTN_LEFT:
 	    fcurrent = flist_next(fcurrent,0,1);
 	    break;
 	case KEY_PAGEUP:
+        case BTN_RIGHT:
 	    fcurrent = flist_prev(fcurrent,1);
 	    break;
 	case -1: /* timeout */

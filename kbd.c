@@ -275,6 +275,7 @@ int kbd_read(char *buf, uint32_t len,
 {
     struct libinput_event *evt;
     struct libinput_event_keyboard *kbd;
+    struct libinput_event_pointer *ptr;
     int rc;
 
     memset(buf, 0, len);
@@ -293,6 +294,11 @@ int kbd_read(char *buf, uint32_t len,
                     *keycode = libinput_event_keyboard_get_key(kbd);
                 /* TODO: track modifier state */
                 /* TODO: fill buf with typed chars */
+                break;
+            case LIBINPUT_EVENT_POINTER_BUTTON:
+                ptr = libinput_event_get_pointer_event(evt);
+                if (libinput_event_pointer_get_button_state(ptr))
+                    *keycode = libinput_event_pointer_get_button(ptr);
                 break;
             default:
                 /* ignore event */
