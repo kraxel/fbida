@@ -51,7 +51,6 @@
 #include "xdnd.h"
 #include "selections.h"
 #include "sane.h"
-#include "curl.h"
 #include "idaconfig.h"
 
 /* ---------------------------------------------------------------------- */
@@ -907,9 +906,6 @@ void new_file(char *name, int complain)
     struct stat st;
     int n;
 
-    if (curl_is_url(name))
-	goto load;
-
     if (0 == strncasecmp(name,"file:",5))
 	name += 5;
     if (-1 == stat(name,&st)) {
@@ -922,16 +918,13 @@ void new_file(char *name, int complain)
 	browser_window(name);
 	break;
     case S_IFREG:
-	goto load;
+        n = list_append(name);
+        list_update();
+        cpage = 0;
+        load_file(n,cpage);
 	break;
     }
     return;
-    
- load:
-    n = list_append(name);
-    list_update();
-    cpage = 0;
-    load_file(n,cpage);
 }
 
 static void
@@ -1878,11 +1871,6 @@ main(int argc, char *argv[])
 	load_stdin();
     } else if (argc > 1) {
 	for (files = 0, i = 1; i < argc; i++) {
- 	    if (curl_is_url(argv[i])) {
-		list_append(argv[i]);
-		files++;
-		continue;
-	    }
 	    if (-1 == stat(argv[i],&st)) {
 		if (debug)
 		    fprintf(stderr,"stat %s: %s\n",argv[i],strerror(errno));

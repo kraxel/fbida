@@ -74,24 +74,11 @@ HAVE_LIBWEBP	:= $(call ac_pkg_config,libwebp)
 HAVE_MOTIF	:= $(call ac_lib,XmStringGenerate,Xm,-L/usr/X11R6/$(LIB) -lXpm -lXt -lXext -lX11)
 JPEG_VER        := $(call ac_jpeg_ver)
 # deprecated
-#HAVE_GLIBC	:= $(call ac_func,fopencookie)
 #HAVE_LIBSANE	:= $(call ac_lib,sane_init,sane)
-#HAVE_LIBCURL	:= $(call ac_lib,curl_easy_init,curl)
 endef
 
 # transposing
 CFLAGS  += -Ijpeg/$(JPEG_VER)
-
-# transparent http/ftp access using curl depends on fopencookie (glibc)
-ifneq ($(HAVE_GLIBC),yes)
-  HAVE_LIBCURL	:= no
-endif
-
-# catch fopen calls for transparent ftp/http access
-ifeq ($(HAVE_LIBCURL),yes)
-  ida fbi : CFLAGS   += -D_GNU_SOURCE
-  ida fbi : LDFLAGS  += -Wl,--wrap=fopen
-endif
 
 ########################################################################
 # conditional stuff
@@ -106,20 +93,18 @@ ifeq ($(HAVE_CAIRO_GL),yes)
 endif
 
 includes        = CAIRO_GL
-libraries       = PCD GIF CURL SANE
-ida_libs	= PCD GIF WEBP CURL SANE
-fbi_libs	= PCD GIF WEBP CURL
+libraries       = PCD GIF SANE
+ida_libs	= PCD GIF WEBP SANE
+fbi_libs	= PCD GIF WEBP
 
 PCD_LDLIBS	:= -lpcd
 GIF_LDLIBS	:= -lgif
 SANE_LDLIBS	:= -lsane
-CURL_LDLIBS	:= -lcurl
 
 WEBP_OBJS	:= rd/read-webp.o
 PCD_OBJS	:= rd/read-pcd.o
 GIF_OBJS	:= rd/read-gif.o
 SANE_OBJS	:= sane.o
-CURL_OBJS	:= curl.o
 
 # common objs
 OBJS_READER	:= readers.o rd/read-ppm.o rd/read-bmp.o rd/read-jpeg.o \
