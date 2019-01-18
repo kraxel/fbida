@@ -67,7 +67,6 @@ define make-config
 LIB		:= $(LIB)
 RESDIR		:= $(call ac_resdir)
 HAVE_LINUX_FB_H	:= $(call ac_header,linux/fb.h)
-HAVE_CAIRO_GL	:= $(call ac_pkg_config,cairo-gl)
 HAVE_LIBPCD	:= $(call ac_lib,pcd_open,pcd)
 HAVE_LIBGIF	:= $(call ac_lib,DGifOpenFileName,gif)
 HAVE_LIBWEBP	:= $(call ac_pkg_config,libwebp)
@@ -86,11 +85,6 @@ ifeq ($(HAVE_LIBWEBP),yes)
   PKGS_FBI += libwebp
 endif
 
-ifeq ($(HAVE_CAIRO_GL),yes)
-  PKGS_FBPDF += cairo-gl
-endif
-
-includes        = CAIRO_GL
 libraries       = PCD GIF
 ida_libs	= PCD GIF WEBP
 fbi_libs	= PCD GIF WEBP
@@ -109,7 +103,6 @@ OBJS_WRITER	:= writers.o wr/write-ppm.o wr/write-ps.o wr/write-jpeg.o \
                    wr/write-png.o wr/write-tiff.o
 
 # update various flags depending on HAVE_*
-CFLAGS		+= $(call ac_inc_cflags,$(includes))
 CFLAGS		+= $(call ac_lib_cflags,$(libraries))
 CFLAGS		+= $(call ac_lib_mkvar,$(libraries),CFLAGS)
 LDFLAGS		+= $(call ac_lib_mkvar,$(libraries),LDFLAGS)
