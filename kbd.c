@@ -209,7 +209,8 @@ static int open_restricted(const char *path, int flags, void *user_data)
     }
 
     fprintf(stderr, "using %s\n", path);
-    ioctl(fd, EVIOCGRAB, 1);
+    if (devgrab)
+        ioctl(fd, EVIOCGRAB, 1);
     devcount++;
     return fd;
 }
@@ -317,4 +318,16 @@ int kbd_read(char *buf, uint32_t len,
         *keycode = tty_parse(buf, modifier);
         return rc;
     }
+}
+
+void kbd_suspend(void)
+{
+    if (ctx)
+        libinput_suspend(ctx);
+}
+
+void kbd_resume(void)
+{
+    if (ctx)
+        libinput_resume(ctx);
 }

@@ -12,6 +12,7 @@
 #include <linux/vt.h>
 
 #include "vt.h"
+#include "kbd.h"
 
 /* -------------------------------------------------------------------- */
 
@@ -130,6 +131,7 @@ int check_console_switch(void)
     case CONSOLE_REL_REQ:
 	console_switch_release();
     case CONSOLE_INACTIVE:
+        kbd_suspend();
 	console_visible = 0;
 	break;
     case CONSOLE_ACQ_REQ:
@@ -137,6 +139,7 @@ int check_console_switch(void)
     case CONSOLE_ACTIVE:
 	console_visible = 1;
         console_redraw();
+        kbd_resume();
 	break;
     default:
 	break;

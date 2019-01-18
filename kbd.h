@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <inttypes.h>
 #include <linux/input.h>
 
 #define KEY_MOD_SHIFT (1 << 0)
@@ -8,4 +9,6 @@ void kbd_init(bool use_libinput, bool use_grab, dev_t gfx);
 int kbd_wait(int timeout);
 int kbd_read(char *buf, uint32_t len,
              uint32_t *keycode, uint32_t *modifier);
+void kbd_suspend(void);
+void kbd_resume(void);
 void kbd_fini(void);
