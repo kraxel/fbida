@@ -237,6 +237,7 @@ int main(int argc, char *argv[])
 {
     GError *err = NULL;
     bool framebuffer = false;
+    bool use_grab = false;
     bool use_libinput;
     bool quit, newpage, pageflip;
     char cwd[1024];
@@ -327,6 +328,10 @@ int main(int argc, char *argv[])
             fprintf(stderr, "WARNING: Other processes (fbcon too) can write to display.\n");
             fprintf(stderr, "WARNING: Also can't properly cleanup on exit.\n");
         }
+        if (use_libinput) {
+            fprintf(stderr, "NOTICE: Using input device grab.\n");
+            use_grab = true;
+        }
     }
 
     surface1 = cairo_image_surface_create_for_data(gfx->mem,
@@ -342,7 +347,7 @@ int main(int argc, char *argv[])
                                                        gfx->stride);
     }
 
-    kbd_init(use_libinput, gfx->devnum);
+    kbd_init(use_libinput, use_grab, gfx->devnum);
 
     index = 0;
     newpage = true;

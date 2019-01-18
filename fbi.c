@@ -1326,6 +1326,7 @@ int main(int argc, char *argv[])
     int              once;
     int              i, arg, key;
     bool             framebuffer = false;
+    bool             use_grab = false;
     bool             use_libinput;
     char             *info, *desc, *device, *output, *mode;
     char             linebuffer[128];
@@ -1444,11 +1445,15 @@ int main(int argc, char *argv[])
             fprintf(stderr, "WARNING: Other processes (fbcon too) can write to display.\n");
             fprintf(stderr, "WARNING: Also can't properly cleanup on exit.\n");
         }
+        if (use_libinput) {
+            fprintf(stderr, "NOTICE: Using input device grab.\n");
+            use_grab = true;
+        }
     }
     shadow_init(gfx);
 
     /* svga main loop */
-    kbd_init(use_libinput, gfx->devnum);
+    kbd_init(use_libinput, use_grab, gfx->devnum);
     desc = NULL;
     info = NULL;
     for (;;) {
