@@ -22,6 +22,7 @@
 #include <wchar.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 
 #include <linux/kd.h>
 #include <linux/vt.h>
@@ -77,6 +78,7 @@ struct flist {
     int               tag;
     char              *name;
     struct list_head  list;
+    bool              list_check;
 
     /* image cache */
     int               seen;
@@ -93,6 +95,8 @@ static LIST_HEAD(flru);
 static int           fcount;
 static struct flist  *fcurrent;
 static struct ida_image *img;
+static const char *filelist;
+static struct stat liststat;
 
 /* accounting */
 static int img_cnt, min_cnt = 2, max_cnt = 16;
@@ -132,6 +136,7 @@ static FT_Face face;
 
 static struct ida_image *flist_img_get(struct flist *f);
 static void flist_img_load(struct flist *f, int prefetch);
+static void flist_img_free(struct flist *f);
 
 /* ---------------------------------------------------------------------- */
 
@@ -176,7 +181,7 @@ usage(FILE *fp, char *name)
 
 /* ---------------------------------------------------------------------- */
 
-static int flist_add(char *filename)
+static struct flist *flist_add(const char *filename)
 {
     struct flist *f;
 
@@ -185,12 +190,26 @@ static int flist_add(char *filename)
     f->name = strdup(filename);
     list_add_tail(&f->list,&flist);
     INIT_LIST_HEAD(&f->lru);
-    return 0;
+    return f;
 }
 
-static int flist_add_list(char *listfile)
+static struct flist *flist_find(const char *filename)
+{
+    struct list_head *item;
+    struct flist *f;
+
+    list_for_each(item,&flist) {
+	f = list_entry(item, struct flist, list);
+        if (strcmp(filename, f->name) == 0)
+            return f;
+    }
+    return NULL;
+}
+
+static int flist_add_list(const char *listfile)
 {
     char filename[256];
+    struct flist *f;
     FILE *list;
 
     list = fopen(listfile,"r");
@@ -198,11 +217,16 @@ static int flist_add_list(char *listfile)
 	fprintf(stderr,"open %s: %s\n",listfile,strerror(errno));
 	return -1;
     }
+    fstat(fileno(list), &liststat);
     while (NULL != fgets(filename,sizeof(filename)-1,list)) {
 	size_t off = strcspn(filename,"\r\n");
 	if (off)
 	    filename[off] = 0;
-	flist_add(filename);
+        f = flist_find(filename);
+        if (!f) {
+            f = flist_add(filename);
+        }
+        f->list_check = true;
     }
     fclose(list);
     return 0;
@@ -227,6 +251,37 @@ static void flist_renumber(void)
 	f->nr = ++i;
     }
     fcount = i;
+}
+
+static int flist_check_reload_list(const char *listfile)
+{
+    struct list_head *item, *safe;
+    struct flist *f;
+    struct stat st;
+    int ret;
+
+    ret = stat(listfile, &st);
+    if (ret < 0)
+        return ret;
+
+    if (st.st_mtime == liststat.st_mtime)
+        return 0;
+
+    ret = flist_add_list(listfile);
+    if (ret != 0)
+        return ret;
+
+    list_for_each_safe(item, safe, &flist) {
+	f = list_entry(item, struct flist, list);
+        if (f->list_check) {
+            f->list_check = false;
+        } else {
+            flist_img_free(f);
+            flist_del(f);
+        }
+    }
+    flist_renumber();
+    return 0;
 }
 
 static int flist_islast(struct flist *f)
@@ -725,7 +780,7 @@ static int
 svga_show(struct flist *f, struct flist *prev,
 	  int timeout, char *desc, char *info, int *nr)
 {
-    static int        paused = 0, skip = KEY_SPACE;
+    static int        paused = 0, skip = -1;
 
     struct ida_image  *img = flist_img_get(f);
     int               exif = 0, help = 0;
@@ -1313,7 +1368,7 @@ int main(int argc, char *argv[])
     int              once;
     int              i, arg, key;
     bool             framebuffer = false;
-    char             *info, *desc, *filelist, *device, *output, *mode;
+    char             *info, *desc, *device, *output, *mode;
     char             linebuffer[128];
     struct flist     *fprev = NULL;
 
@@ -1522,7 +1577,7 @@ int main(int argc, char *argv[])
 	    fcurrent->tag = !fcurrent->tag;
 	    /* fall throuth */
 	case KEY_SPACE:
-	    fcurrent = flist_next(fcurrent,1,0);
+            fcurrent = flist_next(fcurrent,1,0);
 	    if (NULL != fcurrent)
 		break;
 	    /* else fall */
@@ -1538,7 +1593,12 @@ int main(int argc, char *argv[])
 	    fcurrent = flist_prev(fcurrent,1);
 	    break;
 	case -1: /* timeout */
-	    fcurrent = flist_next(fcurrent,once,1);
+            if (filelist && !once && flist_islast(fcurrent)) {
+                flist_check_reload_list(filelist);
+                fcurrent = flist_first();
+            } else {
+                fcurrent = flist_next(fcurrent,once,1);
+            }
 	    if (NULL == fcurrent) {
 		cleanup_and_exit(0);
 	    }
