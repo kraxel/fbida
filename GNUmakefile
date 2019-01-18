@@ -73,8 +73,6 @@ HAVE_LIBGIF	:= $(call ac_lib,DGifOpenFileName,gif)
 HAVE_LIBWEBP	:= $(call ac_pkg_config,libwebp)
 HAVE_MOTIF	:= $(call ac_lib,XmStringGenerate,Xm,-L/usr/X11R6/$(LIB) -lXpm -lXt -lXext -lX11)
 JPEG_VER        := $(call ac_jpeg_ver)
-# deprecated
-#HAVE_LIBSANE	:= $(call ac_lib,sane_init,sane)
 endef
 
 # transposing
@@ -93,18 +91,16 @@ ifeq ($(HAVE_CAIRO_GL),yes)
 endif
 
 includes        = CAIRO_GL
-libraries       = PCD GIF SANE
-ida_libs	= PCD GIF WEBP SANE
+libraries       = PCD GIF
+ida_libs	= PCD GIF WEBP
 fbi_libs	= PCD GIF WEBP
 
 PCD_LDLIBS	:= -lpcd
 GIF_LDLIBS	:= -lgif
-SANE_LDLIBS	:= -lsane
 
 WEBP_OBJS	:= rd/read-webp.o
 PCD_OBJS	:= rd/read-pcd.o
 GIF_OBJS	:= rd/read-gif.o
-SANE_OBJS	:= sane.o
 
 # common objs
 OBJS_READER	:= readers.o rd/read-ppm.o rd/read-bmp.o rd/read-jpeg.o \

@@ -308,7 +308,6 @@ ctrl*bar*browse.accelerator:		<Key>F
 ctrl*bar*filelist.labelString:		File list ...
 ctrl*bar*filelist.acceleratorText:	L
 ctrl*bar*filelist.accelerator:		<Key>L
-ctrl*bar*scan.labelString:		Scan
 ctrl*bar*print.labelString:		Print ...
 ctrl*bar*print.mnemonic:		P
 ctrl*bar*print.acceleratorText:		Ctrl+P

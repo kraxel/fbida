@@ -50,7 +50,6 @@
 #include "filelist.h"
 #include "xdnd.h"
 #include "selections.h"
-#include "sane.h"
 #include "idaconfig.h"
 
 /* ---------------------------------------------------------------------- */
@@ -66,7 +65,6 @@ static void scroll_ac(Widget, XEvent*, String*, Cardinal*);
 static void debug_ac(Widget, XEvent*, String*, Cardinal*);
 static void load_ac(Widget, XEvent*, String*, Cardinal*);
 static void save_ac(Widget, XEvent*, String*, Cardinal*);
-static void scan_ac(Widget, XEvent*, String*, Cardinal*);
 static void print_ac(Widget, XEvent*, String*, Cardinal*);
 
 static void undo_ac(Widget, XEvent*, String*, Cardinal*);
@@ -93,7 +91,6 @@ static XtActionsRec actionTable[] = {
     { "Man",      man_action   },
     { "Load",     load_ac      },
     { "Save",     save_ac      },
-    { "Scan",     scan_ac      },
     { "Print",    print_ac     },
     { "Browser",  browser_ac   },
     { "Filelist", filelist_ac  },
@@ -543,9 +540,6 @@ create_control(void)
     push = XtVaCreateManagedWidget("filelist",xmPushButtonWidgetClass,menu,NULL);
     XtAddCallback(push,XmNactivateCallback,action_cb,"Filelist()");
     XtVaCreateManagedWidget("sep",xmSeparatorWidgetClass,menu,NULL);
-#ifdef HAVE_LIBSANE
-    sane_menu(menu);
-#endif
     push = XtVaCreateManagedWidget("print",xmPushButtonWidgetClass,menu,NULL);
     XtAddCallback(push,XmNactivateCallback,action_cb,"Print()");
     XtVaCreateManagedWidget("sep",xmSeparatorWidgetClass,menu,NULL);
@@ -957,22 +951,6 @@ load_ac(Widget widget, XEvent *event, String *params, Cardinal *num)
 	XmFileSelectionDoSearch(loadbox,NULL);
     }
     XtManageChild(loadbox);
-}
-
-void
-scan_ac(Widget widget, XEvent *event, String *params, Cardinal *num)
-{
-#ifdef HAVE_LIBSANE
-    cpage = 0;
-    if (*num)
-	npages = viewer_loader_start(ida, &sane_loader, NULL, params[0], 0);
-    else
-	npages = viewer_loader_start(ida, &sane_loader, NULL, "", 0);
-    if (-1 == npages)
-	return;
-    ida->file = "scanned image";
-    resize_shell();
-#endif
 }
 
 /* ---------------------------------------------------------------------- */
