@@ -17,6 +17,8 @@ struct gfxstate {
     uint32_t rlen, glen, blen, tlen;
     uint32_t roff, goff, boff, toff;
 
+    dev_t devnum;
+
     /* egl */
     EGLDisplay dpy;
     EGLContext ctx;

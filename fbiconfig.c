@@ -182,6 +182,11 @@ struct cfg_cmdline fbi_cfg[] = {
 	.option   = { O_VIDEO_MODE },
 	.needsarg = 1,
 	.desc     = "use video mode <arg> (from /etc/fb.modes)",
+    },{
+	.cmdline  = "libinput",
+	.option   = { O_LIBINPUT },
+	.yesno    = 1,
+	.desc     = "use libinput (experimental)",
 
     },{
 	/* end of list */
@@ -249,6 +254,11 @@ struct cfg_cmdline fbpdf_cfg[] = {
 	.option   = { O_VIDEO_MODE },
 	.needsarg = 1,
 	.desc     = "use video mode <arg> (from /etc/fb.modes)",
+    },{
+	.cmdline  = "libinput",
+	.option   = { O_LIBINPUT },
+	.yesno    = 1,
+	.desc     = "use libinput (experimental)",
     },{
 	/* end of list */
     }

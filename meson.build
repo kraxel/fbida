@@ -24,6 +24,8 @@ exif_dep     = dependency('libexif')
 png_dep      = dependency('libpng')
 tiff_dep     = dependency('libtiff-4')
 webp_dep     = dependency('libwebp', required : false)
+udev_dep     = dependency('libudev')
+input_dep    = dependency('libinput')
 
 # other library deps
 cc           = meson.get_compiler('c')
@@ -84,7 +86,7 @@ fbi_srcs     = [ 'fbi.c', 'fb-gui.c', 'desktop.c',
 fbi_deps     = [ freetype_dep, fontconf_dep,
                  drm_dep, pixman_dep,
                  exif_dep, image_deps,
-                 math_dep ]
+                 math_dep, udev_dep, input_dep ]
 
 executable('fbi',
            sources             : fbi_srcs,
@@ -115,7 +117,8 @@ executable('thumbnail.cgi',
 fbpdf_srcs   = [ 'fbpdf.c', 'parseconfig.c', 'fbiconfig.c',
                  'vt.c', 'kbd.c', 'fbtools.c', 'drmtools.c', 'drmtools-egl.c' ]
 fbpdf_deps   = [ drm_dep, gbm_dep, epoxy_dep,
-                 pixman_dep, poppler_dep, cairo_dep ]
+                 pixman_dep, poppler_dep, cairo_dep,
+                 udev_dep, input_dep ]
 
 executable('fbpdf',
            sources             : fbpdf_srcs,
@@ -123,7 +126,9 @@ executable('fbpdf',
            install             : true)
 
 # build kbdtest
-executable('kbdtest', [ 'kbdtest.c', 'kbd.c' ])
+executable('kbdtest',
+           sources             : [ 'kbdtest.c', 'kbd.c' ],
+           dependencies        : [ udev_dep, input_dep ] )
 
 # build ida
 mkfallback   = find_program('scripts/fallback.pl')

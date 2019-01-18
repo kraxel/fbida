@@ -237,6 +237,7 @@ int main(int argc, char *argv[])
 {
     GError *err = NULL;
     bool framebuffer = false;
+    bool use_libinput;
     bool quit, newpage, pageflip;
     char cwd[1024];
     char uri[1024];
@@ -294,6 +295,7 @@ int main(int argc, char *argv[])
     mode = cfg_get_str(O_VIDEO_MODE);
     fitwidth = GET_FIT_WIDTH();
     pageflip = GET_PAGEFLIP();
+    use_libinput = GET_LIBINPUT();
 
     if (device) {
         /* device specified */
@@ -340,7 +342,7 @@ int main(int argc, char *argv[])
                                                        gfx->stride);
     }
 
-    kbd_init();
+    kbd_init(use_libinput, gfx->devnum);
 
     index = 0;
     newpage = true;

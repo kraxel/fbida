@@ -950,7 +950,11 @@ svga_show(struct flist *f, struct flist *prev,
         case KEY_D:
             /* need shift state for this one */
             return KEY_D | (keymod << 16);
+
+        case KEY_RESERVED:
+            /* ignored event */
             break;
+
         default:
             return keycode;
         }
@@ -1322,6 +1326,7 @@ int main(int argc, char *argv[])
     int              once;
     int              i, arg, key;
     bool             framebuffer = false;
+    bool             use_libinput;
     char             *info, *desc, *device, *output, *mode;
     char             linebuffer[128];
     struct flist     *fprev = NULL;
@@ -1376,6 +1381,7 @@ int main(int argc, char *argv[])
     timeout     = GET_TIMEOUT();
     pcd_res     = GET_PCD_RES();
     interactive = GET_INTERACTIVE();
+    use_libinput = GET_LIBINPUT();
 
     fontname    = cfg_get_str(O_FONT);
     filelist    = cfg_get_str(O_FILE_LIST);
@@ -1442,7 +1448,7 @@ int main(int argc, char *argv[])
     shadow_init(gfx);
 
     /* svga main loop */
-    kbd_init();
+    kbd_init(use_libinput, gfx->devnum);
     desc = NULL;
     info = NULL;
     for (;;) {

@@ -10,6 +10,7 @@
 
 #include <sys/ioctl.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
 
 #include "gfx.h"
 #include "drmtools.h"
@@ -226,6 +227,7 @@ static void drm_flush_display(bool second)
 gfxstate *drm_init(const char *device, const char *output,
                    const char *mode, bool pageflip)
 {
+    struct stat st;
     gfxstate *gfx;
     char dev[64];
 
@@ -265,6 +267,9 @@ gfxstate *drm_init(const char *device, const char *output,
     gfx->restore_display = drm_restore_display;
     gfx->cleanup_display = drm_cleanup_display;
     gfx->flush_display   = drm_flush_display;
+
+    fstat(drm_fd, &st);
+    gfx->devnum = st.st_rdev;
 
     if (pageflip) {
         if (drm_init_fb(&fb2) == 0) {

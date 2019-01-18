@@ -13,8 +13,9 @@ CFLAGS	+= -Wno-pointer-sign
 # hard build deps
 PKG_CONFIG = pkg-config
 PKGS_IDA := libexif libpng libtiff-4 pixman-1
-PKGS_FBI := freetype2 fontconfig libdrm libexif libpng libtiff-4 pixman-1
-PKGS_FBPDF := libdrm poppler-glib gbm egl epoxy pixman-1
+PKGS_FBI := freetype2 fontconfig libdrm libexif libpng libtiff-4 pixman-1 libudev libinput
+PKGS_FBPDF := libdrm poppler-glib gbm egl epoxy pixman-1 libudev libinput
+PKGS_KTEST := libudev libinput
 HAVE_DEPS := $(shell $(PKG_CONFIG) $(PKGS_FBI) $(PKGS_FBPDF) && echo yes)
 
 # map pkg-config names to debian packages using apt-file
@@ -200,6 +201,9 @@ fbpdf: $(OBJS_FBPDF)
 
 ########################################################################
 # rules for kbdtest
+
+kbdtest : CFLAGS += $(shell $(PKG_CONFIG) --cflags $(PKGS_KTEST))
+kbdtest : LDLIBS += $(shell $(PKG_CONFIG) --libs   $(PKGS_KTEST))
 
 kbdtest : kbdtest.o kbd.o
 

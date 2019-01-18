@@ -30,7 +30,8 @@
 #define O_SCROLL		O_OPTIONS, "scroll"
 #define O_TIMEOUT		O_OPTIONS, "timeout"
 #define O_PCD_RES		O_OPTIONS, "photocd-res"
-#define O_INTERACTIVE	O_OPTIONS, "interactive"
+#define O_INTERACTIVE	        O_OPTIONS, "interactive"
+#define O_LIBINPUT	        O_OPTIONS, "libinput"
 
 #define O_DEVICE                O_OPTIONS, "device"
 #define O_OUTPUT                O_OPTIONS, "output"
@@ -65,6 +66,7 @@
 #define GET_TIMEOUT()           cfg_get_int(O_TIMEOUT,        0)
 #define GET_PCD_RES()           cfg_get_int(O_PCD_RES,        3)
 #define GET_INTERACTIVE()       cfg_get_bool(O_INTERACTIVE,   1)
+#define GET_LIBINPUT()          cfg_get_bool(O_LIBINPUT,      0)
 
 #define GET_OPENGL()       	cfg_get_bool(O_OPENGL,        0)
 #define GET_PAGEFLIP()       	cfg_get_bool(O_PAGEFLIP,      1)

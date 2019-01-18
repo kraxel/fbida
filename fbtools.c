@@ -224,6 +224,7 @@ static void fb_cleanup_display(void)
 gfxstate* fb_init(char *device, char *mode, int vt)
 {
     unsigned long page_mask;
+    struct stat st;
     gfxstate *gfx;
 
     if (vt != 0)
@@ -334,6 +335,10 @@ gfxstate* fb_init(char *device, char *mode, int vt)
 
     gfx->restore_display = fb_restore_display;
     gfx->cleanup_display = fb_cleanup_display;
+
+    fstat(fb, &st);
+    gfx->devnum = st.st_rdev;
+
     return gfx;
 
  err:

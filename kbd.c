@@ -9,6 +9,9 @@
 #include <errno.h>
 #include <termios.h>
 
+#include <libudev.h>
+#include <libinput.h>
+
 #include "kbd.h"
 
 /* ---------------------------------------------------------------------- */
@@ -192,34 +195,118 @@ static int file_wait(int fd, int timeout)
 
 /* ---------------------------------------------------------------------- */
 
-void kbd_init(void)
+static int devcount;
+
+static int open_restricted(const char *path, int flags, void *user_data)
 {
-    tty_raw();
+    int fd;
+
+    fd = open(path, flags);
+    if (fd < 0) {
+        fprintf(stderr, "open %s: %s\n", path, strerror(errno));
+        return fd;
+    }
+
+    fprintf(stderr, "using %s\n", path);
+    ioctl(fd, EVIOCGRAB, 1);
+    devcount++;
+    return fd;
+}
+
+static void close_restricted(int fd, void *user_data)
+{
+    ioctl(fd, EVIOCGRAB, 0);
+    close(fd);
+}
+
+static const struct libinput_interface interface = {
+    .open_restricted  = open_restricted,
+    .close_restricted = close_restricted,
+};
+
+static struct libinput *ctx;
+
+void kbd_init(int use_libinput, dev_t gfx)
+{
+    struct udev        *udev;
+    struct udev_device *ugfx;
+    const char *seat = NULL;
+
+    if (use_libinput) {
+        udev = udev_new();
+        ugfx = udev_device_new_from_devnum(udev, 'c', gfx);
+        if (ugfx)
+            seat = udev_device_get_property_value(ugfx, "ID_SEAT");
+        if (!seat)
+            seat = "seat0";
+        ctx = libinput_udev_create_context(&interface, NULL, udev);
+        libinput_udev_assign_seat(ctx, seat);
+        if (devcount == 0) {
+            fprintf(stderr, "WARNING: no input devices available\n");
+        }
+        fprintf(stderr, "kbd: using libinput (%d devices, %s)\n",
+                devcount, seat);
+    } else {
+        fprintf(stderr, "kbd: using stdin from terminal\n");
+        tty_raw();
+    }
 }
 
 void kbd_fini(void)
 {
-    tty_restore();
+    if (ctx) {
+        libinput_unref(ctx);
+    } else {
+        tty_restore();
+    }
 }
 
 int kbd_wait(int timeout)
 {
-    return file_wait(STDIN_FILENO, timeout);
+    if (ctx) {
+        return file_wait(libinput_get_fd(ctx), timeout);
+    } else {
+        return file_wait(STDIN_FILENO, timeout);
+    }
 }
 
 int kbd_read(char *buf, uint32_t len,
              uint32_t *keycode, uint32_t *modifier)
 {
+    struct libinput_event *evt;
+    struct libinput_event_keyboard *kbd;
     int rc;
 
     memset(buf, 0, len);
     *keycode = KEY_RESERVED;
     *modifier = 0;
 
-    rc = read(STDIN_FILENO, buf, len-1);
-    if (rc < 1)
-        return -1;
+    if (ctx) {
+        rc = libinput_dispatch(ctx);
+        if (rc < 0)
+            return -1;
+        while ((evt = libinput_get_event(ctx)) != NULL) {
+            switch (libinput_event_get_type(evt)) {
+            case LIBINPUT_EVENT_KEYBOARD_KEY:
+                kbd = libinput_event_get_keyboard_event(evt);
+                if (libinput_event_keyboard_get_key_state(kbd))
+                    *keycode = libinput_event_keyboard_get_key(kbd);
+                /* TODO: track modifier state */
+                /* TODO: fill buf with typed chars */
+                break;
+            default:
+                /* ignore event */
+                break;
+            }
+            libinput_event_destroy(evt);
+        }
+        return 0;
+    } else {
+        rc = read(STDIN_FILENO, buf, len-1);
+        if (rc < 1)
+            return -1;
 
-    *keycode = tty_parse(buf, modifier);
-    return rc;
+        *keycode = tty_parse(buf, modifier);
+        return rc;
+    }
 }
