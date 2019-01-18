@@ -19,31 +19,21 @@ static const char *keyname[KEY_CNT] = {
 
 int main(int argc, char *argv[])
 {
-    struct timeval limit;
     uint32_t code, mod;
     char key[32];
-    fd_set set;
     int rc,i;
 
-    tty_raw();
+    kbd_init();
 
     for (;;) {
-        FD_ZERO(&set);
-        FD_SET(0, &set);
-        limit.tv_sec = 10;
-        limit.tv_usec = 0;
-	rc = select(1, &set, NULL, NULL, &limit);
-	if (0 == rc || !FD_ISSET(0,&set))
-            break;
+        kbd_wait(10);
 
-        memset(key, 0, sizeof(key));
-        rc = read(0, key, sizeof(key)-1);
-        if (rc < 1) {
+        rc = kbd_read(key, sizeof(key), &code, &mod);
+        if (rc < 0) {
             /* EOF */
             break;
         }
 
-        code = kbd_parse(key, &mod);
         fprintf(stderr, "key: \"");
         for (i = 0; key[i] != 0; i++) {
             fprintf(stderr, "%c", isprint(key[i]) ? key[i] : '.');
@@ -55,6 +45,7 @@ int main(int argc, char *argv[])
             fprintf(stderr, " +ctrl");
         fprintf(stderr, "\n");
     }
-    tty_restore();
+
+    kbd_fini();
     return 0;
 }

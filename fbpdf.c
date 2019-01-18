@@ -340,7 +340,7 @@ int main(int argc, char *argv[])
                                                        gfx->stride);
     }
 
-    tty_raw();
+    kbd_init();
 
     index = 0;
     newpage = true;
@@ -364,9 +364,7 @@ int main(int argc, char *argv[])
 	    continue;
 	}
 
-        memset(key, 0, sizeof(key));
-        read(0, key, sizeof(key)-1);
-        keycode = kbd_parse(key, &keymod);
+        kbd_read(key, sizeof(key), &keycode, &keymod);
 
         switch (keycode) {
         case KEY_ESC:
@@ -417,7 +415,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    tty_restore();
+    kbd_fini();
     cleanup_and_exit(0);
     return 0;
 }

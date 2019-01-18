@@ -779,10 +779,7 @@ svga_show(struct flist *f, struct flist *prev,
     int               rc;
     char              key[16];
     uint32_t          keycode, keymod;
-    fd_set            set;
-    struct timeval    limit;
     char              linebuffer[80];
-    int               fdmax;
 
     *nr = 0;
     if (NULL == img)
@@ -835,29 +832,17 @@ svga_show(struct flist *f, struct flist *prev,
 	    return -1;
 	}
 
-	FD_ZERO(&set);
-	FD_SET(0, &set);
-	fdmax = 1;
-	limit.tv_sec = timeout;
-	limit.tv_usec = 0;
-	rc = select(fdmax, &set, NULL, NULL,
-		    (0 != timeout && !paused) ? &limit : NULL);
+        rc = kbd_wait(timeout);
         if (check_console_switch()) {
 	    continue;
 	}
-	if (0 == rc)
+	if (rc < 1)
 	    return -1; /* timeout */
 
-	if (FD_ISSET(0,&set)) {
-	    /* stdin, i.e. keyboard */
-	    rc = read(0, key, sizeof(key)-1);
-	    if (rc < 1) {
-		/* EOF */
-		return KEY_ESC;
-	    }
-	    key[rc] = 0;
-	}
-        keycode = kbd_parse(key, &keymod);
+        rc = kbd_read(key, sizeof(key), &keycode, &keymod);
+        if (rc < 0)
+            return KEY_ESC; /* EOF */
+
         switch (keycode) {
         case KEY_SPACE:
 	    if (textreading && f->top < (int)(img->i.height - gfx->vdisplay)) {
@@ -1064,24 +1049,18 @@ static char edit_line(struct ida_image *img, char *line, int max)
     int      rc;
     char     key[16];
     uint32_t keycode, keymod;
-    fd_set   set;
 
     do {
 	status_edit(line,pos);
 
-	FD_SET(0, &set);
-	rc = select(1, &set, NULL, NULL, NULL);
+        kbd_wait(0);
         if (check_console_switch()) {
 	    continue;
 	}
-	rc = read(0, key, sizeof(key)-1);
-	if (rc < 1) {
-	    /* EOF */
-	    return KEY_ESC;
-	}
-	key[rc] = 0;
 
-        keycode = kbd_parse(key, &keymod);
+        rc = kbd_read(key, sizeof(key), &keycode, &keymod);
+	if (rc < 0)
+	    return KEY_ESC; /* EOF */
 
         switch (keycode) {
         case KEY_ENTER:
@@ -1324,7 +1303,7 @@ static void exit_signals_init(void)
 static void cleanup_and_exit(int code)
 {
     shadow_fini();
-    tty_restore();
+    kbd_fini();
     gfx->cleanup_display();
     console_switch_cleanup();
     flist_print_tagged(stdout);
@@ -1463,7 +1442,7 @@ int main(int argc, char *argv[])
     shadow_init(gfx);
 
     /* svga main loop */
-    tty_raw();
+    kbd_init();
     desc = NULL;
     info = NULL;
     for (;;) {

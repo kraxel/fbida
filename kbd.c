@@ -135,7 +135,7 @@ static struct termctrl termctrl[] = {
     { /* EOF */ }
 };
 
-uint32_t kbd_parse(const char *key, uint32_t *mod)
+static uint32_t tty_parse(const char *key, uint32_t *mod)
 {
     int i;
 
@@ -149,27 +149,12 @@ uint32_t kbd_parse(const char *key, uint32_t *mod)
     return KEY_RESERVED;
 }
 
-int kbd_wait(int timeout)
-{
-    struct timeval limit;
-    fd_set set;
-    int rc;
-
-    FD_ZERO(&set);
-    FD_SET(STDIN_FILENO, &set);
-    limit.tv_sec = timeout;
-    limit.tv_usec = 0;
-    rc = select(STDIN_FILENO + 1, &set, NULL, NULL,
-                timeout ? &limit : NULL);
-    return rc;
-}
-
 /* ---------------------------------------------------------------------- */
 
-struct termios  saved_attributes;
-int             saved_fl;
+static struct termios  saved_attributes;
+static int             saved_fl;
 
-void tty_raw(void)
+static void tty_raw(void)
 {
     struct termios tattr;
 
@@ -184,8 +169,57 @@ void tty_raw(void)
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &tattr);
 }
 
-void tty_restore(void)
+static void tty_restore(void)
 {
     fcntl(STDIN_FILENO, F_SETFL, saved_fl);
     tcsetattr(STDIN_FILENO, TCSANOW, &saved_attributes);
+}
+
+static int file_wait(int fd, int timeout)
+{
+    struct timeval limit;
+    fd_set set;
+    int rc;
+
+    FD_ZERO(&set);
+    FD_SET(fd, &set);
+    limit.tv_sec = timeout;
+    limit.tv_usec = 0;
+    rc = select(fd + 1, &set, NULL, NULL,
+                timeout ? &limit : NULL);
+    return rc;
+}
+
+/* ---------------------------------------------------------------------- */
+
+void kbd_init(void)
+{
+    tty_raw();
+}
+
+void kbd_fini(void)
+{
+    tty_restore();
+}
+
+int kbd_wait(int timeout)
+{
+    return file_wait(STDIN_FILENO, timeout);
+}
+
+int kbd_read(char *buf, uint32_t len,
+             uint32_t *keycode, uint32_t *modifier)
+{
+    int rc;
+
+    memset(buf, 0, len);
+    *keycode = KEY_RESERVED;
+    *modifier = 0;
+
+    rc = read(STDIN_FILENO, buf, len-1);
+    if (rc < 1)
+        return -1;
+
+    *keycode = tty_parse(buf, modifier);
+    return rc;
 }

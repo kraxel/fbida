@@ -3,8 +3,8 @@
 #define KEY_MOD_SHIFT (1 << 0)
 #define KEY_MOD_CTRL  (1 << 1)
 
-uint32_t kbd_parse(const char *key, uint32_t *mod);
+void kbd_init(void);
 int kbd_wait(int timeout);
-
-void tty_raw(void);
-void tty_restore(void);
+int kbd_read(char *buf, uint32_t len,
+             uint32_t *keycode, uint32_t *modifier);
+void kbd_fini(void);
