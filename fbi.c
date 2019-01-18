@@ -32,11 +32,6 @@
 
 #include <libexif/exif-data.h>
 
-#ifdef HAVE_LIBLIRC
-# include "lirc/lirc_client.h"
-# include "lirc.h"
-#endif
-
 #include "readers.h"
 #include "vt.h"
 #include "kbd.h"
@@ -59,9 +54,6 @@
 #define ARRAY_SIZE(x)   (sizeof(x)/sizeof(x[0]))
 
 /* ---------------------------------------------------------------------- */
-
-/* lirc fd */
-int lirc = -1;
 
 /* variables for read_image */
 int32_t         lut_red[256], lut_green[256], lut_blue[256];
@@ -846,12 +838,6 @@ svga_show(struct flist *f, struct flist *prev,
 	FD_ZERO(&set);
 	FD_SET(0, &set);
 	fdmax = 1;
-#ifdef HAVE_LIBLIRC
-	if (-1 != lirc) {
-	    FD_SET(lirc,&set);
-	    fdmax = lirc+1;
-	}
-#endif
 	limit.tv_sec = timeout;
 	limit.tv_usec = 0;
 	rc = select(fdmax, &set, NULL, NULL,
@@ -871,17 +857,6 @@ svga_show(struct flist *f, struct flist *prev,
 	    }
 	    key[rc] = 0;
 	}
-#ifdef HAVE_LIBLIRC
-	if (lirc != -1 && FD_ISSET(lirc,&set)) {
-	    /* lirc input */
-	    if (-1 == lirc_fbi_havedata(&rc,key)) {
-		fprintf(stderr,"lirc: connection lost\n");
-		close(lirc);
-		lirc = -1;
-	    }
-	    key[rc] = 0;
-        }
-#endif
         keycode = kbd_parse(key, &keymod);
         switch (keycode) {
         case KEY_SPACE:
@@ -1379,9 +1354,6 @@ int main(int argc, char *argv[])
 #endif
 
     setlocale(LC_ALL,"");
-#ifdef HAVE_LIBLIRC
-    lirc = lirc_fbi_init();
-#endif
     fbi_read_config(".fbirc");
     cfg_parse_cmdline(&argc,argv,fbi_cmd);
     cfg_parse_cmdline(&argc,argv,fbi_cfg);

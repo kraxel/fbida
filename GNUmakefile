@@ -77,7 +77,6 @@ JPEG_VER        := $(call ac_jpeg_ver)
 #HAVE_GLIBC	:= $(call ac_func,fopencookie)
 #HAVE_LIBSANE	:= $(call ac_lib,sane_init,sane)
 #HAVE_LIBCURL	:= $(call ac_lib,curl_easy_init,curl)
-#HAVE_LIBLIRC	:= $(call ac_lib,lirc_init,lirc_client)
 endef
 
 # transposing
@@ -107,22 +106,20 @@ ifeq ($(HAVE_CAIRO_GL),yes)
 endif
 
 includes        = CAIRO_GL
-libraries       = PCD GIF CURL SANE LIRC
+libraries       = PCD GIF CURL SANE
 ida_libs	= PCD GIF WEBP CURL SANE
-fbi_libs	= PCD GIF WEBP CURL LIRC
+fbi_libs	= PCD GIF WEBP CURL
 
 PCD_LDLIBS	:= -lpcd
 GIF_LDLIBS	:= -lgif
 SANE_LDLIBS	:= -lsane
 CURL_LDLIBS	:= -lcurl
-LIRC_LDLIBS     := -llirc_client
 
 WEBP_OBJS	:= rd/read-webp.o
 PCD_OBJS	:= rd/read-pcd.o
 GIF_OBJS	:= rd/read-gif.o
 SANE_OBJS	:= sane.o
 CURL_OBJS	:= curl.o
-LIRC_OBJS       := lirc.o
 
 # common objs
 OBJS_READER	:= readers.o rd/read-ppm.o rd/read-bmp.o rd/read-jpeg.o \
