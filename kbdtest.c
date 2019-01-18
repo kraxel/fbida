@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     char key[32];
     int rc,i;
 
-    kbd_init(0, 0, 0);
+    kbd_init(0, 0);
 
     for (;;) {
         kbd_wait(10);

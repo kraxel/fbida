@@ -195,7 +195,6 @@ static int file_wait(int fd, int timeout)
 
 /* ---------------------------------------------------------------------- */
 
-static bool devgrab;
 static int devcount;
 
 static int open_restricted(const char *path, int flags, void *user_data)
@@ -209,8 +208,7 @@ static int open_restricted(const char *path, int flags, void *user_data)
     }
 
     fprintf(stderr, "using %s\n", path);
-    if (devgrab)
-        ioctl(fd, EVIOCGRAB, 1);
+    ioctl(fd, EVIOCGRAB, 1);
     devcount++;
     return fd;
 }
@@ -228,14 +226,13 @@ static const struct libinput_interface interface = {
 
 static struct libinput *ctx;
 
-void kbd_init(bool use_libinput, bool use_grab, dev_t gfx)
+void kbd_init(int use_libinput, dev_t gfx)
 {
     struct udev        *udev;
     struct udev_device *ugfx;
     const char *seat = NULL;
 
     if (use_libinput) {
-        devgrab = use_grab;
         udev = udev_new();
         ugfx = udev_device_new_from_devnum(udev, 'c', gfx);
         if (ugfx)
