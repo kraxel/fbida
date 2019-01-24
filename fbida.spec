@@ -36,6 +36,7 @@ BuildRequires: pkgconfig(egl)
 BuildRequires: pkgconfig(epoxy)
 BuildRequires: pkgconfig(cairo)
 BuildRequires: pkgconfig(libudev)
+BuildRequires: pkgconfig(libinput)
 
 %description
 fbida
