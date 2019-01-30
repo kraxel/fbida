@@ -180,6 +180,15 @@ struct color *tmt_background(struct TMTATTRS *a)
 
 /* ---------------------------------------------------------------------- */
 
+const char *ansiseq[KEY_MAX] = {
+    [ KEY_UP    ] = "\x1b[A",
+    [ KEY_DOWN  ] = "\x1b[B",
+    [ KEY_RIGHT ] = "\x1b[C",
+    [ KEY_LEFT  ] = "\x1b[D",
+};
+
+/* ---------------------------------------------------------------------- */
+
 static void render(void)
 {
     static bool second;
@@ -373,10 +382,15 @@ int main(int argc, char *argv[])
                     down = libinput_event_keyboard_get_key_state(kevt);
                     xkb_state_update_key(state, key, down);
                     if (down) {
-                        rc = xkb_state_key_get_utf8(state, key,
-                                                    buf, sizeof(buf));
-                        if (rc > 0)
-                            write(pty, buf, rc);
+                        if (ansiseq[key - 8]) {
+                            write(pty, ansiseq[key - 8],
+                                  strlen(ansiseq[key - 8]));
+                        } else {
+                            rc = xkb_state_key_get_utf8(state, key,
+                                                        buf, sizeof(buf));
+                            if (rc > 0)
+                                write(pty, buf, rc);
+                        }
                     }
                     break;
                 default:
