@@ -31,9 +31,18 @@
 #include "drmtools.h"
 #include "tmt.h"
 
+/* ---------------------------------------------------------------------- */
+
+static char *font_name = "monospace";
+static int font_size = 16;
+
 static gfxstate *gfx;
 static cairo_surface_t *surface1;
 static cairo_surface_t *surface2;
+static cairo_t *context1;
+static cairo_t *context2;
+cairo_font_extents_t extents;
+
 static TMT *vt;
 static int dirty;
 static struct udev *udev;
@@ -169,31 +178,29 @@ struct color *tmt_background(struct TMTATTRS *a)
     return tmt_colors + bg;
 }
 
+/* ---------------------------------------------------------------------- */
+
 static void render(void)
 {
     static bool second;
     const TMTSCREEN *s = tmt_screen(vt);
     const TMTPOINT *cursor = tmt_cursor(vt);
     cairo_t *context;
-    cairo_font_extents_t extents;
     int line, col, tx, ty;
     wchar_t ws[2];
     char utf8[10];
 
     if (surface2)
         second = !second;
-    context = cairo_create(second ? surface2 : surface1);
+    context = second ? context2 : context1;
 
-    cairo_select_font_face(context, "monospace",
-                           CAIRO_FONT_SLANT_NORMAL,
-                           CAIRO_FONT_WEIGHT_NORMAL);
-    cairo_set_font_size(context, 16);
-    cairo_font_extents(context, &extents);
     tx = (gfx->hdisplay - (extents.max_x_advance * s->ncol)) / 2;
     ty = (gfx->vdisplay - (extents.height * s->nline)) / 2;
 
+#if 0
     cairo_set_source_rgb(context, 0, 0, 0);
     cairo_paint(context);
+#endif
 
     for (line = 0; line < s->nline; line++) {
         for (col = 0; col < s->ncol; col++) {
@@ -228,7 +235,6 @@ static void render(void)
     }
 
     cairo_show_page(context);
-    cairo_destroy(context);
 
     if (gfx->flush_display)
         gfx->flush_display(second);
@@ -248,7 +254,7 @@ void tmt_callback(tmt_msg_t m, TMT *vt, const void *a, void *p)
 int main(int argc, char *argv[])
 {
     pid_t child;
-    int pty, input;
+    int pty, input, rows, cols;
 
     setlocale(LC_ALL,"");
 
@@ -267,12 +273,23 @@ int main(int argc, char *argv[])
                                                    gfx->hdisplay,
                                                    gfx->vdisplay,
                                                    gfx->stride);
+    context1 = cairo_create(surface1);
+    cairo_select_font_face(context1, font_name,
+                           CAIRO_FONT_SLANT_NORMAL,
+                           CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_set_font_size(context1, font_size);
+    cairo_font_extents(context1, &extents);
     if (gfx->mem2) {
         surface2 = cairo_image_surface_create_for_data(gfx->mem2,
                                                        CAIRO_FORMAT_ARGB32,
                                                        gfx->hdisplay,
                                                        gfx->vdisplay,
                                                        gfx->stride);
+        context2 = cairo_create(surface2);
+        cairo_select_font_face(context2, font_name,
+                               CAIRO_FONT_SLANT_NORMAL,
+                               CAIRO_FONT_WEIGHT_NORMAL);
+        cairo_set_font_size(context2, font_size);
     }
 
     /* init udev + libinput */
@@ -286,20 +303,27 @@ int main(int argc, char *argv[])
     map = xkb_keymap_new_from_names(xkb, &layout, XKB_KEYMAP_COMPILE_NO_FLAGS);
     state = xkb_state_new(map);
 
-    vt = tmt_open(25, 80, tmt_callback, NULL, NULL);
+    /* init terminal emulation */
+    cols = gfx->hdisplay / extents.max_x_advance;
+    rows = gfx->vdisplay / extents.height;
+    vt = tmt_open(rows, cols, tmt_callback, NULL, NULL);
     child = forkpty(&pty, NULL, NULL, NULL);
     if (0 == child) {
         /* child */
+        char lines[10], columns[10];
+        snprintf(lines, sizeof(lines), "%d", rows);
+        snprintf(columns, sizeof(columns), "%d", cols);
         setenv("TERM", "ansi", true);
-        setenv("LINES", "25", true);
-        setenv("COLUMNS", "80", true);
+        setenv("LINES", lines, true);
+        setenv("COLUMNS", columns, true);
         execl("/bin/sh", "-sh", NULL);
         fprintf(stderr, "failed to exec /bin/sh: %s\n", strerror(errno));
         sleep(3);
         exit(0);
     }
-    dirty++;
 
+    /* parent */
+    dirty++;
     for (;;) {
         fd_set set;
         int rc, max;
