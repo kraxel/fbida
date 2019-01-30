@@ -122,11 +122,58 @@ static const struct libinput_interface interface = {
 
 /* ---------------------------------------------------------------------- */
 
+struct color {
+    float r;
+    float g;
+    float b;
+};
+
+static struct color tmt_colors[] = {
+    /* normal */
+    [ TMT_COLOR_BLACK   ] = { .r = 0.0, .g = 0.0, .b = 0.0 },
+    [ TMT_COLOR_RED     ] = { .r = 0.7, .g = 0.0, .b = 0.0 },
+    [ TMT_COLOR_GREEN   ] = { .r = 0.0, .g = 0.7, .b = 0.0 },
+    [ TMT_COLOR_YELLOW  ] = { .r = 0.7, .g = 0.7, .b = 0.0 },
+    [ TMT_COLOR_BLUE    ] = { .r = 0.0, .g = 0.0, .b = 0.7 },
+    [ TMT_COLOR_MAGENTA ] = { .r = 0.7, .g = 0.0, .b = 0.7 },
+    [ TMT_COLOR_CYAN    ] = { .r = 0.0, .g = 0.7, .b = 0.7 },
+    [ TMT_COLOR_WHITE   ] = { .r = 0.7, .g = 0.7, .b = 0.7 },
+    /* bold */
+    [ TMT_COLOR_BLACK   + 8 ] = { .r = 0.3, .g = 0.3, .b = 0.3 },
+    [ TMT_COLOR_RED     + 8 ] = { .r = 1.0, .g = 0.3, .b = 0.3 },
+    [ TMT_COLOR_GREEN   + 8 ] = { .r = 0.3, .g = 1.0, .b = 0.3 },
+    [ TMT_COLOR_YELLOW  + 8 ] = { .r = 1.0, .g = 1.0, .b = 0.3 },
+    [ TMT_COLOR_BLUE    + 8 ] = { .r = 0.3, .g = 0.3, .b = 1.0 },
+    [ TMT_COLOR_MAGENTA + 8 ] = { .r = 1.0, .g = 0.3, .b = 1.0 },
+    [ TMT_COLOR_CYAN    + 8 ] = { .r = 0.3, .g = 1.0, .b = 1.0 },
+    [ TMT_COLOR_WHITE   + 8 ] = { .r = 1.0, .g = 1.0, .b = 1.0 },
+};
+
+struct color *tmt_foreground(struct TMTATTRS *a)
+{
+    int fg = a->fg;
+
+    if (fg == TMT_COLOR_DEFAULT)
+        fg = TMT_COLOR_WHITE;
+    if (a->bold)
+        fg += 8;
+    return tmt_colors + fg;
+}
+
+struct color *tmt_background(struct TMTATTRS *a)
+{
+    int bg = a->bg;
+
+    if (bg == TMT_COLOR_DEFAULT)
+       bg = TMT_COLOR_BLACK;
+    return tmt_colors + bg;
+}
+
 static void render(void)
 {
     static bool second;
     const TMTSCREEN *s = tmt_screen(vt);
-//    const TMTPOINT *c = tmt_cursor(vt);
+    const TMTPOINT *cursor = tmt_cursor(vt);
     cairo_t *context;
     cairo_font_extents_t extents;
     int line, col, tx, ty;
@@ -148,16 +195,34 @@ static void render(void)
     cairo_set_source_rgb(context, 0, 0, 0);
     cairo_paint(context);
 
-    cairo_set_source_rgb(context, 1, 1, 1);
     for (line = 0; line < s->nline; line++) {
         for (col = 0; col < s->ncol; col++) {
             TMTCHAR *c = &s->lines[line]->chars[col];
-            ws[0] = c->c;
-            ws[1] = 0;
-            wcstombs(utf8, ws, sizeof(utf8));
+            struct color *bg = tmt_background(&c->a);
+            struct color *fg = tmt_foreground(&c->a);
+
+            if (cursor->r == line && cursor->c == col) {
+                bg = tmt_colors + TMT_COLOR_WHITE;
+                fg = tmt_colors + TMT_COLOR_BLACK;
+            }
+
+            /* background */
+            cairo_rectangle(context,
+                            tx + col * extents.max_x_advance,
+                            ty + line * extents.height,
+                            extents.max_x_advance,
+                            extents.height);
+            cairo_set_source_rgb(context, bg->r, bg->g, bg->b);
+            cairo_fill(context);
+
+            /* char */
             cairo_move_to(context,
                           tx + col * extents.max_x_advance,
                           ty + line * extents.height + extents.ascent);
+            cairo_set_source_rgb(context, fg->r, fg->g, fg->b);
+            ws[0] = c->c;
+            ws[1] = 0;
+            wcstombs(utf8, ws, sizeof(utf8));
             cairo_show_text(context, utf8);
         }
     }
