@@ -249,7 +249,7 @@ static void render(void)
         gfx->flush_display(second);
 }
 
-void tmt_callback(tmt_msg_t m, TMT *vt, const void *a, void *p)
+static void tmt_callback(tmt_msg_t m, TMT *vt, const void *a, void *p)
 {
     switch (m) {
     case TMT_MSG_UPDATE:
