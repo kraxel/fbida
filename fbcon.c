@@ -284,7 +284,8 @@ static void tmt_callback(tmt_msg_t m, TMT *vt, const void *a, void *p)
 int main(int argc, char *argv[])
 {
     pid_t child;
-    int pty, input, rows, cols;
+    int pty, input;
+    struct winsize win;
 
     setlocale(LC_ALL,"");
 
@@ -334,15 +335,17 @@ int main(int argc, char *argv[])
     state = xkb_state_new(map);
 
     /* init terminal emulation */
-    cols = gfx->hdisplay / extents.max_x_advance;
-    rows = gfx->vdisplay / extents.height;
-    vt = tmt_open(rows, cols, tmt_callback, NULL, NULL);
-    child = forkpty(&pty, NULL, NULL, NULL);
+    win.ws_col = gfx->hdisplay / extents.max_x_advance;
+    win.ws_row = gfx->vdisplay / extents.height;
+    win.ws_xpixel = extents.max_x_advance;
+    win.ws_ypixel = extents.height;
+    vt = tmt_open(win.ws_row, win.ws_col, tmt_callback, NULL, NULL);
+    child = forkpty(&pty, NULL, NULL, &win);
     if (0 == child) {
         /* child */
         char lines[10], columns[10];
-        snprintf(lines, sizeof(lines), "%d", rows);
-        snprintf(columns, sizeof(columns), "%d", cols);
+        snprintf(lines, sizeof(lines), "%d", win.ws_row);
+        snprintf(columns, sizeof(columns), "%d", win.ws_col);
         setenv("TERM", "ansi", true);
         setenv("LINES", lines, true);
         setenv("COLUMNS", columns, true);
