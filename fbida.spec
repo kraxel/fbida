@@ -3,7 +3,6 @@ License:      GPLv2+
 Version:      2.14
 Release:      1%{?dist}
 Summary:      fbida
-Group:        Applications/Multimedia
 URL:          http://www.kraxel.org/blog/linux/%{name}/
 Source:       http://www.kraxel.org/releases/%{name}/%{name}-%{version}.tar.gz
 
@@ -37,6 +36,7 @@ BuildRequires: pkgconfig(epoxy)
 BuildRequires: pkgconfig(cairo)
 BuildRequires: pkgconfig(libudev)
 BuildRequires: pkgconfig(libinput)
+BuildRequires: pkgconfig(xkbcommon)
 
 %description
 fbida
@@ -48,9 +48,13 @@ fbi displays images on the linux console using fbdev or drm.
 
 %package -n fbpdf
 Summary: Framebuffer pdf viewer
-Group: Applications/Productivity
 %description -n fbpdf
 fbpdf displays pdf files on the linux console using fbdev or drm.
+
+%package -n fbcon
+Summary: Framebuffer terminal console
+%description -n fbcon
+Framebuffer terminal console
 
 %package -n ida
 Summary: Motif image viewer
@@ -89,6 +93,10 @@ cp man/fbgs.1 %{buildroot}%{_mandir}/man1
 %files -n fbpdf
 %doc COPYING
 %{_bindir}/fbpdf
+
+%files -n fbcon
+%doc COPYING
+%{_bindir}/fbcon
 
 %files -n ida
 %doc COPYING
