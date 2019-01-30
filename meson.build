@@ -1,8 +1,10 @@
 # -*-python-*-
-project('fbida', 'c')
+project('fbida', 'c', default_options : [ 'c_std=gnu99' ])
 
 # tweak warnings
 add_global_arguments('-Wno-pointer-sign', language : 'c')
+add_global_arguments('-D_POSIX_SOURCE=1', language : 'c')
+add_global_arguments('-D_GNU_SOURCE=1', language : 'c')
 
 # init configuration
 config       = configuration_data()
@@ -26,10 +28,12 @@ tiff_dep     = dependency('libtiff-4')
 webp_dep     = dependency('libwebp', required : false)
 udev_dep     = dependency('libudev')
 input_dep    = dependency('libinput')
+xkb_dep      = dependency('xkbcommon')
 
 # other library deps
 cc           = meson.get_compiler('c')
 jpeg_dep     = cc.find_library('jpeg')
+util_dep     = cc.find_library('util')
 math_dep     = cc.find_library('m', required : false)
 pcd_dep      = cc.find_library('pcd', required : false)
 gif_dep      = cc.find_library('gif', required : false)
@@ -123,6 +127,15 @@ fbpdf_deps   = [ drm_dep, gbm_dep, epoxy_dep,
 executable('fbpdf',
            sources             : fbpdf_srcs,
            dependencies        : fbpdf_deps,
+           install             : true)
+
+# build fbcon
+fbcon_srcs   = [ 'fbcon.c', 'drmtools.c', 'tmt.c' ]
+fbcon_deps   = [ drm_dep, cairo_dep, util_dep, udev_dep, input_dep, xkb_dep ]
+
+executable('fbcon',
+           sources             : fbcon_srcs,
+           dependencies        : fbcon_deps,
            install             : true)
 
 # build kbdtest
