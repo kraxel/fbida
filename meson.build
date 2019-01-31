@@ -130,7 +130,7 @@ executable('fbpdf',
            install             : true)
 
 # build fbcon
-fbcon_srcs   = [ 'fbcon.c', 'drmtools.c', 'tmt.c' ]
+fbcon_srcs   = [ 'fbcon.c', 'drmtools.c', 'fbtools.c', 'vt.c', 'tmt.c' ]
 fbcon_deps   = [ drm_dep, cairo_dep, util_dep, udev_dep, input_dep, xkb_dep ]
 
 executable('fbcon',

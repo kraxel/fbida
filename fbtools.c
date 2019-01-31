@@ -285,7 +285,9 @@ gfxstate* fb_init(const char *device, char *mode)
 	    goto err;
 	}
     }
+#if 0
     console_activate_current();
+#endif
 
     /* cls */
     fb_memset(fb_mem+fb_mem_offset, 0, fb_fix.line_length * fb_var.yres);

@@ -29,6 +29,7 @@
 
 #include "fbtools.h"
 #include "drmtools.h"
+#include "vt.h"
 #include "tmt.h"
 
 /* ---------------------------------------------------------------------- */
@@ -45,7 +46,7 @@ static cairo_t *context2;
 cairo_font_extents_t extents;
 
 static TMT *vt;
-static int dirty, pty;
+static int clear, dirty, pty;
 static struct udev *udev;
 static struct libinput *kbd;
 
@@ -59,6 +60,8 @@ static struct xkb_rule_names layout = {
     .variant = NULL,
     .options = NULL,
 };
+
+int debug = 0;
 
 /* ---------------------------------------------------------------------- */
 
@@ -93,6 +96,7 @@ static void exit_signals_init(void)
 
     /* cleanup */
     gfx->cleanup_display();
+    console_switch_cleanup();
     fprintf(stderr,"Oops: %s\n",strsignal(termsig));
     exit(42);
 }
@@ -100,7 +104,21 @@ static void exit_signals_init(void)
 static void cleanup_and_exit(int code)
 {
     gfx->cleanup_display();
+    console_switch_cleanup();
     exit(code);
+}
+
+static void console_switch_suspend(void)
+{
+    libinput_suspend(kbd);
+}
+
+static void console_switch_resume(void)
+{
+    gfx->restore_display();
+    libinput_resume(kbd);
+    clear++;
+    dirty++;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -256,10 +274,10 @@ static void render(void)
     tx = (gfx->hdisplay - (extents.max_x_advance * s->ncol)) / 2;
     ty = (gfx->vdisplay - (extents.height * s->nline)) / 2;
 
-#if 0
-    cairo_set_source_rgb(context, 0, 0, 0);
-    cairo_paint(context);
-#endif
+    if (clear) {
+        cairo_set_source_rgb(context, 0, 0, 0);
+        cairo_paint(context);
+    }
 
     for (line = 0; line < s->nline; line++) {
         for (col = 0; col < s->ncol; col++) {
@@ -356,17 +374,19 @@ int main(int argc, char *argv[])
         if (!gfx)
             fprintf(stderr, "%s: init failed\n", drm_node);
     }
-#if 0
     if (!gfx && fb_node) {
-        gfx = fb_init(fb_node, NULL, 0);
+        gfx = fb_init(fb_node, NULL);
         if (!gfx)
             fprintf(stderr, "%s: init failed\n", fb_node);
     }
-#endif
     if (!gfx)
         exit(1);
     exit_signals_init();
     signal(SIGTSTP,SIG_IGN);
+    if (console_switch_init(console_switch_suspend,
+                            console_switch_resume) < 0) {
+        fprintf(stderr, "NOTICE: No vt switching available on terminal.\n");
+    }
 
     /* init cairo */
     surface1 = cairo_image_surface_create_for_data(gfx->mem,
@@ -434,6 +454,7 @@ int main(int argc, char *argv[])
     }
 
     /* parent */
+    clear++;
     dirty++;
     for (;;) {
         fd_set set;
