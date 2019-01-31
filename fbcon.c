@@ -138,8 +138,7 @@ struct color {
     float b;
 };
 
-static struct color tmt_colors[] = {
-    /* normal */
+static struct color tmt_colors_normal[] = {
     [ TMT_COLOR_BLACK   ] = { .r = 0.0, .g = 0.0, .b = 0.0 },
     [ TMT_COLOR_RED     ] = { .r = 0.7, .g = 0.0, .b = 0.0 },
     [ TMT_COLOR_GREEN   ] = { .r = 0.0, .g = 0.7, .b = 0.0 },
@@ -148,25 +147,28 @@ static struct color tmt_colors[] = {
     [ TMT_COLOR_MAGENTA ] = { .r = 0.7, .g = 0.0, .b = 0.7 },
     [ TMT_COLOR_CYAN    ] = { .r = 0.0, .g = 0.7, .b = 0.7 },
     [ TMT_COLOR_WHITE   ] = { .r = 0.7, .g = 0.7, .b = 0.7 },
-    /* bold */
-    [ TMT_COLOR_BLACK   + 8 ] = { .r = 0.3, .g = 0.3, .b = 0.3 },
-    [ TMT_COLOR_RED     + 8 ] = { .r = 1.0, .g = 0.3, .b = 0.3 },
-    [ TMT_COLOR_GREEN   + 8 ] = { .r = 0.3, .g = 1.0, .b = 0.3 },
-    [ TMT_COLOR_YELLOW  + 8 ] = { .r = 1.0, .g = 1.0, .b = 0.3 },
-    [ TMT_COLOR_BLUE    + 8 ] = { .r = 0.3, .g = 0.3, .b = 1.0 },
-    [ TMT_COLOR_MAGENTA + 8 ] = { .r = 1.0, .g = 0.3, .b = 1.0 },
-    [ TMT_COLOR_CYAN    + 8 ] = { .r = 0.3, .g = 1.0, .b = 1.0 },
-    [ TMT_COLOR_WHITE   + 8 ] = { .r = 1.0, .g = 1.0, .b = 1.0 },
+};
+
+static struct color tmt_colors_bold[] = {
+    [ TMT_COLOR_BLACK   ] = { .r = 0.3, .g = 0.3, .b = 0.3 },
+    [ TMT_COLOR_RED     ] = { .r = 1.0, .g = 0.3, .b = 0.3 },
+    [ TMT_COLOR_GREEN   ] = { .r = 0.3, .g = 1.0, .b = 0.3 },
+    [ TMT_COLOR_YELLOW  ] = { .r = 1.0, .g = 1.0, .b = 0.3 },
+    [ TMT_COLOR_BLUE    ] = { .r = 0.3, .g = 0.3, .b = 1.0 },
+    [ TMT_COLOR_MAGENTA ] = { .r = 1.0, .g = 0.3, .b = 1.0 },
+    [ TMT_COLOR_CYAN    ] = { .r = 0.3, .g = 1.0, .b = 1.0 },
+    [ TMT_COLOR_WHITE   ] = { .r = 1.0, .g = 1.0, .b = 1.0 },
 };
 
 struct color *tmt_foreground(struct TMTATTRS *a)
 {
+    struct color *tmt_colors = tmt_colors_normal;
     int fg = a->fg;
 
+    if (a->bold)
+        tmt_colors = tmt_colors_bold;
     if (fg == TMT_COLOR_DEFAULT)
         fg = TMT_COLOR_WHITE;
-    if (a->bold)
-        fg += 8;
     return tmt_colors + fg;
 }
 
@@ -176,7 +178,7 @@ struct color *tmt_background(struct TMTATTRS *a)
 
     if (bg == TMT_COLOR_DEFAULT)
        bg = TMT_COLOR_BLACK;
-    return tmt_colors + bg;
+    return tmt_colors_normal + bg;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -240,8 +242,8 @@ static void render(void)
             struct color *fg = tmt_foreground(&c->a);
 
             if (cursor->r == line && cursor->c == col) {
-                bg = tmt_colors + TMT_COLOR_WHITE;
-                fg = tmt_colors + TMT_COLOR_BLACK;
+                bg = tmt_colors_normal + TMT_COLOR_WHITE;
+                fg = tmt_colors_normal + TMT_COLOR_BLACK;
             }
 
             /* background */
