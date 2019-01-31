@@ -158,6 +158,34 @@ const char *ansiseq[KEY_MAX] = {
     [ KEY_F12      ] = "\x1b[24~",
 };
 
+static void xkb_configure(void)
+{
+    char line[128], *m, *v, *h;
+    FILE *fp;
+
+    fp = fopen("/etc/vconsole.conf", "r");
+    if (!fp)
+        return;
+    while (fgets(line, sizeof(line), fp)) {
+        if (strncmp(line, "KEYMAP=", 7) != 0)
+            continue;
+        m = line + 7;
+        if (*m == '"')
+            m++;
+        if ((h = strchr(m, '\n')) != NULL)
+            *h = 0;
+        if ((h = strchr(m, '"')) != NULL)
+            *h = 0;
+        v = strchr(m, '-');
+        if (v) {
+            *(v++) = 0;
+            layout.variant = strdup(v);
+        }
+        layout.layout = strdup(m);
+    }
+    fclose(fp);
+}
+
 /* ---------------------------------------------------------------------- */
 
 struct color {
@@ -371,8 +399,17 @@ int main(int argc, char *argv[])
     input = libinput_get_fd(kbd);
 
     /* init udev + xkbcommon */
+    xkb_configure();
     xkb = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
     map = xkb_keymap_new_from_names(xkb, &layout, XKB_KEYMAP_COMPILE_NO_FLAGS);
+    if (!map) {
+        layout.variant = NULL;
+        map = xkb_keymap_new_from_names(xkb, &layout, XKB_KEYMAP_COMPILE_NO_FLAGS);
+        if (!map) {
+            layout.layout = "us";
+            map = xkb_keymap_new_from_names(xkb, &layout, XKB_KEYMAP_COMPILE_NO_FLAGS);
+        }
+    }
     state = xkb_state_new(map);
 
     /* init terminal emulation */
