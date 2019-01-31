@@ -1314,11 +1314,17 @@ static void cleanup_and_exit(int code)
     exit(code);
 }
 
-static void console_switch_redraw(void)
+static void console_switch_suspend(void)
+{
+    kbd_suspend();
+}
+
+static void console_switch_resume(void)
 {
     gfx->restore_display();
     shadow_set_dirty();
     shadow_render(gfx);
+    kbd_resume();
 }
 
 int main(int argc, char *argv[])
@@ -1436,7 +1442,8 @@ int main(int argc, char *argv[])
     }
     exit_signals_init();
     signal(SIGTSTP,SIG_IGN);
-    if (console_switch_init(console_switch_redraw) < 0) {
+    if (console_switch_init(console_switch_suspend,
+                            console_switch_resume) < 0) {
         fprintf(stderr, "NOTICE: No vt switching available on terminal.\n");
         fprintf(stderr, "NOTICE: Not started from linux console?  CONFIG_VT=n?\n");
         if (framebuffer) {

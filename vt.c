@@ -12,7 +12,6 @@
 #include <linux/vt.h>
 
 #include "vt.h"
-#include "kbd.h"
 
 /* -------------------------------------------------------------------- */
 
@@ -32,7 +31,8 @@ static int kd_mode;
 static struct vt_mode vt_mode;
 static struct vt_mode vt_omode;
 static int orig_vt_no = -1;
-static void (*console_redraw)(void);
+static void (*console_suspend)(void);
+static void (*console_resume)(void);
 
 static void console_switch_signal(int signal)
 {
@@ -66,11 +66,13 @@ static void console_switch_acquire(void)
 	write(2,"vt: acquire\n",12);
 }
 
-int console_switch_init(void (*redraw)(void))
+int console_switch_init(void (*suspend)(void),
+                        void (*resume)(void))
 {
     struct sigaction act,old;
 
-    console_redraw = redraw;
+    console_suspend = suspend;
+    console_resume = resume;
 
     memset(&act,0,sizeof(act));
     act.sa_handler  = console_switch_signal;
@@ -129,17 +131,16 @@ int check_console_switch(void)
 
     switch (console_switch_state) {
     case CONSOLE_REL_REQ:
-	console_switch_release();
+        console_visible = 0;
+        console_suspend();
+        console_switch_release();
     case CONSOLE_INACTIVE:
-        kbd_suspend();
-	console_visible = 0;
 	break;
     case CONSOLE_ACQ_REQ:
 	console_switch_acquire();
     case CONSOLE_ACTIVE:
 	console_visible = 1;
-        console_redraw();
-        kbd_resume();
+        console_resume();
 	break;
     default:
 	break;
