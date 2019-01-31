@@ -31,7 +31,7 @@ static bool console_switching_active;
 static int kd_mode;
 static struct vt_mode vt_mode;
 static struct vt_mode vt_omode;
-static int orig_vt_no = 0;
+static int orig_vt_no = -1;
 static void (*console_redraw)(void);
 
 static void console_switch_signal(int signal)
@@ -148,43 +148,16 @@ int check_console_switch(void)
     return 1;
 }
 
-void console_set_vt(int vtno)
+int console_aquire_vt(void)
 {
     struct vt_stat vts;
-    char vtname[12];
+    int vtno = -1;
 
-    if (vtno < 0) {
-	if (-1 == ioctl(STDIN_FILENO, VT_OPENQRY, &vtno) || vtno == -1) {
-	    perror("ioctl VT_OPENQRY");
-	    exit(1);
-	}
+    if (-1 == ioctl(STDIN_FILENO, VT_OPENQRY, &vtno) || vtno == -1) {
+        perror("ioctl VT_OPENQRY");
+        return -1;
     }
-
-    vtno &= 0xff;
-    sprintf(vtname, "/dev/tty%d", vtno);
-    chown(vtname, getuid(), getgid());
-    if (-1 == access(vtname, R_OK | W_OK)) {
-	fprintf(stderr,"access %s: %s\n",vtname,strerror(errno));
-	exit(1);
-    }
-
-    /* switch controlling tty */
-    switch (fork()) {
-    case 0:
-	break;
-    case -1:
-	perror("fork");
-	exit(1);
-    default:
-	exit(0);
-    }
-    close(0);
-    close(1);
-    close(2);
-    setsid();
-    open(vtname,O_RDWR);
-    dup(0);
-    dup(0);
+    fprintf(stderr, "using vt %d\n", vtno);
 
     if (-1 == ioctl(STDIN_FILENO,VT_GETSTATE, &vts)) {
 	perror("ioctl VT_GETSTATE");
@@ -199,11 +172,12 @@ void console_set_vt(int vtno)
 	perror("ioctl VT_WAITACTIVE");
 	exit(1);
     }
+    return 0;
 }
 
 void console_restore_vt(void)
 {
-    if (!orig_vt_no)
+    if (orig_vt_no < 0)
         return;
 
     if (ioctl(STDIN_FILENO, VT_ACTIVATE, orig_vt_no) < 0)

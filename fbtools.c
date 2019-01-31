@@ -215,20 +215,16 @@ static void fb_cleanup_display(void)
     }
     close(fb);
 
-    console_restore_vt();
     tcsetattr(STDIN_FILENO, TCSANOW, &term);
 }
 
 /* -------------------------------------------------------------------- */
 
-gfxstate* fb_init(const char *device, char *mode, int vt)
+gfxstate* fb_init(const char *device, char *mode)
 {
     unsigned long page_mask;
     struct stat st;
     gfxstate *gfx;
-
-    if (vt != 0)
-	console_set_vt(vt);
 
     if (NULL == device) {
 	device = getenv("FRAMEBUFFER");

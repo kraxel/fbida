@@ -130,12 +130,6 @@ struct cfg_cmdline fbi_cfg[] = {
 	.needsarg = 1,
 	.desc     = "image blend time in miliseconds",
     },{
-	.letter   = 'T',
-	.cmdline  = "vt",
-	.option   = { O_VT },
-	.needsarg = 1,
-	.desc     = "start on virtual console <arg>",
-    },{
 	.letter   = 's',
 	.cmdline  = "scroll",
 	.option   = { O_SCROLL },

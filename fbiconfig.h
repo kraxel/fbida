@@ -26,7 +26,6 @@
 
 #define O_CACHE_MEM    	        O_OPTIONS, "cache-mem"
 #define O_BLEND_MSECS		O_OPTIONS, "blend-msecs"
-#define O_VT		        O_OPTIONS, "vt"
 #define O_SCROLL		O_OPTIONS, "scroll"
 #define O_TIMEOUT		O_OPTIONS, "timeout"
 #define O_PCD_RES		O_OPTIONS, "photocd-res"
@@ -61,7 +60,6 @@
 
 #define GET_CACHE_MEM()         cfg_get_int(O_CACHE_MEM,    256)
 #define GET_BLEND_MSECS()       cfg_get_int(O_BLEND_MSECS,    0)
-#define GET_VT()                cfg_get_int(O_VT,             0)
 #define GET_SCROLL()            cfg_get_int(O_SCROLL,        50)
 #define GET_TIMEOUT()           cfg_get_int(O_TIMEOUT,        0)
 #define GET_PCD_RES()           cfg_get_int(O_PCD_RES,        3)

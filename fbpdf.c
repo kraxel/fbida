@@ -303,14 +303,14 @@ int main(int argc, char *argv[])
             gfx = drm_init(device, output, mode, pageflip);
         } else {
             framebuffer = true;
-            gfx = fb_init(device, mode, GET_VT());
+            gfx = fb_init(device, mode);
         }
     } else {
         /* try drm first, failing that fb */
         gfx = drm_init(NULL, output, mode, pageflip);
         if (!gfx) {
             framebuffer = true;
-            gfx = fb_init(NULL, mode, GET_VT());
+            gfx = fb_init(NULL, mode);
         }
     }
     if (!gfx) {
