@@ -235,7 +235,7 @@ gfxstate* fb_init(const char *device, char *mode)
     fprintf(stderr, "trying fbdev: %s ...\n", device);
 
     /* get current settings (which we have to restore) */
-    if (-1 == (fb = open(device,O_RDWR /* O_WRONLY */))) {
+    if (-1 == (fb = open(device,O_RDWR | O_CLOEXEC))) {
 	fprintf(stderr,"open %s: %s\n",device,strerror(errno));
 	exit(1);
     }

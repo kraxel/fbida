@@ -84,7 +84,7 @@ int drm_init_dev(const char *dev, const char *output, const char *mode)
     int i, rc;
 
     /* open device */
-    drm_fd = open(dev, O_RDWR);
+    drm_fd = open(dev, O_RDWR | O_CLOEXEC);
     if (drm_fd < 0) {
         fprintf(stderr, "drm: open %s: %s\n", dev, strerror(errno));
         return -1;
@@ -298,7 +298,7 @@ void drm_info(const char *device)
     } else {
         snprintf(dev, sizeof(dev), DRM_DEV_NAME, DRM_DIR_NAME, 0);
     }
-    drm_fd = open(dev, O_RDWR);
+    drm_fd = open(dev, O_RDWR | O_CLOEXEC);
     if (drm_fd < 0) {
         fprintf(stderr, "drm: open %s: %s\n", dev, strerror(errno));
         return;

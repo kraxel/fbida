@@ -127,7 +127,7 @@ static int open_restricted(const char *path, int flags, void *user_data)
 {
     int fd;
 
-    fd = open(path, flags);
+    fd = open(path, flags | O_CLOEXEC);
     if (fd < 0) {
         fprintf(stderr, "open %s: %s\n", path, strerror(errno));
         return fd;
