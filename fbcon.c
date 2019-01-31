@@ -130,6 +130,34 @@ static const struct libinput_interface interface = {
     .close_restricted = close_restricted,
 };
 
+const char *ansiseq[KEY_MAX] = {
+    [ KEY_UP       ] = "\x1b[A",
+    [ KEY_DOWN     ] = "\x1b[B",
+    [ KEY_RIGHT    ] = "\x1b[C",
+    [ KEY_LEFT     ] = "\x1b[D",
+    [ KEY_END      ] = "\x1b[F",
+    [ KEY_HOME     ] = "\x1b[H",
+
+    [ KEY_INSERT   ] = "\x1b[2~",
+    [ KEY_DELETE   ] = "\x1b[3~",
+    [ KEY_PAGEUP   ] = "\x1b[5~",
+    [ KEY_PAGEDOWN ] = "\x1b[6~",
+
+    [ KEY_F1       ] = "\x1b[OP",
+    [ KEY_F2       ] = "\x1b[OQ",
+    [ KEY_F3       ] = "\x1b[OR",
+    [ KEY_F4       ] = "\x1b[OS",
+
+    [ KEY_F5       ] = "\x1b[15~",
+    [ KEY_F6       ] = "\x1b[17~",
+    [ KEY_F7       ] = "\x1b[18~",
+    [ KEY_F8       ] = "\x1b[19~",
+    [ KEY_F9       ] = "\x1b[20~",
+    [ KEY_F10      ] = "\x1b[21~",
+    [ KEY_F11      ] = "\x1b[23~",
+    [ KEY_F12      ] = "\x1b[24~",
+};
+
 /* ---------------------------------------------------------------------- */
 
 struct color {
@@ -180,36 +208,6 @@ struct color *tmt_background(struct TMTATTRS *a)
        bg = TMT_COLOR_BLACK;
     return tmt_colors_normal + bg;
 }
-
-/* ---------------------------------------------------------------------- */
-
-const char *ansiseq[KEY_MAX] = {
-    [ KEY_UP       ] = "\x1b[A",
-    [ KEY_DOWN     ] = "\x1b[B",
-    [ KEY_RIGHT    ] = "\x1b[C",
-    [ KEY_LEFT     ] = "\x1b[D",
-    [ KEY_END      ] = "\x1b[F",
-    [ KEY_HOME     ] = "\x1b[H",
-
-    [ KEY_INSERT   ] = "\x1b[2~",
-    [ KEY_DELETE   ] = "\x1b[3~",
-    [ KEY_PAGEUP   ] = "\x1b[5~",
-    [ KEY_PAGEDOWN ] = "\x1b[6~",
-
-    [ KEY_F1       ] = "\x1b[OP",
-    [ KEY_F2       ] = "\x1b[OQ",
-    [ KEY_F3       ] = "\x1b[OR",
-    [ KEY_F4       ] = "\x1b[OS",
-
-    [ KEY_F5       ] = "\x1b[15~",
-    [ KEY_F6       ] = "\x1b[17~",
-    [ KEY_F7       ] = "\x1b[18~",
-    [ KEY_F8       ] = "\x1b[19~",
-    [ KEY_F9       ] = "\x1b[20~",
-    [ KEY_F10      ] = "\x1b[21~",
-    [ KEY_F11      ] = "\x1b[23~",
-    [ KEY_F12      ] = "\x1b[24~",
-};
 
 /* ---------------------------------------------------------------------- */
 
