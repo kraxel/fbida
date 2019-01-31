@@ -33,6 +33,7 @@
 
 /* ---------------------------------------------------------------------- */
 
+static char *seat_name = "seat0";
 static char *font_name = "monospace";
 static int font_size = 16;
 
@@ -283,18 +284,57 @@ static void tmt_callback(tmt_msg_t m, TMT *vt, const void *a, void *p)
 
 int main(int argc, char *argv[])
 {
-    pid_t child;
-    int pty, input;
+    struct udev_enumerate *uenum;
+    struct udev_list_entry *ulist, *uentry;
     struct winsize win;
+    const char *drm_node = NULL;
+    const char *fb_node = NULL;
+    int pty, input;
+    pid_t child;
 
     setlocale(LC_ALL,"");
 
-    /* init drm */
-    gfx = drm_init(NULL, NULL, NULL, true);
-    if (!gfx) {
-        fprintf(stderr, "drm init failed\n");
-        exit(1);
+    /* look for gfx devices */
+    udev = udev_new();
+    uenum = udev_enumerate_new(udev);
+    udev_enumerate_add_match_subsystem(uenum, "drm");
+    udev_enumerate_add_match_subsystem(uenum, "graphics");
+    udev_enumerate_add_match_tag(uenum, "seat");
+    udev_enumerate_scan_devices(uenum);
+    ulist = udev_enumerate_get_list_entry(uenum);
+    udev_list_entry_foreach(uentry, ulist) {
+        const char *path = udev_list_entry_get_name(uentry);
+        struct udev_device *udevice = udev_device_new_from_syspath(udev, path);
+        const char *node = udev_device_get_devnode(udevice);
+        const char *seat = udev_device_get_property_value(udevice, "ID_SEAT");
+        const char *subsys = udev_device_get_subsystem(udevice);
+        if (!seat)
+            seat = "seat0";
+        if (strcmp(seat, seat_name) != 0)
+            continue;
+        if (!node)
+            continue;
+        if (!drm_node && strcmp(subsys, "drm") == 0)
+            drm_node = node;
+        if (!fb_node && strcmp(subsys, "graphics") == 0)
+            fb_node = node;
     }
+
+    /* init graphics */
+    if (drm_node) {
+        gfx = drm_init(drm_node, NULL, NULL, true);
+        if (!gfx)
+            fprintf(stderr, "%s: init failed\n", drm_node);
+    }
+#if 0
+    if (!gfx && fb_node) {
+        gfx = fb_init(fb_node, NULL, 0);
+        if (!gfx)
+            fprintf(stderr, "%s: init failed\n", fb_node);
+    }
+#endif
+    if (!gfx)
+        exit(1);
     exit_signals_init();
     signal(SIGTSTP,SIG_IGN);
 
@@ -323,10 +363,9 @@ int main(int argc, char *argv[])
         cairo_set_font_size(context2, font_size);
     }
 
-    /* init udev + libinput */
-    udev = udev_new();
+    /* init libinput */
     kbd = libinput_udev_create_context(&interface, NULL, udev);
-    libinput_udev_assign_seat(kbd, "seat0");
+    libinput_udev_assign_seat(kbd, seat_name);
     input = libinput_get_fd(kbd);
 
     /* init udev + xkbcommon */
