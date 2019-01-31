@@ -137,6 +137,8 @@ executable('fbcon',
            sources             : fbcon_srcs,
            dependencies        : fbcon_deps,
            install             : true)
+install_data('fbcon.desktop',
+             install_dir : 'share/wayland-sessions')
 
 # build kbdtest
 executable('kbdtest',

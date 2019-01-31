@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=fbcon
+Exec=/usr/bin/fbcon
+TryExec=/usr/bin/fbcon
+Type=Application
+DesktopNames=fbcon
