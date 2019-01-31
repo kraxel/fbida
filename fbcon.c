@@ -45,7 +45,7 @@ static cairo_t *context2;
 cairo_font_extents_t extents;
 
 static TMT *vt;
-static int dirty;
+static int dirty, pty;
 static struct udev *udev;
 static struct libinput *kbd;
 
@@ -277,6 +277,8 @@ static void tmt_callback(tmt_msg_t m, TMT *vt, const void *a, void *p)
     case TMT_MSG_UPDATE:
         dirty++;
         break;
+    case TMT_MSG_ANSWER:
+        write(pty, a, strlen(a));
     default:
         break;
     }
@@ -289,7 +291,7 @@ int main(int argc, char *argv[])
     struct winsize win;
     const char *drm_node = NULL;
     const char *fb_node = NULL;
-    int pty, input;
+    int input;
     pid_t child;
 
     setlocale(LC_ALL,"");
