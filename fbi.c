@@ -820,7 +820,7 @@ svga_show(struct flist *f, struct flist *prev,
 	    return -1;
 	}
 
-        rc = kbd_wait(timeout);
+        rc = kbd_wait(paused ? 0 : timeout);
         if (check_console_switch()) {
 	    continue;
 	}
