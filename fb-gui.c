@@ -229,7 +229,6 @@ void shadow_draw_rgbdata(int x, int y, int pixels, unsigned char *rgb)
         dest[0] = rgb[2];
         dest[1] = rgb[1];
         dest[2] = rgb[0];
-        dest[4] = 0;
         dest += 4;
         rgb += 3;
     }
@@ -248,7 +247,6 @@ void shadow_merge_rgbdata(int x, int y, int pixels, int weight,
         dest[0] += rgb[2] * weight >> 8;
         dest[1] += rgb[1] * weight >> 8;
         dest[2] += rgb[0] * weight >> 8;
-        dest[4] = 0;
         dest += 4;
         rgb += 3;
     }
