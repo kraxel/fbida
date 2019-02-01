@@ -451,19 +451,6 @@ static void status_error(unsigned char *msg)
     sleep(2);
 }
 
-static void status_edit(unsigned char *msg, int pos)
-{
-    int yt = gfx->vdisplay + (face->size->metrics.descender >> 6);
-    wchar_t str[128];
-
-    status_prepare();
-
-    swprintf(str,ARRAY_SIZE(str), L"%s", msg);
-    shadow_draw_string_cursor(face, 0, yt, str, pos);
-
-    shadow_render(gfx);
-}
-
 static void show_exif(struct flist *f)
 {
     static unsigned int tags[] = {
@@ -1046,86 +1033,6 @@ static char *make_info(struct ida_image *img, float scale)
     return linebuffer;
 }
 
-static char edit_line(struct ida_image *img, char *line, int max)
-{
-    int      len = strlen(line);
-    int      pos = len;
-    int      rc;
-    char     key[16];
-    uint32_t keycode, keymod;
-
-    do {
-	status_edit(line,pos);
-
-        kbd_wait(0);
-        if (check_console_switch()) {
-	    continue;
-	}
-
-        rc = kbd_read(key, sizeof(key), &keycode, &keymod);
-	if (rc < 0)
-	    return KEY_ESC; /* EOF */
-
-        switch (keycode) {
-        case KEY_ENTER:
-	    return 0;
-        case KEY_ESC:
-	    return KEY_ESC;
-
-        case KEY_RIGHT:
-	    if (pos < len)
-		pos++;
-        case KEY_LEFT:
-	    if (pos > 0)
-		pos--;
-        case KEY_HOME:
-	    pos = 0;
-        case KEY_END:
-	    pos = len;
-        case KEY_BACKSPACE:
-	    if (pos > 0) {
-		memmove(line+pos-1,line+pos,len-pos+1);
-		pos--;
-		len--;
-	    }
-        case KEY_DELETE:
-	    if (pos < len) {
-		memmove(line+pos,line+pos+1,len-pos);
-		len--;
-	    }
-
-        default:
-            if (1 == rc && isprint(key[0]) && len < max) {
-                /* new key */
-                if (pos < len)
-                    memmove(line+pos+1,line+pos,len-pos+1);
-                line[pos] = key[0];
-                pos++;
-                len++;
-                line[len] = 0;
-            }
-	}
-    } while (1);
-}
-
-static void edit_desc(struct ida_image *img, char *filename)
-{
-    static char linebuffer[128];
-    char *desc;
-    int len, rc;
-
-    desc = file_desktop(filename);
-    len = desktop_read_entry(desc, "Comment=", linebuffer, sizeof(linebuffer));
-    if (0 == len) {
-	linebuffer[0] = 0;
-	len = 0;
-    }
-    rc = edit_line(img, linebuffer, sizeof(linebuffer)-1);
-    if (0 != rc)
-	return;
-    desktop_write_entry(desc, "Directory", "Comment=", linebuffer);
-}
-
 /* ---------------------------------------------------------------------- */
 
 static struct ida_image *flist_img_get(struct flist *f)
@@ -1605,12 +1512,6 @@ int main(int argc, char *argv[])
 #endif
 	case KEY_V:
 	    statusline = !statusline;
-	    break;
-	case KEY_T:
-	    if (!comments) {
-		edit_desc(img, fcurrent->name);
-		desc = make_desc(&fcurrent->fimg->i,fcurrent->name);
-	    }
 	    break;
 	}
     }
