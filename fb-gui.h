@@ -19,10 +19,8 @@ void shadow_draw_rgbdata(int x, int y, int pixels,
 void shadow_merge_rgbdata(int x, int y, int pixels, int weight,
 			  unsigned char *rgb);
 void shadow_darkify(int x1, int x2, int y1,int y2, int percent);
-void shadow_reverse(int x1, int x2, int y1,int y2);
 
 int  shadow_draw_string(FT_Face face, int x, int y, wchar_t *str, int align);
-void shadow_draw_string_cursor(FT_Face face, int x, int y, wchar_t *str, int pos);
 void shadow_draw_text_box(FT_Face face, int x, int y, int percent,
 			  wchar_t *lines[], unsigned int count);
 
