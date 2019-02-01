@@ -248,7 +248,7 @@ void shadow_darkify(int x1, int x2, int y1,int y2, int percent)
     cairo_rectangle(context, x1, y1,
                     x2 - x1 + 1,
                     y2 - y1 + 1);
-    cairo_set_source_rgba(context, 0, 0, 0, percent * 0.01);
+    cairo_set_source_rgba(context, 0, 0, 0, 1 - (percent * 0.01));
     cairo_fill(context);
 }
 
