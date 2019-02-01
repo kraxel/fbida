@@ -1832,7 +1832,7 @@ main(int argc, char *argv[])
 		      display_cb,NULL);
     }
     XtVaGetValues(app_shell, XtNbackground,&background, NULL);
-    x11_color_init(app_shell,&gray);
+    x11_color_init(app_shell);
     x11_icons_init(dpy, background /* x11_gray */);
     stderr_init();
     ipc_init();

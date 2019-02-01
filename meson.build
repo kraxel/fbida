@@ -85,7 +85,7 @@ add_global_arguments(['-include', 'config.h'], language : 'c')
 fbi_srcs     = [ 'fbi.c', 'fb-gui.c', 'desktop.c',
                  'parseconfig.c', 'fbiconfig.c',
                  'vt.c', 'kbd.c', 'fbtools.c', 'drmtools.c',
-                 'dither.c', 'filter.c', 'op.c', 'jpegtools.c', 
+                 'filter.c', 'op.c', 'jpegtools.c',
                  trans_src, read_srcs ]
 fbi_deps     = [ freetype_dep, fontconf_dep,
                  drm_dep, pixman_dep,
@@ -158,7 +158,7 @@ ida_logo     = custom_target('ida-logo',
                              output  : ['logo.h'],
                              command : [ hexify, '@INPUT@', '@OUTPUT@'])
 ida_srcs     = [ 'ida.c', 'man.c', 'hex.c', 'x11.c', 'viewer.c',
-                 'dither.c', 'icons.c', 'parseconfig.c', 'idaconfig.c',
+                 'icons.c', 'parseconfig.c', 'idaconfig.c',
                  'fileops.c', 'desktop.c', 'RegEdit.c', 'selections.c',
                  'xdnd.c', 'filebutton.c', 'filelist.c', 'browser.c',
                  'jpegtools.c', 'op.c', 'filter.c', 'lut.c', 'color.c',

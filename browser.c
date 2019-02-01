@@ -37,7 +37,6 @@
 #include "browser.h"
 #include "filter.h"
 #include "x11.h"
-#include "dither.h"
 #include "selections.h"
 #include "filebutton.h"
 #include "misc.h"

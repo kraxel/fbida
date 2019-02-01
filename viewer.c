@@ -16,7 +16,6 @@
 
 #include "ida.h"
 #include "x11.h"
-#include "dither.h"
 #include "readers.h"
 #include "viewer.h"
 #include "hex.h"
@@ -46,7 +45,7 @@ Cursor ptrs[POINTER_COUNT];
 
 Pixmap image_to_pixmap(struct ida_image *img)
 {
-    unsigned char line[256],*src;
+    unsigned char *src;
     XImage *ximage;
     void *shm;
     Pixmap pix;
@@ -56,17 +55,11 @@ Pixmap image_to_pixmap(struct ida_image *img)
     ximage = x11_create_ximage(app_shell, img->i.width, img->i.height, &shm);
     for (y = 0; y < img->i.height; y++) {
 	src = ida_image_scanline(img, y);
-	if (display_type == PSEUDOCOLOR) {
-	    dither_line(src, line, y, img->i.width);
-	    for (x = 0; x < img->i.width; x++)
-		XPutPixel(ximage, x, y, x11_map[line[x]]);
-	} else {
-	    for (x = 0; x < img->i.width; x++, src += 3) {
-		pix = x11_lut_red[src[0]] |
-		    x11_lut_green[src[1]] |
-		    x11_lut_blue[src[2]];
-		XPutPixel(ximage, x, y, pix);
-	    }
+        for (x = 0; x < img->i.width; x++, src += 3) {
+            pix = x11_lut_red[src[0]] |
+                x11_lut_green[src[1]] |
+                x11_lut_blue[src[2]];
+            XPutPixel(ximage, x, y, pix);
 	}
     }
     pix = XCreatePixmap(dpy,XtWindow(app_shell),img->i.width, img->i.height,
@@ -94,7 +87,7 @@ int viewer_i2s(int zoom, int val)
 static void
 viewer_renderline(struct ida_viewer *ida, char *scanline)
 {
-    unsigned char *src,*dst,*rgb;
+    unsigned char *src;
     unsigned long pix;
     unsigned int x,s,scrline;
 
@@ -102,18 +95,11 @@ viewer_renderline(struct ida_viewer *ida, char *scanline)
 
     if (0 == ida->zoom) {
 	/* as-is */
-	if (display_type == PSEUDOCOLOR) {
-	    dst = ida->dither_line;
-	    dither_line(src, dst, ida->line, ida->scrwidth);
-	    for (x = 0; x < ida->scrwidth; x++, dst++)
-		XPutPixel(ida->ximage, x, ida->line, x11_map[*dst]);
-	} else {
-	    for (x = 0; x < ida->scrwidth; x++, src += 3) {
-		pix = x11_lut_red[src[0]] |
-		    x11_lut_green[src[1]] |
-		    x11_lut_blue[src[2]];
-		XPutPixel(ida->ximage, x, ida->line, pix);
-	    }
+        for (x = 0; x < ida->scrwidth; x++, src += 3) {
+            pix = x11_lut_red[src[0]] |
+                x11_lut_green[src[1]] |
+                x11_lut_blue[src[2]];
+            XPutPixel(ida->ximage, x, ida->line, pix);
 	}
 
     } else if (ida->zoom < 0) {
@@ -122,81 +108,48 @@ viewer_renderline(struct ida_viewer *ida, char *scanline)
 	if (s-1 != (ida->line % s))
 	    return;
 	scrline = ida->line/s;
-	if (display_type == PSEUDOCOLOR) {
-	    rgb = ida->rgb_line;
-	    for (x = 0; x < ida->scrwidth; x++, rgb += 3, src += 3*s) {
-		rgb[0] = src[0];
-		rgb[1] = src[1];
-		rgb[2] = src[2];
-	    }
-	    rgb = ida->rgb_line;
-	    dst = ida->dither_line;
-	    dither_line(rgb, dst, scrline, ida->scrwidth);
-	    for (x = 0; x < ida->scrwidth; x++, dst++)
-		XPutPixel(ida->ximage, x, scrline, x11_map[*dst]);
-	} else {
 #if 0
-	    /* just drop pixels */
-	    for (x = 0; x < ida->scrwidth; x++, src += 3*s) {
-		pix = x11_lut_red[src[0]] |
-		    x11_lut_green[src[1]] |
-		    x11_lut_blue[src[2]];
-		XPutPixel(ida->ximage, x, scrline, pix);
-	    }
+        /* just drop pixels */
+        for (x = 0; x < ida->scrwidth; x++, src += 3*s) {
+            pix = x11_lut_red[src[0]] |
+                x11_lut_green[src[1]] |
+                x11_lut_blue[src[2]];
+            XPutPixel(ida->ximage, x, scrline, pix);
+        }
 #else
-	    /* horizontal interpolation (vertical is much harder ...) */
-	    for (x = 0; x < ida->scrwidth; x++, src += 3*s) {
-		int red,green,blue,count,ix;
-		red   = 0;
-		green = 0;
-		blue  = 0;
-		count = 0;
-		for (ix = 0; ix < 3*s; ix += 3) {
-		    red   += src[ix+0];
-		    green += src[ix+1]; 
-		    blue  += src[ix+2]; 
-		    count += 1;
-		}
-		pix = x11_lut_red[red/count] |
-		    x11_lut_green[green/count] |
-		    x11_lut_blue[blue/count];
-		XPutPixel(ida->ximage, x, scrline, pix);
-	    }
+        /* horizontal interpolation (vertical is much harder ...) */
+        for (x = 0; x < ida->scrwidth; x++, src += 3*s) {
+            int red,green,blue,count,ix;
+            red   = 0;
+            green = 0;
+            blue  = 0;
+            count = 0;
+            for (ix = 0; ix < 3*s; ix += 3) {
+                red   += src[ix+0];
+                green += src[ix+1]; 
+                blue  += src[ix+2]; 
+                count += 1;
+            }
+            pix = x11_lut_red[red/count] |
+                x11_lut_green[green/count] |
+                x11_lut_blue[blue/count];
+            XPutPixel(ida->ximage, x, scrline, pix);
+        }
 #endif
-	}
-	
+
     } else {
 	/* zoom in */
 	s = ida->zoom+1;
-	if (display_type == PSEUDOCOLOR) {
-	    rgb = ida->rgb_line;
-	    for (x = 0; x < ida->scrwidth; rgb += 3) {
-		rgb[0] = src[0];
-		rgb[1] = src[1];
-		rgb[2] = src[2];
-		x++;
-		if (0 == (x%s))
-		    src += 3;
-	    }
-	    for (scrline = ida->line*s; scrline < ida->line*s+s; scrline++) {
-		rgb = ida->rgb_line;
-		dst = ida->dither_line;
-		dither_line(rgb, dst, scrline, ida->scrwidth);
-		for (x = 0; x < ida->scrwidth; x++, dst++)
-		    XPutPixel(ida->ximage, x, scrline, x11_map[*dst]);
-	    }
-	} else {
-	    for (scrline = ida->line*s; scrline < ida->line*s+s; scrline++) {
-		src = scanline;
-		for (x = 0; x < ida->scrwidth; src += 3) {
-		    unsigned int i;
-		    pix = x11_lut_red[src[0]] |
-			x11_lut_green[src[1]] |
-			x11_lut_blue[src[2]];
-		    for (i = 0; i < s; i++, x++)
-			XPutPixel(ida->ximage, x, scrline, pix);
-		}
-	    }
+        for (scrline = ida->line*s; scrline < ida->line*s+s; scrline++) {
+            src = scanline;
+            for (x = 0; x < ida->scrwidth; src += 3) {
+                unsigned int i;
+                pix = x11_lut_red[src[0]] |
+                    x11_lut_green[src[1]] |
+                    x11_lut_blue[src[2]];
+                for (i = 0; i < s; i++, x++)
+                    XPutPixel(ida->ximage, x, scrline, pix);
+            }
 	}
     }
 }

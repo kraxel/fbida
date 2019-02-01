@@ -34,7 +34,6 @@
 #include <X11/extensions/XShm.h>
 
 #include "x11.h"
-#include "dither.h"
 
 extern Display *dpy;
 
@@ -46,85 +45,17 @@ int             display_type = 0;
 int             display_depth = 0;
 XVisualInfo     *info;
 
-/* PseudoColor: ditherresult => colormap-entry */
-int             x11_colors;
-int             x11_grays;
-unsigned long   *x11_map;
-unsigned long   x11_map_color[256];
-unsigned long   x11_map_gray[64];
-
 unsigned long   x11_red;
 unsigned long   x11_green;
 unsigned long   x11_blue;
+unsigned long   x11_gray;
 
 int             have_shmem = 0;
-
-/*
- * - xv uses 4:8:4 for truecolor images.
- * - The GIMP 0.99.9 uses 6:6:4, but the 6 intervals for red+green are
- *   choosen somehow wired :-(
- * - ImageMagick tries to optimize the palette for each image individual
- */
-static int      try_red[] =    {4, 6, 6, 5, 4};
-static int      try_green[] =  {8, 6, 6, 5, 4};
-static int      try_blue[] =   {4, 6, 4, 5, 4};
 
 /* TrueColor: r,g,b => X11-color */
 unsigned long   x11_lut_red[256];
 unsigned long   x11_lut_green[256];
 unsigned long   x11_lut_blue[256];
-unsigned long   x11_lut_gray[256];
-
-static int
-x11_alloc_grays(Display * dpy, Colormap cmap, unsigned long *colors, int gray)
-{
-    XColor          akt_color;
-    int             i;
-
-    for (i = 0; i < gray; i++) {
-	akt_color.red = i * 65535 / (gray - 1);
-	akt_color.green = i * 65535 / (gray - 1);
-	akt_color.blue = i * 65535 / (gray - 1);
-
-	if (!XAllocColor(dpy, cmap, &akt_color)) {
-	    /* failed, free them */
-	    XFreeColors(dpy, cmap, colors, i, 0);
-	    return 1;
-	}
-	colors[i] = akt_color.pixel;
-#if 0
-	fprintf(stderr, "%2lx: %04x %04x %04x\n",
-		akt_color.pixel,akt_color.red,akt_color.green,akt_color.red);
-#endif
-    }
-    return 0;
-}
-
-static int
-x11_alloc_colorcube(Display * dpy, Colormap cmap, unsigned long *colors,
-		    int red, int green, int blue)
-{
-    XColor          akt_color;
-    int             i;
-
-    for (i = 0; i < red * green * blue; i++) {
-	akt_color.red = ((i / (green * blue)) % red) * 65535 / (red - 1);
-	akt_color.green = ((i / blue) % green) * 65535 / (green - 1);
-	akt_color.blue = (i % blue) * 65535 / (blue - 1);
-#if 0
-	fprintf(stderr, "%04x %04x %04x\n",
-		akt_color.red, akt_color.green, akt_color.red);
-#endif
-
-	if (!XAllocColor(dpy, cmap, &akt_color)) {
-	    /* failed, free them */
-	    XFreeColors(dpy, cmap, colors, i, 0);
-	    return 1;
-	}
-	colors[i] = akt_color.pixel;
-    }
-    return 0;
-}
 
 static unsigned long
 x11_alloc_color(Display * dpy, Colormap cmap, int red, int green, int blue)
@@ -179,23 +110,19 @@ x11_create_lut(unsigned long red_mask,
 	x11_lut_red[i] = (i >> (8 - rgb_red_bits)) << rgb_red_shift;
 	x11_lut_green[i] = (i >> (8 - rgb_green_bits)) << rgb_green_shift;
 	x11_lut_blue[i] = (i >> (8 - rgb_blue_bits)) << rgb_blue_shift;
-	x11_lut_gray[i] =
-	    x11_lut_red[i] | x11_lut_green[i] | x11_lut_blue[i];
     }
 }
 
 int
-x11_color_init(Widget shell, int *gray)
+x11_color_init(Widget shell)
 {
     Screen          *scr;
     Colormap        cmap;
     XVisualInfo     template;
-    unsigned int    found, i;
+    unsigned int    found;
 
     scr = XtScreen(shell);
     cmap = DefaultColormapOfScreen(scr);
-    if (0 == x11_grays)
-	x11_grays = 8;
 
     /* Ask for visual type */
     template.screen = XDefaultScreen(dpy);
@@ -210,51 +137,9 @@ x11_color_init(Widget shell, int *gray)
     /* display_depth = (info->depth+7)/8; */
     if (info->class == TrueColor) {
 	/* TrueColor */
-	*gray = 0;		/* XXX testing... */
 	display_depth = 4;
 	display_type = TRUECOLOR;
 	x11_create_lut(info->red_mask, info->green_mask, info->blue_mask);
-	x11_black = x11_alloc_color(dpy, cmap, 0, 0, 0);
-	x11_gray = x11_alloc_color(dpy, cmap, 0xc400, 0xc400, 0xc400);
-	x11_lightgray = x11_alloc_color(dpy, cmap, 0xe000, 0xe000, 0xe000);
-	x11_white = x11_alloc_color(dpy, cmap, 0xffff, 0xffff, 0xffff);
-    } else if (info->class == PseudoColor && info->depth == 8) {
-	/* 8bit PseudoColor */
-	display_depth = 1;
-	display_type = PSEUDOCOLOR;
-	if (0 != x11_alloc_grays(dpy, cmap, x11_map_gray, x11_grays)) {
-	    fprintf(stderr, "sorry, can't allocate %d grays\n", x11_grays);
-	    exit(1);
-	}
-	if (!*gray) {
-	    for (i = 0; i < sizeof(try_red) / sizeof(int); i++) {
-		if (0 == x11_alloc_colorcube
-		    (dpy, cmap, x11_map_color,
-		     try_red[i], try_green[i], try_blue[i])) {
-		    x11_colors = try_red[i] * try_green[i] * try_blue[i];
-		    init_dither(try_red[i], try_green[i], try_blue[i], x11_grays);
-		    break;
-		}
-	    }
-	    if (i == sizeof(try_red) / sizeof(int)) {
-		*gray = 1;
-		fprintf(stderr, "failed to allocate enouth colors, "
-			"using grayscaled\n");
-	    }
-	}
-	if (*gray)
-	    init_dither(2, 2, 2, x11_grays);
-    } else if (info->class == StaticGray || info->class == GrayScale) {
-	/* Grayscale */
-	display_depth = 1;
-	display_type = PSEUDOCOLOR;
-	x11_grays = 64;
-	*gray = 1;
-	init_dither(2, 2, 2, x11_grays);
-	if (0 != x11_alloc_grays(dpy, cmap, x11_map_gray, x11_grays)) {
-	    fprintf(stderr, "sorry, can't allocate %d grays\n", x11_grays);
-	    exit(1);
-	}
     } else {
 	fprintf(stderr, "sorry, can't handle visual\n");
 	exit(1);
@@ -264,14 +149,7 @@ x11_color_init(Widget shell, int *gray)
     x11_red = x11_alloc_color(dpy, cmap, 65535, 0, 0);
     x11_green = x11_alloc_color(dpy, cmap, 0, 65535, 0);
     x11_blue = x11_alloc_color(dpy, cmap, 0, 0, 65535);
-
-    if (*gray) {
-	x11_map = x11_map_gray;
-	dither_line = dither_line_gray;
-    } else {
-	x11_map = x11_map_color;
-	dither_line = dither_line_color;
-    }
+    x11_gray = x11_alloc_color(dpy, cmap, 0xc400, 0xc400, 0xc400);
 
     return display_type;
 }
@@ -395,7 +273,6 @@ x11_create_pixmap(Widget shell, unsigned char *byte_data,
     unsigned long  *long_data = (unsigned long *) byte_data;
     int             x, y;
     void           *shm;
-    unsigned long  *map = gray ? x11_map_gray : x11_map;
 
     Screen         *scr = XtScreen(shell);
 
@@ -411,12 +288,8 @@ x11_create_pixmap(Widget shell, unsigned char *byte_data,
 	return 0;
     }
     for (y = 0; y < height; y++)
-	if (display_type == TRUECOLOR)
-	    for (x = 0; x < width; x++)
-		XPutPixel(ximage, x, y, *(long_data++));
-	else
-	    for (x = 0; x < width; x++)
-		XPutPixel(ximage, x, y, map[(int) (*(byte_data++))]);
+        for (x = 0; x < width; x++)
+            XPutPixel(ximage, x, y, *(long_data++));
 
     XPUTIMAGE(dpy, pixmap, gc, ximage, 0, 0, 0, 0, width, height);
 
@@ -432,26 +305,10 @@ x11_data_to_ximage(unsigned char *data, unsigned char *ximage,
     unsigned long  *d;
     int             i, n;
 
-    if (display_type == PSEUDOCOLOR) {
-	if (gray) {
-	    for (i = 0; i < y; i++)
-		dither_line_gray(data + x * i, ximage + x * i, i + sy, x);
-	} else {
-	    for (i = 0; i < y; i++)
-		dither_line(data + 3 * x * i, ximage + x * i, i + sy, x);
-	}
-    } else {
-	d = (unsigned long *) ximage;
-	if (gray) {
-	    n = x * y;
-	    for (i = 0; i < n; i++)
-		*(d++) = x11_lut_gray[data[i]];
-	} else {
-	    n = 3 * x * y;
-	    for (i = 0; i < n; i += 3)
-		*(d++) = x11_lut_red[data[i]] |
-		    x11_lut_green[data[i + 1]] |
-		    x11_lut_blue[data[i + 2]];
-	}
-    }
+    d = (unsigned long *) ximage;
+    n = 3 * x * y;
+    for (i = 0; i < n; i += 3)
+        *(d++) = x11_lut_red[data[i]] |
+            x11_lut_green[data[i + 1]] |
+            x11_lut_blue[data[i + 2]];
 }

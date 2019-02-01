@@ -13,7 +13,6 @@
 
 #include "vt.h"
 #include "fbtools.h"
-#include "dither.h"
 #include "fb-gui.h"
 
 static int ys =  3;
@@ -56,30 +55,28 @@ static void shadow_render_line(gfxstate *gfx, int line,
     int x;
 
     switch (gfx->bits_per_pixel) {
-    case 8:
-	dither_line(buffer, ptr, line, swidth);
-	break;
     case 15:
     case 16:
 	for (x = 0; x < swidth; x++) {
-	    ptr2[x] = s_lut_red[buffer[x*3]] |
-		s_lut_green[buffer[x*3+1]] |
-		s_lut_blue[buffer[x*3+2]];
+	    ptr2[x] =
+                s_lut_red[buffer[x*4+2]] |
+		s_lut_green[buffer[x*4+1]] |
+		s_lut_blue[buffer[x*4+0]];
 	}
 	break;
     case 24:
 	for (x = 0; x < swidth; x++) {
-	    ptr[3*x+2] = buffer[3*x+0];
-	    ptr[3*x+1] = buffer[3*x+1];
-	    ptr[3*x+0] = buffer[3*x+2];
+	    ptr[3*x+2] = buffer[4*x+2];
+	    ptr[3*x+1] = buffer[4*x+1];
+	    ptr[3*x+0] = buffer[4*x+0];
 	}
 	break;
     case 32:
 	for (x = 0; x < swidth; x++) {
 	    ptr4[x] = s_lut_transp[255] |
-		s_lut_red[buffer[x*3]] |
-		s_lut_green[buffer[x*3+1]] |
-		s_lut_blue[buffer[x*3+2]];
+		s_lut_red[buffer[x*4+2]] |
+		s_lut_green[buffer[x*4+1]] |
+		s_lut_blue[buffer[x*4+0]];
 	}
 	break;
     }
@@ -110,7 +107,7 @@ void shadow_clear_lines(int first, int last)
     int i;
 
     for (i = first; i <= last; i++) {
-	memset(shadow[i],0,3*swidth);
+	memset(shadow[i],0,4*swidth);
 	sdirty[i]++;
     }
 }
@@ -139,15 +136,11 @@ void shadow_init(gfxstate *gfx)
     sdirty  = malloc(sizeof(unsigned int)   * sheight);
     memset(sdirty,0, sizeof(unsigned int)   * sheight);
     for (i = 0; i < sheight; i++)
-	shadow[i] = malloc(swidth*3);
+	shadow[i] = malloc(swidth*4);
     shadow_clear();
 
     /* init rendering */
     switch (gfx->bits_per_pixel) {
-    case 8:
-	init_dither(8, 8, 4, 2);
-	dither_line = dither_line_color;
-	break;
     case 15:
     case 16:
     case 24:
@@ -178,7 +171,7 @@ void shadow_fini(void)
 
 static void shadow_setpixel(int x, int y)
 {
-    unsigned char *dest = shadow[y] + 3*x;
+    unsigned char *dest = shadow[y] + 4*x;
 
     if (x < 0)
 	return;
@@ -229,22 +222,36 @@ void shadow_draw_rect(int x1, int x2, int y1,int y2)
 
 void shadow_draw_rgbdata(int x, int y, int pixels, unsigned char *rgb)
 {
-    unsigned char *dest = shadow[y] + 3*x;
+    unsigned char *dest = shadow[y] + 4*x;
+    int i;
 
-    memcpy(dest,rgb,3*pixels);
+    for (i = 0; i < pixels; i++) {
+        dest[0] = rgb[2];
+        dest[1] = rgb[1];
+        dest[2] = rgb[0];
+        dest[4] = 0;
+        dest += 4;
+        rgb += 3;
+    }
     sdirty[y]++;
 }
 
 void shadow_merge_rgbdata(int x, int y, int pixels, int weight,
 			  unsigned char *rgb)
 {
-    unsigned char *dest = shadow[y] + 3*x;
-    int i = 3*pixels;
+    unsigned char *dest = shadow[y] + 4*x;
+    int i;
 
     weight = weight * 256 / 100;
 
-    while (i-- > 0)
-	*(dest++) += *(rgb++) * weight >> 8;
+    for (i = 0; i < pixels; i++) {
+        dest[0] += rgb[2] * weight >> 8;
+        dest[1] += rgb[1] * weight >> 8;
+        dest[2] += rgb[0] * weight >> 8;
+        dest[4] = 0;
+        dest += 4;
+        rgb += 3;
+    }
     sdirty[y]++;
 }
 
@@ -274,8 +281,8 @@ void shadow_darkify(int x1, int x2, int y1,int y2, int percent)
     for (y = y1; y <= y2; y++) {
 	sdirty[y]++;
 	ptr = shadow[y];
-	ptr += 3*x1;
-	x = 3*(x2-x1+1);
+	ptr += 4*x1;
+	x = 4*(x2-x1+1);
 	while (x-- > 0) {
 	    *ptr = (*ptr * percent) >> 8;
 	    ptr++;
@@ -307,9 +314,9 @@ void shadow_reverse(int x1, int x2, int y1,int y2)
 	sdirty[y]++;
 	ptr = shadow[y];
 	for (x = x1; x <= x2; x++) {
-	    ptr[3*x+0] = 255-ptr[3*x+0];
-	    ptr[3*x+1] = 255-ptr[3*x+1];
-	    ptr[3*x+2] = 255-ptr[3*x+2];
+	    ptr[4*x+0] = 255-ptr[4*x+0];
+	    ptr[4*x+1] = 255-ptr[4*x+1];
+	    ptr[4*x+2] = 255-ptr[4*x+2];
 	}
     }
 }
@@ -330,10 +337,10 @@ static void shadow_draw_glyph(FT_Bitmap *bitmap, int sx, int sy)
 	if (sy+y >= sheight)
 	    continue;
 	sdirty[sy+y]++;
-	dst = shadow[sy+y] + sx*3;
+	dst = shadow[sy+y] + sx*4;
 	switch (bitmap->pixel_mode) {
 	case FT_PIXEL_MODE_MONO:
-	    for (x = 0; x < bitmap->width; x++, dst += 3) {
+	    for (x = 0; x < bitmap->width; x++, dst += 4) {
 		if (sx+x < 0)
 		    continue;
 		if (sx+x >= swidth)
@@ -347,7 +354,7 @@ static void shadow_draw_glyph(FT_Bitmap *bitmap, int sx, int sy)
 	    }
 	    break;
 	case FT_PIXEL_MODE_GRAY:
-	    for (x = 0; x < bitmap->width; x++, dst += 3) {
+	    for (x = 0; x < bitmap->width; x++, dst += 4) {
 		if (sx+x < 0)
 		    continue;
 		if (sx+x >= swidth)
