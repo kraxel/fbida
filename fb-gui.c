@@ -8,8 +8,11 @@
 #include <sys/ioctl.h>
 #include <linux/fb.h>
 
+#include <pixman.h>
+
 #include "vt.h"
 #include "fbtools.h"
+#include "readers.h"
 #include "fb-gui.h"
 
 static int ys =  3;
@@ -25,6 +28,7 @@ static unsigned int  *sdirty,swidth,sheight;
 
 static cairo_t *context;
 static cairo_surface_t *surface;
+static pixman_image_t *pixman;
 static unsigned char *framebuffer;
 static cairo_font_extents_t extents;
 
@@ -106,12 +110,19 @@ void shadow_render(gfxstate *gfx)
 
 void shadow_clear_lines(int first, int last)
 {
+#if 0
+    /* FIXME: segfaults */
+    cairo_rectangle(context, 0, first, swidth, last - first + 1);
+    cairo_set_source_rgb(context, 0, 0, 0);
+    cairo_fill(context);
+#else
     int i;
 
     for (i = first; i <= last; i++) {
 	memset(shadow[i],0,4*swidth);
 	sdirty[i]++;
     }
+#endif
 }
 
 void shadow_clear(void)
@@ -153,6 +164,9 @@ void shadow_init(gfxstate *gfx)
                                                   swidth, sheight,
                                                   swidth * 4);
     context = cairo_create(surface);
+    pixman = pixman_image_create_bits(PIXMAN_x8r8g8b8, swidth, sheight,
+                                      (void*)framebuffer, swidth * 4);
+
 
     /* init rendering */
     switch (gfx->bits_per_pixel) {
@@ -208,39 +222,27 @@ void shadow_draw_rect(int x1, int x2, int y1, int y2)
     shadow_set_dirty_range(y1, (y2 - y1) + 1);
 }
 
-void shadow_draw_rgbdata(int x, int y, int pixels, unsigned char *rgb)
+void shadow_composite_image(struct ida_image *img,
+                            int xoff, int yoff, int weight)
 {
-    unsigned char *dest = shadow[y] + 4*x;
-    int i;
+    if (weight == 100) {
+        pixman_image_composite(PIXMAN_OP_SRC, img->p, NULL, pixman,
+                               0, 0, 0, 0,
+                               xoff, yoff,
+                               img->i.width, img->i.height);
+    } else {
+        pixman_color_t color = {
+            .alpha = weight * 0xffff / 100,
+        };
+        pixman_image_t *mask = pixman_image_create_solid_fill(&color);
 
-    for (i = 0; i < pixels; i++) {
-        dest[0] = rgb[2];
-        dest[1] = rgb[1];
-        dest[2] = rgb[0];
-        dest += 4;
-        rgb += 3;
+        pixman_image_composite(PIXMAN_OP_OVER, img->p, mask, pixman,
+                               0, 0, 0, 0,
+                               xoff, yoff,
+                               img->i.width, img->i.height);
+        pixman_image_unref(mask);
     }
-    sdirty[y]++;
 }
-
-void shadow_merge_rgbdata(int x, int y, int pixels, int weight,
-			  unsigned char *rgb)
-{
-    unsigned char *dest = shadow[y] + 4*x;
-    int i;
-
-    weight = weight * 256 / 100;
-
-    for (i = 0; i < pixels; i++) {
-        dest[0] += rgb[2] * weight >> 8;
-        dest[1] += rgb[1] * weight >> 8;
-        dest[2] += rgb[0] * weight >> 8;
-        dest += 4;
-        rgb += 3;
-    }
-    sdirty[y]++;
-}
-
 
 void shadow_darkify(int x1, int x2, int y1,int y2, int percent)
 {

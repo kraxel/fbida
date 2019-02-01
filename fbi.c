@@ -365,41 +365,21 @@ static void
 shadow_draw_image(struct ida_image *img, int xoff, int yoff,
 		  unsigned int first, unsigned int last, int weight)
 {
-    unsigned int     dwidth  = MIN(img->i.width,  gfx->hdisplay);
-    unsigned int     dheight = MIN(img->i.height, gfx->vdisplay);
-    unsigned int     data, offset, y, xs, ys;
+    unsigned int     xs, ys;
 
     if (100 == weight)
 	shadow_clear_lines(first, last);
     else
 	shadow_darkify(0, gfx->hdisplay-1, first, last, 100 - weight);
 
-    /* offset for image data (image > screen, select visible area) */
-    offset = (yoff * img->i.width + xoff) * 3;
-
-    /* offset for video memory (image < screen, center image) */
+    /* image < screen: center image */
     xs = 0, ys = 0;
     if (img->i.width < gfx->hdisplay)
 	xs += (gfx->hdisplay - img->i.width) / 2;
     if (img->i.height < gfx->vdisplay)
 	ys += (gfx->vdisplay - img->i.height) / 2;
 
-    /* go ! */
-    for (data = 0, y = 0;
-	 data < img->i.width * img->i.height * 3
-	     && data / img->i.width / 3 < dheight;
-	 data += img->i.width * 3, y++) {
-	if (ys+y < first)
-	    continue;
-	if (ys+y > last)
-	    continue;
-	if (100 == weight)
-	  shadow_draw_rgbdata(xs, ys+y, dwidth,
-			      ida_image_scanline(img, y) + offset);
-	else
-	  shadow_merge_rgbdata(xs, ys+y, dwidth, weight,
-                               ida_image_scanline(img, y) + offset);
-    }
+    shadow_composite_image(img, xs - xoff, ys - yoff, weight);
 }
 
 static void status_prepare(void)

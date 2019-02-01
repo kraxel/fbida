@@ -12,10 +12,8 @@ void shadow_fini(void);
 
 void shadow_draw_line(int x1, int x2, int y1,int y2);
 void shadow_draw_rect(int x1, int x2, int y1,int y2);
-void shadow_draw_rgbdata(int x, int y, int pixels,
-			 unsigned char *rgb);
-void shadow_merge_rgbdata(int x, int y, int pixels, int weight,
-			  unsigned char *rgb);
+void shadow_composite_image(struct ida_image *img,
+                            int xoff, int yoff, int weight);
 void shadow_darkify(int x1, int x2, int y1,int y2, int percent);
 
 int  shadow_draw_string(int x, int y, char *str, int align);

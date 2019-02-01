@@ -130,7 +130,7 @@ int load_free_extras(struct ida_image_info *info)
 void ida_image_alloc(struct ida_image *img)
 {
     assert(img->p == NULL);
-    img->p = pixman_image_create_bits(PIXMAN_r8g8b8,
+    img->p = pixman_image_create_bits(/* PIXMAN_r8g8b8 */ PIXMAN_b8g8r8,
                                       img->i.width, img->i.height, NULL, 0);
 }
 
