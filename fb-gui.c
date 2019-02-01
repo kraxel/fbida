@@ -122,12 +122,17 @@ void shadow_clear(void)
     shadow_clear_lines(0, sheight-1);
 }
 
-void shadow_set_dirty(void)
+void shadow_set_dirty_range(int y, int h)
 {
     int i;
 
-    for (i = 0; i < sheight; i++)
+    for (i = y; i < y + h; i++)
 	sdirty[i]++;
+}
+
+void shadow_set_dirty(void)
+{
+    shadow_set_dirty_range(0, sheight);
 }
 
 void shadow_init(gfxstate *gfx)
@@ -144,7 +149,7 @@ void shadow_init(gfxstate *gfx)
     for (i = 0; i < sheight; i++)
 	shadow[i] = framebuffer + i*swidth*4;
     shadow_clear();
-    surface = cairo_image_surface_create_for_data(gfx->mem,
+    surface = cairo_image_surface_create_for_data(framebuffer,
                                                   CAIRO_FORMAT_RGB24,
                                                   swidth, sheight,
                                                   swidth * 4);
@@ -167,68 +172,41 @@ void shadow_init(gfxstate *gfx)
 
 void shadow_fini(void)
 {
-    int i;
-
     if (!shadow)
 	return;
-    for (i = 0; i < sheight; i++)
-	free(shadow[i]);
     free(shadow);
     free(sdirty);
+    free(framebuffer);
 }
 
 /* ---------------------------------------------------------------------- */
 /* shadow framebuffer -- drawing interface                                */
 
-static void shadow_setpixel(int x, int y)
-{
-    unsigned char *dest = shadow[y] + 4*x;
-
-    if (x < 0)
-	return;
-    if (x >= swidth)
-	return;
-    if (y < 0)
-	return;
-    if (y >= sheight)
-	return;
-    *(dest++) = 255;
-    *(dest++) = 255;
-    *(dest++) = 255;
-    sdirty[y]++;
-}
-
 void shadow_draw_line(int x1, int x2, int y1,int y2)
 {
-    int x,y,h;
-    float inc;
+    cairo_set_source_rgb(context, 1, 1, 1);
+    cairo_set_line_width(context, 1);
 
-    if (x2 < x1)
-	h = x2, x2 = x1, x1 = h;
-    if (y2 < y1)
-	h = y2, y2 = y1, y1 = h;
+    cairo_move_to(context, x1 + 0.5, y1 + 0.5);
+    cairo_line_to(context, x2 + 0.5, y2 + 0.5);
+    cairo_stroke(context);
 
-    if (x2 - x1 < y2 - y1) {
-	inc = (float)(x2-x1)/(float)(y2-y1);
-	for (y = y1; y <= y2; y++) {
-	    x = x1 + inc * (y - y1);
-	    shadow_setpixel(x,y);
-	}
-    } else {
-	inc = (float)(y2-y1)/(float)(x2-x1);
-	for (x = x1; x <= x2; x++) {
-	    y = y1 + inc * (x - x1);
-	    shadow_setpixel(x,y);
-	}
-    }
+    shadow_set_dirty_range(y1, (y2 - y1) + 1);
 }
 
-void shadow_draw_rect(int x1, int x2, int y1,int y2)
+void shadow_draw_rect(int x1, int x2, int y1, int y2)
 {
-    shadow_draw_line(x1, x2, y1, y1);
-    shadow_draw_line(x1, x2, y2, y2);
-    shadow_draw_line(x1, x1, y1, y2);
-    shadow_draw_line(x2, x2, y1, y2);
+    cairo_set_source_rgb(context, 1, 1, 1);
+    cairo_set_line_width(context, 1);
+
+    cairo_move_to(context, x1 + 0.5, y1 + 0.5);
+    cairo_line_to(context, x2 + 0.5, y1 + 0.5);
+    cairo_line_to(context, x2 + 0.5, y2 + 0.5);
+    cairo_line_to(context, x1 + 0.5, y2 + 0.5);
+    cairo_line_to(context, x1 + 0.5, y1 + 0.5);
+    cairo_stroke(context);
+
+    shadow_set_dirty_range(y1, (y2 - y1) + 1);
 }
 
 void shadow_draw_rgbdata(int x, int y, int pixels, unsigned char *rgb)
