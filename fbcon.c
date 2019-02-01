@@ -314,7 +314,7 @@ static void child_exec_shell(struct winsize *win)
     fprintf(stderr, "\x1b[0m");
 
     /* check for errors */
-    if (libinput_deverror != 0) {
+    if (libinput_deverror != 0 || libinput_devcount == 0) {
         fprintf(stderr, "ERROR: failed to open input devices (%d ok, %d failed)\n",
                 libinput_devcount, libinput_deverror);
         return;
