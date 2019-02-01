@@ -88,7 +88,7 @@ fbi_srcs     = [ 'fbi.c', 'fb-gui.c', 'desktop.c',
                  'filter.c', 'op.c', 'jpegtools.c',
                  trans_src, read_srcs ]
 fbi_deps     = [ freetype_dep, fontconf_dep,
-                 drm_dep, pixman_dep,
+                 drm_dep, pixman_dep, cairo_dep,
                  exif_dep, image_deps,
                  math_dep, udev_dep, input_dep ]
 

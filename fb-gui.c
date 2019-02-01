@@ -8,6 +8,7 @@
 #include <sys/ioctl.h>
 #include <linux/fb.h>
 
+#include <cairo.h>
 #include <fontconfig/fontconfig.h>
 #include <fontconfig/fcfreetype.h>
 
@@ -25,6 +26,10 @@ static int32_t s_lut_transp[256], s_lut_red[256], s_lut_green[256], s_lut_blue[2
 
 static unsigned char **shadow;
 static unsigned int  *sdirty,swidth,sheight;
+
+static cairo_t *context;
+static cairo_surface_t *surface;
+static unsigned char *framebuffer;
 
 static void shadow_lut_init_one(int32_t *lut, int bits, int shift)
 {
@@ -135,9 +140,15 @@ void shadow_init(gfxstate *gfx)
     shadow  = malloc(sizeof(unsigned char*) * sheight);
     sdirty  = malloc(sizeof(unsigned int)   * sheight);
     memset(sdirty,0, sizeof(unsigned int)   * sheight);
+    framebuffer = malloc(swidth*sheight*4);
     for (i = 0; i < sheight; i++)
-	shadow[i] = malloc(swidth*4);
+	shadow[i] = framebuffer + i*swidth*4;
     shadow_clear();
+    surface = cairo_image_surface_create_for_data(gfx->mem,
+                                                  CAIRO_FORMAT_RGB24,
+                                                  swidth, sheight,
+                                                  swidth * 4);
+    context = cairo_create(surface);
 
     /* init rendering */
     switch (gfx->bits_per_pixel) {
