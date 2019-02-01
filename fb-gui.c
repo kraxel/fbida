@@ -8,10 +8,6 @@
 #include <sys/ioctl.h>
 #include <linux/fb.h>
 
-#include <cairo.h>
-#include <fontconfig/fontconfig.h>
-#include <fontconfig/fcfreetype.h>
-
 #include "vt.h"
 #include "fbtools.h"
 #include "fb-gui.h"
@@ -30,6 +26,7 @@ static unsigned int  *sdirty,swidth,sheight;
 static cairo_t *context;
 static cairo_surface_t *surface;
 static unsigned char *framebuffer;
+static cairo_font_extents_t extents;
 
 static void shadow_lut_init_one(int32_t *lut, int bits, int shift)
 {
@@ -252,220 +249,64 @@ void shadow_darkify(int x1, int x2, int y1,int y2, int percent)
     cairo_fill(context);
 }
 
-/* ---------------------------------------------------------------------- */
-/* shadow framebuffer -- text rendering                                   */
-
-static void shadow_draw_glyph(FT_Bitmap *bitmap, int sx, int sy)
+int shadow_draw_string(int x, int y, char *str, int align)
 {
-    unsigned char *src,*dst;
-    unsigned int bit;
-    int x,y;
+    cairo_text_extents_t te;
 
-    src = bitmap->buffer;
-    for (y = 0; y < bitmap->rows; y++, src += bitmap->pitch) {
-	if (sy+y < 0)
-	    continue;
-	if (sy+y >= sheight)
-	    continue;
-	sdirty[sy+y]++;
-	dst = shadow[sy+y] + sx*4;
-	switch (bitmap->pixel_mode) {
-	case FT_PIXEL_MODE_MONO:
-	    for (x = 0; x < bitmap->width; x++, dst += 4) {
-		if (sx+x < 0)
-		    continue;
-		if (sx+x >= swidth)
-		    continue;
-		bit = (1 << (7-(x&7)));
-		if (bit & (src[x >> 3])) {
-		    dst[0] = 255;
-		    dst[1] = 255;
-		    dst[2] = 255;
-		}
-	    }
-	    break;
-	case FT_PIXEL_MODE_GRAY:
-	    for (x = 0; x < bitmap->width; x++, dst += 4) {
-		if (sx+x < 0)
-		    continue;
-		if (sx+x >= swidth)
-		    continue;
-		if (src[x]) {
-		    dst[0] += (255-dst[0]) * src[x] / 255;
-		    dst[1] += (255-dst[1]) * src[x] / 255;
-		    dst[2] += (255-dst[2]) * src[x] / 255;
-		}
-	    }
-	    break;
-	}
-    }
-}
-
-struct glyph {
-    FT_Glyph  glyph;
-    int       pos;
-};
-
-int shadow_draw_string(FT_Face face, int x, int y, wchar_t *str, int align)
-{
-    struct glyph   *glyphs;
-    FT_UInt        gi,pgi;
-    FT_Vector      delta,pen;
-    FT_Glyph       image;
-    FT_BitmapGlyph bit;
-    size_t         len;
-    int            i,ng,pos;
-    int            kerning;
-
-    len = wcslen(str);
-    glyphs = malloc(sizeof(*glyphs) * len);
-    memset(glyphs,0,sizeof(*glyphs) * len);
-
-    kerning  = FT_HAS_KERNING(face);
-    pgi = 0;
-    
-    for (ng = 0, pos = 0, i = 0; str[i] != 0; i++) {
-	gi = FT_Get_Char_Index(face, str[i]);
-	if (kerning && pgi && gi) {
-	    FT_Get_Kerning(face,pgi,gi,FT_KERNING_DEFAULT,&delta);
-	    pos += delta.x;
-	}
-	glyphs[ng].pos = pos;
-	if (0 != FT_Load_Glyph(face, gi, FT_LOAD_DEFAULT))
-	    continue;
-	if (0 != FT_Get_Glyph(face->glyph, &glyphs[ng].glyph))
-	    continue;
-	pos += face->glyph->advance.x;
-	pgi = gi;
-	ng++;
-    }
-
+    cairo_text_extents(context, str, &te);
     switch(align) {
     case -1: /* left */
 	break;
     case 0: /* center */
-	x -= pos >> 7;
+	x -= te.x_advance / 2;
 	break;
     case 1: /* right */
-	x -= pos >> 6;
+	x -= te.x_advance;
 	break;
     }
-    pen.x = 0;
-    pen.y = 0;
-    for (i = 0; i < ng; i++) {
-	image = glyphs[i].glyph;
-	if (0 != FT_Glyph_To_Bitmap(&image,FT_RENDER_MODE_NORMAL,&pen,0))
-	    continue;
-	bit = (FT_BitmapGlyph)image;
-	shadow_draw_glyph(&bit->bitmap,
-			  x + bit->left + (glyphs[i].pos >> 6),
-			  y - bit->top);
-	if (image != glyphs[i].glyph)
-	    FT_Done_Glyph(image);
-    }
 
-    for (i = 0; i < ng; i++)
-	FT_Done_Glyph(glyphs[i].glyph);
-    free(glyphs);
-
-    return pos >> 6;
+    cairo_move_to(context, x, y + extents.ascent);
+    cairo_show_text(context, str);
+    return 0;
 }
 
-void shadow_draw_text_box(FT_Face face, int x, int y, int percent, wchar_t *lines[], unsigned int count)
+void shadow_draw_text_box(int x, int y, int percent, char *lines[], unsigned int count)
 {
-    unsigned int i,len,max, x1, x2, y1, y2;
+    unsigned int i, len, max, x1, x2, y1, y2;
 
     if (!console_visible)
 	return;
 
     max = 0;
     for (i = 0; i < count; i++) {
-	len = wcslen(lines[i]);
+	len = strlen(lines[i]);
 	if (max < len)
 	    max = len;
     }
 
-    FT_Load_Glyph(face, FT_Get_Char_Index(face, 'x'), FT_LOAD_DEFAULT);
     x1 = x;
-    x2 = x + max * (face->glyph->advance.x >> 6);
+    x2 = x + max * extents.max_x_advance;
     y1 = y;
-    y2 = y + count * (face->size->metrics.height >> 6);
+    y2 = y + count * extents.height;
 
     x += xs; x2 += 2*xs;
     y += ys; y2 += 2*ys;
-    y += (face->size->metrics.height    >> 6);
-    y += (face->size->metrics.descender >> 6);
-    
+
     shadow_darkify(x1, x2, y1, y2, percent);
     shadow_draw_rect(x1, x2, y1, y2);
     for (i = 0; i < count; i++) {
-	shadow_draw_string(face, x, y, lines[i], -1);
-	y += (face->size->metrics.height >> 6);
+	shadow_draw_string(x, y, lines[i], -1);
+	y += extents.height;
     }
 }
 
-/* ---------------------------------------------------------------------- */
-/* fontconfig + freetype font rendering                                   */
-
-static FT_Library freetype;
-
-void font_init(void)
+cairo_font_extents_t *shadow_font_init(char *font)
 {
-    int rc;
-    
-    FcInit();
-    rc = FT_Init_FreeType(&freetype);
-    if (rc) {
-	fprintf(stderr,"FT_Init_FreeType() failed\n");
-	exit(1);
-    }
-}
-
-FT_Face font_open(char *fcname)
-{
-    FcResult    result = 0;
-    FT_Face     face = NULL;
-    FcPattern   *pattern,*match;
-    char        *fontname,*h;
-    FcChar8     *filename;
-    double      pixelsize;
-    int         rc;
-
-    /* parse + match font name */
-    pattern = FcNameParse(fcname);
-    FcConfigSubstitute(NULL, pattern, FcMatchPattern);
-    FcDefaultSubstitute(pattern);
-    match = FcFontMatch (0, pattern, &result);
-    FcPatternDestroy(pattern);
-    if (FcResultMatch != result)
-	return NULL;
-    fontname = FcNameUnparse(match);
-    h = strchr(fontname, ':');
-    if (h)
-	*h = 0;
-
-    /* try get the face directly */
-    result = FcPatternGetFTFace(match, FC_FT_FACE, 0, &face);
-    if (FcResultMatch == result) {
-	fprintf(stderr,"using \"%s\", face=%p\n",fontname,face);
-	return face;
-    }
-
-    /* failing that use the filename */
-    result = FcPatternGetString (match, FC_FILE, 0, &filename);
-    if (FcResultMatch == result) {
-	result = FcPatternGetDouble(match, FC_PIXEL_SIZE, 0, &pixelsize);
-	if (FcResultMatch != result)
-	    pixelsize = 16;
-	fprintf(stderr,"using \"%s\", pixelsize=%.2lf file=%s\n",
-		fontname,pixelsize,filename);
-	rc = FT_New_Face (freetype, filename, 0, &face);
-	if (rc)
-	    return NULL;
-	FT_Set_Pixel_Sizes(face, 0, (int)pixelsize);
-	return face;
-    }
-
-    /* oops, didn't work */
-    return NULL;
+    /* TODO: parse font */
+    cairo_select_font_face(context, "monospace",
+                           CAIRO_FONT_SLANT_NORMAL,
+                           CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_set_font_size(context, 16);
+    cairo_font_extents(context, &extents);
+    return &extents;
 }

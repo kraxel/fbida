@@ -1,6 +1,4 @@
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_GLYPH_H
+#include <cairo.h>
 
 extern int visible;
 
@@ -20,9 +18,8 @@ void shadow_merge_rgbdata(int x, int y, int pixels, int weight,
 			  unsigned char *rgb);
 void shadow_darkify(int x1, int x2, int y1,int y2, int percent);
 
-int  shadow_draw_string(FT_Face face, int x, int y, wchar_t *str, int align);
-void shadow_draw_text_box(FT_Face face, int x, int y, int percent,
-			  wchar_t *lines[], unsigned int count);
+int  shadow_draw_string(int x, int y, char *str, int align);
+void shadow_draw_text_box(int x, int y, int percent,
+			  char *lines[], unsigned int count);
 
-void font_init(void);
-FT_Face font_open(char *fcname);
+cairo_font_extents_t *shadow_font_init(char *find);

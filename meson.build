@@ -14,8 +14,6 @@ x11resrun    = run_command('scripts/x11resdir.sh', get_option('prefix'))
 x11resdir    = x11resrun.stdout().strip()
 
 # pkg-config deps
-freetype_dep = dependency('freetype2')
-fontconf_dep = dependency('fontconfig')
 pixman_dep   = dependency('pixman-1')
 poppler_dep  = dependency('poppler-glib')
 cairo_dep    = dependency('cairo')
@@ -87,8 +85,7 @@ fbi_srcs     = [ 'fbi.c', 'fb-gui.c', 'desktop.c',
                  'vt.c', 'kbd.c', 'fbtools.c', 'drmtools.c',
                  'filter.c', 'op.c', 'jpegtools.c',
                  trans_src, read_srcs ]
-fbi_deps     = [ freetype_dep, fontconf_dep,
-                 drm_dep, pixman_dep, cairo_dep,
+fbi_deps     = [ drm_dep, pixman_dep, cairo_dep,
                  exif_dep, image_deps,
                  math_dep, udev_dep, input_dep ]
 

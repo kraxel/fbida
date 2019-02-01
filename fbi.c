@@ -20,6 +20,7 @@
 #include <ctype.h>
 #include <locale.h>
 #include <wchar.h>
+#include <setjmp.h>
 #include <sys/time.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
@@ -121,7 +122,7 @@ int interactive = 0;
 
 /* font handling */
 static char *fontname = NULL;
-static FT_Face face;
+static cairo_font_extents_t *extents;
 
 /* ---------------------------------------------------------------------- */
 /* fwd declarations                                                       */
@@ -404,7 +405,7 @@ shadow_draw_image(struct ida_image *img, int xoff, int yoff,
 static void status_prepare(void)
 {
     struct ida_image *img = flist_img_get(fcurrent);
-    int y1 = gfx->vdisplay - (face->size->metrics.height >> 6);
+    int y1 = gfx->vdisplay - extents->height;
     int y2 = gfx->vdisplay - 1;
 
     if (img) {
@@ -418,34 +419,34 @@ static void status_prepare(void)
 
 static void status_update(unsigned char *desc, char *info)
 {
-    int yt = gfx->vdisplay + (face->size->metrics.descender >> 6);
-    wchar_t str[128];
+    int yt = gfx->vdisplay - extents->height;
+    char str[128];
 
     if (!statusline)
 	return;
     status_prepare();
 
-    swprintf(str,ARRAY_SIZE(str),L"%s",desc);
-    shadow_draw_string(face, 0, yt, str, -1);
+    snprintf(str,ARRAY_SIZE(str),"%s",desc);
+    shadow_draw_string(0, yt, str, -1);
     if (info) {
-	swprintf(str,ARRAY_SIZE(str), L"[ %s ] H - Help", info);
+	snprintf(str,ARRAY_SIZE(str), "[ %s ] H - Help", info);
     } else {
-	swprintf(str,ARRAY_SIZE(str), L"| H - Help");
+	snprintf(str,ARRAY_SIZE(str), "| H - Help");
     }
-    shadow_draw_string(face, gfx->hdisplay, yt, str, 1);
+    shadow_draw_string(gfx->hdisplay, yt, str, 1);
 
     shadow_render(gfx);
 }
 
 static void status_error(unsigned char *msg)
 {
-    int yt = gfx->vdisplay + (face->size->metrics.descender >> 6);
-    wchar_t str[128];
+    int yt = gfx->vdisplay - extents->height;
+    char str[128];
 
     status_prepare();
 
-    swprintf(str,ARRAY_SIZE(str), L"%s", msg);
-    shadow_draw_string(face, 0, yt, str, -1);
+    snprintf(str,ARRAY_SIZE(str), "%s", msg);
+    shadow_draw_string(0, yt, str, -1);
 
     shadow_render(gfx);
     sleep(2);
@@ -476,7 +477,7 @@ static void show_exif(struct flist *f)
     unsigned int tag,l1,l2,len,count,i;
     const char *title[ARRAY_SIZE(tags)];
     char *value[ARRAY_SIZE(tags)];
-    wchar_t *linebuffer[ARRAY_SIZE(tags)];
+    char *linebuffer[ARRAY_SIZE(tags)];
 
     if (!console_visible)
 	return;
@@ -516,13 +517,13 @@ static void show_exif(struct flist *f)
 	if (NULL == title[tag])
 	    continue;
 	linebuffer[count] = malloc(sizeof(wchar_t)*(l1+l2+8));
-	swprintf(linebuffer[count], l1+l2+8,
-		 L"%-*.*s : %-*.*s",
+	snprintf(linebuffer[count], l1+l2+8,
+		 "%-*.*s : %-*.*s",
 		 l1, l1, title[tag],
 		 l2, l2, value[tag]);
 	count++;
     }
-    shadow_draw_text_box(face, 24, 16, transparency,
+    shadow_draw_text_box(24, 16, transparency,
 			 linebuffer, count);
     shadow_render(gfx);
 
@@ -537,34 +538,34 @@ static void show_exif(struct flist *f)
 
 static void show_help(void)
 {
-    static wchar_t *help[] = {
-	L"keyboard commands",
-	L"~~~~~~~~~~~~~~~~~",
-	L"  cursor keys    - scroll image",
-	L"  PgUp, k        - previous image",
-	L"  PgDn, SPACE, j - next image",
-	L"  <i>g           - jump to image #i",
-	L"",
-	L"  a              - autozoom image",
-	L"  +/-            - zoom in/out",
-	L"  <i>s           - set zoom to <i>%",
-	L"",
-	L"  ESC, q         - quit",
-	L"  v              - toggle statusline",
-	L"  h              - show this help text",
-	L"  i              - show EXIF info",
-	L"  p              - pause slideshow",
-	L"",
-	L"available if started with --edit switch,",
-	L"rotation works for jpeg images only:",
-	L"  D, Shift+d     - delete image",
-	L"  r              - rotate 90 degrees clockwise",
-	L"  l              - rotate 90 degrees counter-clockwise",
-	L"  x              - mirror image vertically (top / bottom)",
-	L"  y              - mirror image horizontally (left to right)",
+    static char *help[] = {
+	"keyboard commands",
+	"~~~~~~~~~~~~~~~~~",
+	"  cursor keys    - scroll image",
+	"  PgUp, k        - previous image",
+	"  PgDn, SPACE, j - next image",
+	"  <i>g           - jump to image #i",
+	"",
+	"  a              - autozoom image",
+	"  +/-            - zoom in/out",
+	"  <i>s           - set zoom to <i>%",
+	"",
+	"  ESC, q         - quit",
+	"  v              - toggle statusline",
+	"  h              - show this help text",
+	"  i              - show EXIF info",
+	"  p              - pause slideshow",
+	"",
+	"available if started with --edit switch,",
+	"rotation works for jpeg images only:",
+	"  D, Shift+d     - delete image",
+	"  r              - rotate 90 degrees clockwise",
+	"  l              - rotate 90 degrees counter-clockwise",
+	"  x              - mirror image vertically (top / bottom)",
+	"  y              - mirror image horizontally (left to right)",
     };
 
-    shadow_draw_text_box(face, 24, 16, transparency,
+    shadow_draw_text_box(24, 16, transparency,
 			 help, ARRAY_SIZE(help));
     shadow_render(gfx);
 }
@@ -1314,14 +1315,8 @@ int main(int argc, char *argv[])
 	flist_randomize();
     fcurrent = flist_first();
 
-    font_init();
     if (NULL == fontname)
 	fontname = "monospace:size=16";
-    face = font_open(fontname);
-    if (NULL == face) {
-	fprintf(stderr,"can't open font: %s\n",fontname);
-	exit(1);
-    }
 
     /* gfx device init */
     device = cfg_get_str(O_DEVICE);
@@ -1360,6 +1355,7 @@ int main(int argc, char *argv[])
         }
     }
     shadow_init(gfx);
+    extents = shadow_font_init(fontname);
 
     /* svga main loop */
     kbd_init(use_libinput, gfx->devnum);
