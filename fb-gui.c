@@ -123,7 +123,9 @@ void shadow_set_dirty_range(int y, int h)
 {
     int i;
 
-    for (i = y; i < y + h; i++)
+    if (y < 0)
+        y = 0;
+    for (i = y; i < y + h && i < sheight; i++)
 	sdirty[i]++;
 }
 
@@ -302,11 +304,22 @@ void shadow_draw_text_box(int x, int y, int percent, char *lines[], unsigned int
 
 cairo_font_extents_t *shadow_font_init(char *font)
 {
-    /* TODO: parse font */
-    cairo_select_font_face(context, "monospace",
+    char fontname[64];
+    int fontsize, rc;
+
+    rc = sscanf(font, "%63[^-]-%d", fontname, &fontsize);
+    if (rc != 2) {
+        rc = sscanf(font, "%63[^:]:size=%d", fontname, &fontsize);
+        if (rc != 2) {
+            strncpy(fontname, font, sizeof(fontname));
+            fontsize = 16;
+        }
+    }
+
+    cairo_select_font_face(context, fontname,
                            CAIRO_FONT_SLANT_NORMAL,
                            CAIRO_FONT_WEIGHT_NORMAL);
-    cairo_set_font_size(context, 16);
+    cairo_set_font_size(context, fontsize);
     cairo_font_extents(context, &extents);
     return &extents;
 }
