@@ -245,36 +245,11 @@ void shadow_merge_rgbdata(int x, int y, int pixels, int weight,
 
 void shadow_darkify(int x1, int x2, int y1,int y2, int percent)
 {
-    unsigned char *ptr;
-    int x,y,h;
-
-    if (x2 < x1)
-	h = x2, x2 = x1, x1 = h;
-    if (y2 < y1)
-	h = y2, y2 = y1, y1 = h;
-    
-    if (x1 < 0)
-	x1 = 0;
-    if (x2 >= swidth)
-	x2 = swidth;
-
-    if (y1 < 0)
-	y1 = 0;
-    if (y2 >= sheight)
-	y2 = sheight;
-
-    percent = percent * 256 / 100;
-
-    for (y = y1; y <= y2; y++) {
-	sdirty[y]++;
-	ptr = shadow[y];
-	ptr += 4*x1;
-	x = 4*(x2-x1+1);
-	while (x-- > 0) {
-	    *ptr = (*ptr * percent) >> 8;
-	    ptr++;
-	}
-    }
+    cairo_rectangle(context, x1, y1,
+                    x2 - x1 + 1,
+                    y2 - y1 + 1);
+    cairo_set_source_rgba(context, 0, 0, 0, percent * 0.01);
+    cairo_fill(context);
 }
 
 void shadow_reverse(int x1, int x2, int y1,int y2)
