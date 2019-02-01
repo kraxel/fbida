@@ -30,6 +30,7 @@
 #include "fbtools.h"
 #include "drmtools.h"
 #include "vt.h"
+#include "kbd.h"
 #include "tmt.h"
 
 /* ---------------------------------------------------------------------- */
@@ -122,31 +123,6 @@ static void console_switch_resume(void)
 }
 
 /* ---------------------------------------------------------------------- */
-
-static int open_restricted(const char *path, int flags, void *user_data)
-{
-    int fd;
-
-    fd = open(path, flags | O_CLOEXEC);
-    if (fd < 0) {
-        fprintf(stderr, "open %s: %s\n", path, strerror(errno));
-        return fd;
-    }
-
-    ioctl(fd, EVIOCGRAB, 1);
-    return fd;
-}
-
-static void close_restricted(int fd, void *user_data)
-{
-    ioctl(fd, EVIOCGRAB, 0);
-    close(fd);
-}
-
-static const struct libinput_interface interface = {
-    .open_restricted  = open_restricted,
-    .close_restricted = close_restricted,
-};
 
 const char *ansiseq[KEY_MAX] = {
     [ KEY_UP       ] = "\x1b[A",
@@ -330,6 +306,38 @@ static void tmt_callback(tmt_msg_t m, TMT *vt, const void *a, void *p)
     }
 }
 
+static void child_exec_shell(struct winsize *win)
+{
+    char lines[10], columns[10];
+
+    /* reset terminal */
+    fprintf(stderr, "\x1b[0m");
+
+    /* check for errors */
+    if (libinput_deverror != 0) {
+        fprintf(stderr, "ERROR: failed to open input devices (%d ok, %d failed)\n",
+                libinput_devcount, libinput_deverror);
+        return;
+    }
+
+#if 1
+    fprintf(stderr, "# \n");
+    fprintf(stderr, "# This is fbcon @%s, using %s-%d.\n",
+            seat_name, font_name, font_size);
+    fprintf(stderr, "# \n");
+#endif
+
+    /* prepare environment, run shell */
+    snprintf(lines, sizeof(lines), "%d", win->ws_row);
+    snprintf(columns, sizeof(columns), "%d", win->ws_col);
+    setenv("TERM", "ansi", true);
+    setenv("LINES", lines, true);
+    setenv("COLUMNS", columns, true);
+
+    execl("/bin/sh", "-sh", NULL);
+    fprintf(stderr, "failed to exec /bin/sh: %s\n", strerror(errno));
+}
+
 int main(int argc, char *argv[])
 {
     struct udev_enumerate *uenum;
@@ -414,7 +422,7 @@ int main(int argc, char *argv[])
     }
 
     /* init libinput */
-    kbd = libinput_udev_create_context(&interface, NULL, udev);
+    kbd = libinput_udev_create_context(&libinput_interface, NULL, udev);
     libinput_udev_assign_seat(kbd, seat_name);
     input = libinput_get_fd(kbd);
 
@@ -440,17 +448,10 @@ int main(int argc, char *argv[])
     vt = tmt_open(win.ws_row, win.ws_col, tmt_callback, NULL, NULL);
     child = forkpty(&pty, NULL, NULL, &win);
     if (0 == child) {
-        /* child */
-        char lines[10], columns[10];
-        snprintf(lines, sizeof(lines), "%d", win.ws_row);
-        snprintf(columns, sizeof(columns), "%d", win.ws_col);
-        setenv("TERM", "ansi", true);
-        setenv("LINES", lines, true);
-        setenv("COLUMNS", columns, true);
-        execl("/bin/sh", "-sh", NULL);
-        fprintf(stderr, "failed to exec /bin/sh: %s\n", strerror(errno));
+        child_exec_shell(&win);
+        /* only reached on errors ... */
         sleep(3);
-        exit(0);
+        exit(1);
     }
 
     /* parent */

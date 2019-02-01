@@ -9,9 +9,6 @@
 #include <errno.h>
 #include <termios.h>
 
-#include <libudev.h>
-#include <libinput.h>
-
 #include "kbd.h"
 
 /* ---------------------------------------------------------------------- */
@@ -195,7 +192,8 @@ static int file_wait(int fd, int timeout)
 
 /* ---------------------------------------------------------------------- */
 
-static int devcount;
+int libinput_devcount;
+int libinput_deverror;
 
 static int open_restricted(const char *path, int flags, void *user_data)
 {
@@ -203,23 +201,25 @@ static int open_restricted(const char *path, int flags, void *user_data)
 
     fd = open(path, flags | O_CLOEXEC);
     if (fd < 0) {
-        fprintf(stderr, "open %s: %s\n", path, strerror(errno));
+        fprintf(stderr, "kbd: open %s: %s\n", path, strerror(errno));
+        libinput_deverror++;
         return fd;
     }
 
-    fprintf(stderr, "using %s\n", path);
+    fprintf(stderr, "kbd: using %s\n", path);
     ioctl(fd, EVIOCGRAB, 1);
-    devcount++;
+    libinput_devcount++;
     return fd;
 }
 
 static void close_restricted(int fd, void *user_data)
 {
+    libinput_devcount--;
     ioctl(fd, EVIOCGRAB, 0);
     close(fd);
 }
 
-static const struct libinput_interface interface = {
+const struct libinput_interface libinput_interface = {
     .open_restricted  = open_restricted,
     .close_restricted = close_restricted,
 };
@@ -239,13 +239,10 @@ void kbd_init(int use_libinput, dev_t gfx)
             seat = udev_device_get_property_value(ugfx, "ID_SEAT");
         if (!seat)
             seat = "seat0";
-        ctx = libinput_udev_create_context(&interface, NULL, udev);
+        ctx = libinput_udev_create_context(&libinput_interface, NULL, udev);
         libinput_udev_assign_seat(ctx, seat);
-        if (devcount == 0) {
-            fprintf(stderr, "WARNING: no input devices available\n");
-        }
         fprintf(stderr, "kbd: using libinput (%d devices, %s)\n",
-                devcount, seat);
+                libinput_devcount, seat);
     } else {
         fprintf(stderr, "kbd: using stdin from terminal\n");
         tty_raw();

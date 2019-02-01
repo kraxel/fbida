@@ -350,6 +350,11 @@ int main(int argc, char *argv[])
     }
 
     kbd_init(use_libinput, gfx->devnum);
+    if (use_libinput && libinput_deverror != 0) {
+        fprintf(stderr, "ERROR: failed to open input devices (%d ok, %d failed)\n",
+                libinput_devcount, libinput_deverror);
+        cleanup_and_exit(0);
+    }
 
     index = 0;
     newpage = true;
