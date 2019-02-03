@@ -21,8 +21,8 @@ struct gfxfmt {
     uint32_t              fourcc;  /* little endian (drm) */
     cairo_format_t        cairo;   /* native endian */
     pixman_format_code_t  pixman;  /* native endian */
-    uint32_t              bits_pp;
-    uint32_t              bytes_pp;
+    uint32_t              depth;
+    uint32_t              bpp;
 };
 
 extern gfxfmt fmt_list[];
