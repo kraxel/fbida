@@ -28,6 +28,8 @@ struct gfxfmt {
 extern gfxfmt fmt_list[];
 extern uint32_t fmt_count;
 
+gfxfmt *gfx_fmt_find_pixman(pixman_format_code_t  pixman);
+
 struct gfxstate {
     /* info */
     uint32_t hdisplay;
@@ -35,6 +37,7 @@ struct gfxstate {
     uint32_t stride;
     uint8_t  *mem;
     uint8_t  *mem2;
+    gfxfmt   *fmt;
 
     uint32_t bits_per_pixel;
     uint32_t rlen, glen, blen, tlen;

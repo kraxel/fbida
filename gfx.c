@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <endian.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -49,3 +50,15 @@ gfxfmt fmt_list[] = {
 };
 
 uint32_t fmt_count = ARRAY_SIZE(fmt_list);
+
+gfxfmt *gfx_fmt_find_pixman(pixman_format_code_t  pixman)
+{
+    int i;
+
+    for (i = 0; i < fmt_count; i++) {
+        if (pixman != fmt_list[i].pixman)
+            continue;
+        return fmt_list + i;
+    }
+    return NULL;
+}

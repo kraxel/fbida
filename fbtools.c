@@ -76,21 +76,6 @@ static void fb_linear_palette(int r, int g, int b)
 	p_cmap.len = size;
 }
 
-static void fb_dither_palette(int r, int g, int b)
-{
-    int rs, gs, bs, i;
-
-    rs = 256 / (r - 1);
-    gs = 256 / (g - 1);
-    bs = 256 / (b - 1);
-    for (i = 0; i < 256; i++) {
-	p_red[i]   = color_scale(rs * ((i / (g * b)) % r), 255);
-	p_green[i] = color_scale(gs * ((i / b) % g),       255);
-	p_blue[i]  = color_scale(bs * ((i) % b),           255);
-    }
-    p_cmap.len = 256;
-}
-
 static void fb_set_palette(void)
 {
     if (fb_fix.visual != FB_VISUAL_DIRECTCOLOR && fb_var.bits_per_pixel != 8)
@@ -225,6 +210,7 @@ gfxstate* fb_init(const char *device, char *mode)
     unsigned long page_mask;
     struct stat st;
     gfxstate *gfx;
+    gfxfmt *fmt = NULL;
 
     if (NULL == device) {
 	device = getenv("FRAMEBUFFER");
@@ -294,23 +280,25 @@ gfxstate* fb_init(const char *device, char *mode)
 
     /* init palette */
     switch (fb_var.bits_per_pixel) {
-    case 8:
-	fb_dither_palette(8, 8, 4);
-	break;
     case 15:
+        fmt = gfx_fmt_find_pixman(PIXMAN_x1r5g5b5);
+        fb_linear_palette(5,5,5);
+        break;
     case 16:
-	if (fb_var.green.length == 5) {
-            fb_linear_palette(5,5,5);
-	} else {
-            fb_linear_palette(5,6,5);
-	}
+        fmt = gfx_fmt_find_pixman(PIXMAN_r5g6b5);
+        fb_linear_palette(5,6,5);
 	break;
-    case 24:
     case 32:
+        fmt = gfx_fmt_find_pixman(PIXMAN_x8r8g8b8);
         fb_linear_palette(8,8,8);
 	break;
     }
     fb_set_palette();
+
+    if (!fmt) {
+        fprintf(stderr,"can't handle framebuffer format\n");
+        goto err;
+    }
 
     /* prepare gfx */
     gfx = malloc(sizeof(*gfx));
@@ -320,6 +308,7 @@ gfxstate* fb_init(const char *device, char *mode)
     gfx->vdisplay        = fb_var.yres;
     gfx->stride          = fb_fix.line_length;
     gfx->mem             = fb_mem;
+    gfx->fmt             = fmt;
 
     gfx->rlen            = fb_var.red.length;
     gfx->glen            = fb_var.green.length;
