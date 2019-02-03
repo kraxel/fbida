@@ -1,8 +1,6 @@
 #include <stdbool.h>
 #include <inttypes.h>
 
-#include <epoxy/egl.h>
-
 typedef struct gfxstate gfxstate;
 
 struct gfxstate {
@@ -18,11 +16,6 @@ struct gfxstate {
     uint32_t roff, goff, boff, toff;
 
     dev_t devnum;
-
-    /* egl */
-    EGLDisplay dpy;
-    EGLContext ctx;
-    EGLSurface surface;
 
     /* calls */
     void (*restore_display)(void);
