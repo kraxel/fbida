@@ -46,14 +46,6 @@
 #include "transupp.h"		/* Support routines for jpegtran */
 #include "jpegtools.h"
 
-#define TRUE            1
-#define FALSE           0
-#undef  MAX
-#define MAX(x,y)        ((x)>(y)?(x):(y))
-#undef  MIN
-#define MIN(x,y)        ((x)<(y)?(x):(y))
-#define ARRAY_SIZE(x)   (sizeof(x)/sizeof(x[0]))
-
 /* ---------------------------------------------------------------------- */
 
 /* variables for read_image */

@@ -82,7 +82,7 @@ add_global_arguments(['-include', 'config.h'], language : 'c')
 # build fbi
 fbi_srcs     = [ 'fbi.c', 'fb-gui.c', 'desktop.c',
                  'parseconfig.c', 'fbiconfig.c',
-                 'vt.c', 'kbd.c', 'fbtools.c', 'drmtools.c',
+                 'vt.c', 'kbd.c', 'fbtools.c', 'drmtools.c', 'gfx.c',
                  'filter.c', 'op.c', 'jpegtools.c',
                  trans_src, read_srcs ]
 fbi_deps     = [ drm_dep, pixman_dep, cairo_dep,
@@ -116,7 +116,7 @@ executable('thumbnail.cgi',
 
 # build fbpdf
 fbpdf_srcs   = [ 'fbpdf.c', 'parseconfig.c', 'fbiconfig.c',
-                 'vt.c', 'kbd.c', 'fbtools.c', 'drmtools.c' ]
+                 'vt.c', 'kbd.c', 'fbtools.c', 'drmtools.c', 'gfx.c' ]
 fbpdf_deps   = [ drm_dep, gbm_dep, epoxy_dep,
                  pixman_dep, poppler_dep, cairo_dep,
                  udev_dep, input_dep ]
@@ -127,7 +127,7 @@ executable('fbpdf',
            install             : true)
 
 # build fbcon
-fbcon_srcs   = [ 'fbcon.c', 'drmtools.c', 'fbtools.c', 'vt.c', 'kbd.c', 'tmt.c' ]
+fbcon_srcs   = [ 'fbcon.c', 'drmtools.c', 'fbtools.c', 'gfx.c', 'vt.c', 'kbd.c', 'tmt.c' ]
 fbcon_deps   = [ drm_dep, cairo_dep, util_dep, udev_dep, input_dep, xkb_dep ]
 
 executable('fbcon',

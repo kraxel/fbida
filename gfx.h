@@ -1,7 +1,32 @@
 #include <stdbool.h>
 #include <inttypes.h>
 
+#include <pixman.h>
+#include <cairo.h>
+
+/* ---------------------------------------------------------------------- */
+
+#undef  MAX
+#define MAX(x,y)        ((x)>(y)?(x):(y))
+#undef  MIN
+#define MIN(x,y)        ((x)<(y)?(x):(y))
+#define ARRAY_SIZE(x)   (sizeof(x)/sizeof(x[0]))
+
+/* ---------------------------------------------------------------------- */
+
+typedef struct gfxfmt gfxfmt;
 typedef struct gfxstate gfxstate;
+
+struct gfxfmt {
+    uint32_t              fourcc;  /* little endian (drm) */
+    cairo_format_t        cairo;   /* native endian */
+    pixman_format_code_t  pixman;  /* native endian */
+    uint32_t              bits_pp;
+    uint32_t              bytes_pp;
+};
+
+extern gfxfmt fmt_list[];
+extern uint32_t fmt_count;
 
 struct gfxstate {
     /* info */
