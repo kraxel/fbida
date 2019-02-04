@@ -156,7 +156,7 @@ int drm_init_dev(const char *dev, const char *output, const char *mode)
     return 0;
 }
 
-static int drm_init_fb(struct drmfb *fb, struct gfxfmt *fmt)
+static int drm_init_fb(struct drmfb *fb, struct gfxfmt *fmt, bool logerrors)
 {
     struct drm_mode_map_dumb mreq;
     int rc;
@@ -168,38 +168,43 @@ static int drm_init_fb(struct drmfb *fb, struct gfxfmt *fmt)
     fb->creq.bpp = fmt->bpp;
     rc = drmIoctl(drm_fd, DRM_IOCTL_MODE_CREATE_DUMB, &fb->creq);
     if (rc < 0) {
-        fprintf(stderr, "drm: DRM_IOCTL_MODE_CREATE_DUMB: %s\n", strerror(errno));
+        if (logerrors)
+            fprintf(stderr, "drm: DRM_IOCTL_MODE_CREATE_DUMB: %s\n", strerror(errno));
         return -1;
     }
     rc = drmModeAddFB(drm_fd, fb->creq.width, fb->creq.height,
                       fmt->depth, fmt->bpp, fb->creq.pitch,
                       fb->creq.handle, &fb->id);
     if (rc < 0) {
-        fprintf(stderr, "drm: drmModeAddFB(%c%c%c%c) failed\n",
+        if (logerrors)
+            fprintf(stderr, "drm: drmModeAddFB(%c%c%c%c) failed\n",
+                    (fmt->fourcc >>  0) & 0xff,
+                    (fmt->fourcc >>  8) & 0xff,
+                    (fmt->fourcc >> 16) & 0xff,
+                    (fmt->fourcc >> 24) & 0xff);
+        return -1;
+    }
+    if (logerrors)
+        fprintf(stderr, "drm: drmModeAddFB(%c%c%c%c) OK\n",
                 (fmt->fourcc >>  0) & 0xff,
                 (fmt->fourcc >>  8) & 0xff,
                 (fmt->fourcc >> 16) & 0xff,
                 (fmt->fourcc >> 24) & 0xff);
-        return -1;
-    }
-    fprintf(stderr, "drm: drmModeAddFB(%c%c%c%c) OK\n",
-            (fmt->fourcc >>  0) & 0xff,
-            (fmt->fourcc >>  8) & 0xff,
-            (fmt->fourcc >> 16) & 0xff,
-            (fmt->fourcc >> 24) & 0xff);
 
     /* map framebuffer */
     memset(&mreq, 0, sizeof(mreq));
     mreq.handle = fb->creq.handle;
     rc = drmIoctl(drm_fd, DRM_IOCTL_MODE_MAP_DUMB, &mreq);
     if (rc < 0) {
-        fprintf(stderr, "drm: DRM_IOCTL_MODE_MAP_DUMB: %s\n", strerror(errno));
+        if (logerrors)
+            fprintf(stderr, "drm: DRM_IOCTL_MODE_MAP_DUMB: %s\n", strerror(errno));
         return -1;
     }
     fb->mem = mmap(0, fb->creq.size, PROT_READ | PROT_WRITE, MAP_SHARED,
                    drm_fd, mreq.offset);
     if (fb->mem == MAP_FAILED) {
-        fprintf(stderr, "drm: framebuffer mmap: %s\n", strerror(errno));
+        if (logerrors)
+            fprintf(stderr, "drm: framebuffer mmap: %s\n", strerror(errno));
         return -1;
     }
     return 0;
@@ -252,7 +257,7 @@ gfxstate *drm_init(const char *device, const char *output,
     if (drm_init_dev(dev, output, mode) < 0)
         return NULL;
     for (i = 0; i < fmt_count; i++) {
-        if (drm_init_fb(&fb1, fmt_list + i) < 0)
+        if (drm_init_fb(&fb1, fmt_list + i, true) < 0)
             continue;
         fmt = fmt_list + i;
         break;
@@ -291,7 +296,7 @@ gfxstate *drm_init(const char *device, const char *output,
     snprintf(gfx->devpath, sizeof(gfx->devpath), "%s", dev);
 
     if (pageflip) {
-        if (drm_init_fb(&fb2, fmt) == 0) {
+        if (drm_init_fb(&fb2, fmt, false) == 0) {
             gfx->mem2 = fb2.mem;
         } else {
             fprintf(stderr, "drm: can't alloc two fbs, pageflip disabled.\n");
