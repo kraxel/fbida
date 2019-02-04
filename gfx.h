@@ -43,6 +43,7 @@ struct gfxstate {
     uint32_t rlen, glen, blen, tlen;
     uint32_t roff, goff, boff, toff;
 
+    char devpath[128];
     dev_t devnum;
 
     /* calls */

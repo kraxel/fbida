@@ -337,13 +337,13 @@ int main(int argc, char *argv[])
     }
 
     surface1 = cairo_image_surface_create_for_data(gfx->mem,
-                                                   CAIRO_FORMAT_ARGB32,
+                                                   gfx->fmt->cairo,
                                                    gfx->hdisplay,
                                                    gfx->vdisplay,
                                                    gfx->stride);
     if (gfx->mem2) {
         surface2 = cairo_image_surface_create_for_data(gfx->mem2,
-                                                       CAIRO_FORMAT_ARGB32,
+                                                       gfx->fmt->cairo,
                                                        gfx->hdisplay,
                                                        gfx->vdisplay,
                                                        gfx->stride);

@@ -156,7 +156,7 @@ int drm_init_dev(const char *dev, const char *output, const char *mode)
     return 0;
 }
 
-static int drm_init_fb(struct drmfb *fb)
+static int drm_init_fb(struct drmfb *fb, struct gfxfmt *fmt)
 {
     struct drm_mode_map_dumb mreq;
     int rc;
@@ -165,19 +165,28 @@ static int drm_init_fb(struct drmfb *fb)
     memset(&fb->creq, 0, sizeof(fb->creq));
     fb->creq.width = drm_mode->hdisplay;
     fb->creq.height = drm_mode->vdisplay;
-    fb->creq.bpp = 32;
+    fb->creq.bpp = fmt->bpp;
     rc = drmIoctl(drm_fd, DRM_IOCTL_MODE_CREATE_DUMB, &fb->creq);
     if (rc < 0) {
         fprintf(stderr, "drm: DRM_IOCTL_MODE_CREATE_DUMB: %s\n", strerror(errno));
         return -1;
     }
     rc = drmModeAddFB(drm_fd, fb->creq.width, fb->creq.height,
-                      24, 32, fb->creq.pitch,
+                      fmt->depth, fmt->bpp, fb->creq.pitch,
                       fb->creq.handle, &fb->id);
     if (rc < 0) {
-        fprintf(stderr, "drm: drmModeAddFB() failed\n");
+        fprintf(stderr, "drm: drmModeAddFB(%c%c%c%c) failed\n",
+                (fmt->fourcc >>  0) & 0xff,
+                (fmt->fourcc >>  8) & 0xff,
+                (fmt->fourcc >> 16) & 0xff,
+                (fmt->fourcc >> 24) & 0xff);
         return -1;
     }
+    fprintf(stderr, "drm: drmModeAddFB(%c%c%c%c) OK\n",
+            (fmt->fourcc >>  0) & 0xff,
+            (fmt->fourcc >>  8) & 0xff,
+            (fmt->fourcc >> 16) & 0xff,
+            (fmt->fourcc >> 24) & 0xff);
 
     /* map framebuffer */
     memset(&mreq, 0, sizeof(mreq));
@@ -229,7 +238,9 @@ gfxstate *drm_init(const char *device, const char *output,
 {
     struct stat st;
     gfxstate *gfx;
+    gfxfmt *fmt = NULL;
     char dev[64];
+    int i;
 
     if (device) {
         snprintf(dev, sizeof(dev), "%s", device);
@@ -240,7 +251,13 @@ gfxstate *drm_init(const char *device, const char *output,
 
     if (drm_init_dev(dev, output, mode) < 0)
         return NULL;
-    if (drm_init_fb(&fb1) < 0)
+    for (i = 0; i < fmt_count; i++) {
+        if (drm_init_fb(&fb1, fmt_list + i) < 0)
+            continue;
+        fmt = fmt_list + i;
+        break;
+    }
+    if (fmt == NULL)
         return NULL;
     if (drm_show_fb(&fb1) < 0)
         return NULL;
@@ -253,16 +270,17 @@ gfxstate *drm_init(const char *device, const char *output,
     gfx->vdisplay        = drm_mode->vdisplay;
     gfx->stride          = fb1.creq.pitch;
     gfx->mem             = fb1.mem;
+    gfx->fmt             = fmt;
 
-    gfx->rlen            =  8;
-    gfx->glen            =  8;
-    gfx->blen            =  8;
-    gfx->tlen            =  8;
-    gfx->roff            = 16;
-    gfx->goff            =  8;
-    gfx->boff            =  0;
-    gfx->toff            = 24;
-    gfx->bits_per_pixel  = 32;
+    gfx->rlen            = PIXMAN_FORMAT_R(fmt->pixman);
+    gfx->glen            = PIXMAN_FORMAT_G(fmt->pixman);
+    gfx->blen            = PIXMAN_FORMAT_B(fmt->pixman);
+    gfx->tlen            = PIXMAN_FORMAT_A(fmt->pixman);
+    gfx->roff            = gfx->blen + gfx->glen;
+    gfx->goff            = gfx->blen;
+    gfx->boff            = 0;
+    gfx->toff            = gfx->blen + gfx->glen + gfx->rlen;
+    gfx->bits_per_pixel  = PIXMAN_FORMAT_BPP(fmt->pixman);
 
     gfx->restore_display = drm_restore_display;
     gfx->cleanup_display = drm_cleanup_display;
@@ -270,9 +288,10 @@ gfxstate *drm_init(const char *device, const char *output,
 
     fstat(drm_fd, &st);
     gfx->devnum = st.st_rdev;
+    snprintf(gfx->devpath, sizeof(gfx->devpath), "%s", dev);
 
     if (pageflip) {
-        if (drm_init_fb(&fb2) == 0) {
+        if (drm_init_fb(&fb2, fmt) == 0) {
             gfx->mem2 = fb2.mem;
         } else {
             fprintf(stderr, "drm: can't alloc two fbs, pageflip disabled.\n");

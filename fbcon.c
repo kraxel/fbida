@@ -322,8 +322,13 @@ static void child_exec_shell(struct winsize *win)
 
 #if 1
     fprintf(stderr, "# \n");
-    fprintf(stderr, "# This is fbcon @%s, using %s-%d.\n",
-            seat_name, font_name, font_size);
+    fprintf(stderr, "# This is fbcon @%s, device %s, format %c%c%c%c, font %s-%d.\n",
+            seat_name, gfx->devpath,
+            (gfx->fmt->fourcc >>  0) & 0xff,
+            (gfx->fmt->fourcc >>  8) & 0xff,
+            (gfx->fmt->fourcc >> 16) & 0xff,
+            (gfx->fmt->fourcc >> 24) & 0xff,
+            font_name, font_size);
     fprintf(stderr, "# \n");
 #endif
 
@@ -398,7 +403,7 @@ int main(int argc, char *argv[])
 
     /* init cairo */
     surface1 = cairo_image_surface_create_for_data(gfx->mem,
-                                                   CAIRO_FORMAT_ARGB32,
+                                                   gfx->fmt->cairo,
                                                    gfx->hdisplay,
                                                    gfx->vdisplay,
                                                    gfx->stride);
@@ -410,7 +415,7 @@ int main(int argc, char *argv[])
     cairo_font_extents(context1, &extents);
     if (gfx->mem2) {
         surface2 = cairo_image_surface_create_for_data(gfx->mem2,
-                                                       CAIRO_FORMAT_ARGB32,
+                                                       gfx->fmt->cairo,
                                                        gfx->hdisplay,
                                                        gfx->vdisplay,
                                                        gfx->stride);

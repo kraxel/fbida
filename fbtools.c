@@ -324,7 +324,8 @@ gfxstate* fb_init(const char *device, char *mode)
     gfx->cleanup_display = fb_cleanup_display;
 
     fstat(fb, &st);
-    gfx->devnum = st.st_rdev;
+    gfx->devnum  = st.st_rdev;
+    snprintf(gfx->devpath, sizeof(gfx->devpath), "%s", device);
 
     return gfx;
 
