@@ -110,19 +110,14 @@ void shadow_render(gfxstate *gfx)
 
 void shadow_clear_lines(int first, int last)
 {
-#if 0
-    /* FIXME: segfaults */
+    int i;
+
     cairo_rectangle(context, 0, first, swidth, last - first + 1);
     cairo_set_source_rgb(context, 0, 0, 0);
     cairo_fill(context);
-#else
-    int i;
 
-    for (i = first; i <= last; i++) {
-	memset(shadow[i],0,4*swidth);
+    for (i = first; i <= last; i++)
 	sdirty[i]++;
-    }
-#endif
 }
 
 void shadow_clear(void)
@@ -158,7 +153,6 @@ void shadow_init(gfxstate *gfx)
     framebuffer = malloc(swidth*sheight*4);
     for (i = 0; i < sheight; i++)
 	shadow[i] = framebuffer + i*swidth*4;
-    shadow_clear();
     surface = cairo_image_surface_create_for_data(framebuffer,
                                                   CAIRO_FORMAT_RGB24,
                                                   swidth, sheight,
@@ -166,7 +160,7 @@ void shadow_init(gfxstate *gfx)
     context = cairo_create(surface);
     pixman = pixman_image_create_bits(PIXMAN_x8r8g8b8, swidth, sheight,
                                       (void*)framebuffer, swidth * 4);
-
+    shadow_clear();
 
     /* init rendering */
     switch (gfx->bits_per_pixel) {
