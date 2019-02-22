@@ -1202,7 +1202,6 @@ static void console_switch_suspend(void)
 static void console_switch_resume(void)
 {
     gfx->restore_display();
-    shadow_set_dirty();
     shadow_render(gfx);
     kbd_resume();
 }

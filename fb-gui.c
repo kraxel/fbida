@@ -24,7 +24,7 @@ static int xs = 10;
 static int32_t s_lut_transp[256], s_lut_red[256], s_lut_green[256], s_lut_blue[256];
 
 static unsigned char **shadow;
-static unsigned int  *sdirty,swidth,sheight;
+static unsigned int  swidth,sheight;
 
 static cairo_t *context;
 static cairo_surface_t *surface;
@@ -52,92 +52,40 @@ static void shadow_lut_init(gfxstate *gfx)
     shadow_lut_init_one(s_lut_blue,   gfx->blen, gfx->boff);
 }
 
-static void shadow_render_line(gfxstate *gfx, int line,
-                               unsigned char *dest, char unsigned *buffer)
-{
-    uint8_t  *ptr  = (void*)dest;
-    uint16_t *ptr2 = (void*)dest;
-    uint32_t *ptr4 = (void*)dest;
-    int x;
-
-    switch (gfx->bits_per_pixel) {
-    case 15:
-    case 16:
-	for (x = 0; x < swidth; x++) {
-	    ptr2[x] =
-                s_lut_red[buffer[x*4+2]] |
-		s_lut_green[buffer[x*4+1]] |
-		s_lut_blue[buffer[x*4+0]];
-	}
-	break;
-    case 24:
-	for (x = 0; x < swidth; x++) {
-	    ptr[3*x+2] = buffer[4*x+2];
-	    ptr[3*x+1] = buffer[4*x+1];
-	    ptr[3*x+0] = buffer[4*x+0];
-	}
-	break;
-    case 32:
-	for (x = 0; x < swidth; x++) {
-	    ptr4[x] = s_lut_transp[255] |
-		s_lut_red[buffer[x*4+2]] |
-		s_lut_green[buffer[x*4+1]] |
-		s_lut_blue[buffer[x*4+0]];
-	}
-	break;
-    }
-}
-
 /* ---------------------------------------------------------------------- */
 /* shadow framebuffer -- management interface                             */
 
 void shadow_render(gfxstate *gfx)
 {
-    unsigned int offset = 0;
-    int i;
+    static pixman_image_t *gfxfb;
 
     if (!console_visible)
 	return;
-    for (i = 0; i < sheight; i++, offset += gfx->stride) {
-	if (0 == sdirty[i])
-	    continue;
-	shadow_render_line(gfx, i, gfx->mem + offset, shadow[i]);
-	sdirty[i] = 0;
-    }
+    gfxfb = pixman_image_create_bits(gfx->fmt->pixman,
+                                     gfx->hdisplay,
+                                     gfx->vdisplay,
+                                     (void*)gfx->mem,
+                                     gfx->stride);
+    pixman_image_composite(PIXMAN_OP_SRC, pixman, NULL, gfxfb,
+                           0, 0,
+                           0, 0,
+                           0, 0,
+                           gfx->hdisplay, gfx->vdisplay);
+    pixman_image_unref(gfxfb);
     if (gfx->flush_display)
         gfx->flush_display(false);
 }
 
 void shadow_clear_lines(int first, int last)
 {
-    int i;
-
     cairo_rectangle(context, 0, first, swidth, last - first + 1);
     cairo_set_source_rgb(context, 0, 0, 0);
     cairo_fill(context);
-
-    for (i = first; i <= last; i++)
-	sdirty[i]++;
 }
 
 void shadow_clear(void)
 {
     shadow_clear_lines(0, sheight-1);
-}
-
-void shadow_set_dirty_range(int y, int h)
-{
-    int i;
-
-    if (y < 0)
-        y = 0;
-    for (i = y; i < y + h && i < sheight; i++)
-	sdirty[i]++;
-}
-
-void shadow_set_dirty(void)
-{
-    shadow_set_dirty_range(0, sheight);
 }
 
 void shadow_init(gfxstate *gfx)
@@ -148,8 +96,6 @@ void shadow_init(gfxstate *gfx)
     swidth  = gfx->hdisplay;
     sheight = gfx->vdisplay;
     shadow  = malloc(sizeof(unsigned char*) * sheight);
-    sdirty  = malloc(sizeof(unsigned int)   * sheight);
-    memset(sdirty,0, sizeof(unsigned int)   * sheight);
     framebuffer = malloc(swidth*sheight*4);
     for (i = 0; i < sheight; i++)
 	shadow[i] = framebuffer + i*swidth*4;
@@ -182,7 +128,6 @@ void shadow_fini(void)
     if (!shadow)
 	return;
     free(shadow);
-    free(sdirty);
     free(framebuffer);
 }
 
@@ -197,8 +142,6 @@ void shadow_draw_line(int x1, int x2, int y1,int y2)
     cairo_move_to(context, x1 + 0.5, y1 + 0.5);
     cairo_line_to(context, x2 + 0.5, y2 + 0.5);
     cairo_stroke(context);
-
-    shadow_set_dirty_range(y1, (y2 - y1) + 1);
 }
 
 void shadow_draw_rect(int x1, int x2, int y1, int y2)
@@ -212,8 +155,6 @@ void shadow_draw_rect(int x1, int x2, int y1, int y2)
     cairo_line_to(context, x1 + 0.5, y2 + 0.5);
     cairo_line_to(context, x1 + 0.5, y1 + 0.5);
     cairo_stroke(context);
-
-    shadow_set_dirty_range(y1, (y2 - y1) + 1);
 }
 
 void shadow_composite_image(struct ida_image *img,
