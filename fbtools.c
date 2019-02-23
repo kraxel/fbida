@@ -310,16 +310,6 @@ gfxstate* fb_init(const char *device, char *mode)
     gfx->mem             = fb_mem;
     gfx->fmt             = fmt;
 
-    gfx->rlen            = fb_var.red.length;
-    gfx->glen            = fb_var.green.length;
-    gfx->blen            = fb_var.blue.length;
-    gfx->tlen            = fb_var.transp.length;
-    gfx->roff            = fb_var.red.offset;
-    gfx->goff            = fb_var.green.offset;
-    gfx->boff            = fb_var.blue.offset;
-    gfx->toff            = fb_var.transp.offset;
-    gfx->bits_per_pixel  = fb_var.bits_per_pixel;
-
     gfx->restore_display = fb_restore_display;
     gfx->cleanup_display = fb_cleanup_display;
 

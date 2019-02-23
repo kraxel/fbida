@@ -21,8 +21,6 @@ static int xs = 10;
 /* ---------------------------------------------------------------------- */
 /* shadow framebuffer -- internals                                        */
 
-static int32_t s_lut_transp[256], s_lut_red[256], s_lut_green[256], s_lut_blue[256];
-
 static unsigned char **shadow;
 static unsigned int  swidth,sheight;
 
@@ -31,26 +29,6 @@ static cairo_surface_t *surface;
 static pixman_image_t *pixman;
 static unsigned char *framebuffer;
 static cairo_font_extents_t extents;
-
-static void shadow_lut_init_one(int32_t *lut, int bits, int shift)
-{
-    int i;
-    
-    if (bits > 8)
-	for (i = 0; i < 256; i++)
-	    lut[i] = (i << (bits + shift - 8));
-    else
-	for (i = 0; i < 256; i++)
-	    lut[i] = (i >> (8 - bits)) << shift;
-}
-
-static void shadow_lut_init(gfxstate *gfx)
-{
-    shadow_lut_init_one(s_lut_transp, gfx->tlen, gfx->toff);
-    shadow_lut_init_one(s_lut_red,    gfx->rlen, gfx->roff);
-    shadow_lut_init_one(s_lut_green,  gfx->glen, gfx->goff);
-    shadow_lut_init_one(s_lut_blue,   gfx->blen, gfx->boff);
-}
 
 /* ---------------------------------------------------------------------- */
 /* shadow framebuffer -- management interface                             */
@@ -107,20 +85,6 @@ void shadow_init(gfxstate *gfx)
     pixman = pixman_image_create_bits(PIXMAN_x8r8g8b8, swidth, sheight,
                                       (void*)framebuffer, swidth * 4);
     shadow_clear();
-
-    /* init rendering */
-    switch (gfx->bits_per_pixel) {
-    case 15:
-    case 16:
-    case 24:
-    case 32:
-        shadow_lut_init(gfx);
-	break;
-    default:
-	fprintf(stderr, "Oops: %i bit/pixel ???\n",
-		gfx->bits_per_pixel);
-	exit(1);
-    }
 }
 
 void shadow_fini(void)

@@ -39,10 +39,6 @@ struct gfxstate {
     uint8_t  *mem2;
     gfxfmt   *fmt;
 
-    uint32_t bits_per_pixel;
-    uint32_t rlen, glen, blen, tlen;
-    uint32_t roff, goff, boff, toff;
-
     char devpath[128];
     dev_t devnum;
 

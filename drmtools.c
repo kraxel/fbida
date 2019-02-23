@@ -277,16 +277,6 @@ gfxstate *drm_init(const char *device, const char *output,
     gfx->mem             = fb1.mem;
     gfx->fmt             = fmt;
 
-    gfx->rlen            = PIXMAN_FORMAT_R(fmt->pixman);
-    gfx->glen            = PIXMAN_FORMAT_G(fmt->pixman);
-    gfx->blen            = PIXMAN_FORMAT_B(fmt->pixman);
-    gfx->tlen            = PIXMAN_FORMAT_A(fmt->pixman);
-    gfx->roff            = gfx->blen + gfx->glen;
-    gfx->goff            = gfx->blen;
-    gfx->boff            = 0;
-    gfx->toff            = gfx->blen + gfx->glen + gfx->rlen;
-    gfx->bits_per_pixel  = PIXMAN_FORMAT_BPP(fmt->pixman);
-
     gfx->restore_display = drm_restore_display;
     gfx->cleanup_display = drm_cleanup_display;
     gfx->flush_display   = drm_flush_display;
