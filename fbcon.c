@@ -45,7 +45,7 @@ static struct cairo_state {
     cairo_surface_t *surface;
     cairo_t *context;
     tsm_age_t age;
-    int clear;
+    uint32_t tx, ty, clear;
 } state1, state2;
 
 static int dirty, pty;
@@ -211,13 +211,12 @@ int tsm_draw_cb(struct tsm_screen *con, uint32_t id,
         .g = attr->fg / 255.0,
         .b = attr->fb / 255.0,
     };
-    int sw = tsm_screen_get_width(con) * extents.max_x_advance;
-    int sh = tsm_screen_get_height(con) * extents.height;
-    int tx = (gfx->hdisplay - sw) / 2;
-    int ty = (gfx->vdisplay - sh) / 2;
     wchar_t ws[8];
     char utf8[32];
     int i;
+
+    if (s->age && age && age < s->age)
+        return 0;
 
     if (posx == tsm_screen_get_cursor_x(con) &&
         posy == tsm_screen_get_cursor_y(con) &&
@@ -228,8 +227,8 @@ int tsm_draw_cb(struct tsm_screen *con, uint32_t id,
 
     /* background */
     cairo_rectangle(s->context,
-                    tx + posx * extents.max_x_advance,
-                    ty + posy * extents.height,
+                    s->tx + posx * extents.max_x_advance,
+                    s->ty + posy * extents.height,
                     extents.max_x_advance * width,
                     extents.height);
     cairo_set_source_rgb(s->context, bg.r, bg.g, bg.b);
@@ -237,8 +236,8 @@ int tsm_draw_cb(struct tsm_screen *con, uint32_t id,
 
     /* char */
     cairo_move_to(s->context,
-                  tx + posx * extents.max_x_advance,
-                  ty + posy * extents.height + extents.ascent);
+                  s->tx + posx * extents.max_x_advance,
+                  s->ty + posy * extents.height + extents.ascent);
     cairo_set_source_rgb(s->context, fg.r, fg.g, fg.b);
     for (i = 0; i < len && i < ARRAY_SIZE(ws)-1; i++)
         ws[i] = ch[i];
@@ -253,6 +252,8 @@ static void cairo_render(void)
 {
     static bool second;
     struct cairo_state *s;
+    int sw = tsm_screen_get_width(vts) * extents.max_x_advance;
+    int sh = tsm_screen_get_height(vts) * extents.height;
 
     if (state2.surface)
         second = !second;
@@ -265,6 +266,8 @@ static void cairo_render(void)
         s->age = 0;
     }
 
+    s->tx = (gfx->hdisplay - sw) / 2;
+    s->ty = (gfx->vdisplay - sh) / 2;
     s->age = tsm_screen_draw(vts, tsm_draw_cb, s);
     cairo_show_page(s->context);
 
