@@ -38,6 +38,9 @@ BuildRequires: pkgconfig(libudev)
 BuildRequires: pkgconfig(libinput)
 BuildRequires: pkgconfig(xkbcommon)
 
+# fbcon
+BuildRequires: pkgconfig(libtsm)
+
 %description
 fbida
 
