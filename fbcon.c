@@ -184,7 +184,14 @@ void tsm_log_cb(void *data, const char *file, int line,
 
 void tsm_write_cb(struct tsm_vte *vte, const char *u8, size_t len, void *data)
 {
+    if (debug) {
+        for (int i = 0; i < len; i++) {
+            fprintf(stderr, "%s: 0x%02x %c\n", __func__,
+                    u8[i], isprint(u8[i]) ? u8[i] : '.');
+        }
+    }
     write(pty, u8, len);
+    dirty++;
 }
 
 int tsm_draw_cb(struct tsm_screen *con, uint32_t id,
@@ -305,6 +312,8 @@ static void handle_keydown(struct xkb_state *state,
     uint32_t utf32 = xkb_state_key_get_utf32(state, key);
     uint32_t mods = xkb_to_tsm_mods(state);
 
+    if (!utf32)
+        utf32 = TSM_VTE_INVALID;
     tsm_vte_handle_keyboard(vte, sym, 0, mods, utf32);
     dirty++;
 }
