@@ -194,6 +194,26 @@ void tsm_write_cb(struct tsm_vte *vte, const char *u8, size_t len, void *data)
     dirty++;
 }
 
+struct color tsm_color(const struct tsm_screen_attr *attr,
+                       bool fg)
+{
+    struct color c;
+
+    if (attr->inverse)
+        fg = !fg;
+
+    if (fg) {
+        c.r = attr->fr / 255.0;
+        c.g = attr->fg / 255.0;
+        c.b = attr->fb / 255.0;
+    } else {
+        c.r = attr->br / 255.0;
+        c.g = attr->bg / 255.0;
+        c.b = attr->bb / 255.0;
+    }
+    return c;
+}
+
 int tsm_draw_cb(struct tsm_screen *con, uint32_t id,
                 const uint32_t *ch, size_t len,
                 unsigned int width, unsigned int posx, unsigned int posy,
@@ -201,16 +221,7 @@ int tsm_draw_cb(struct tsm_screen *con, uint32_t id,
                 tsm_age_t age, void *data)
 {
     struct cairo_state *s = data;
-    struct color bg = {
-        .r = attr->br / 255.0,
-        .g = attr->bg / 255.0,
-        .b = attr->bb / 255.0,
-    };
-    struct color fg = {
-        .r = attr->fr / 255.0,
-        .g = attr->fg / 255.0,
-        .b = attr->fb / 255.0,
-    };
+    struct color fg, bg;
     wchar_t ws[8];
     char utf8[32];
     int i;
@@ -218,6 +229,8 @@ int tsm_draw_cb(struct tsm_screen *con, uint32_t id,
     if (s->age && age && age < s->age)
         return 0;
 
+    fg = tsm_color(attr, true);
+    bg = tsm_color(attr, false);
     if (posx == tsm_screen_get_cursor_x(con) &&
         posy == tsm_screen_get_cursor_y(con) &&
         !(tsm_screen_get_flags(con) & TSM_SCREEN_HIDE_CURSOR)) {
