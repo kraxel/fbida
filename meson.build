@@ -27,6 +27,7 @@ webp_dep     = dependency('libwebp', required : false)
 udev_dep     = dependency('libudev')
 input_dep    = dependency('libinput')
 xkb_dep      = dependency('xkbcommon')
+tsm_dep      = dependency('libtsm', required : false)
 
 # other library deps
 cc           = meson.get_compiler('c')
@@ -127,15 +128,17 @@ executable('fbpdf',
            install             : true)
 
 # build fbcon
-fbcon_srcs   = [ 'fbcon.c', 'drmtools.c', 'fbtools.c', 'gfx.c', 'vt.c', 'kbd.c', 'tmt.c' ]
-fbcon_deps   = [ drm_dep, cairo_dep, util_dep, udev_dep, input_dep, xkb_dep ]
+fbcon_srcs   = [ 'fbcon.c', 'drmtools.c', 'fbtools.c', 'gfx.c', 'vt.c', 'kbd.c' ]
+fbcon_deps   = [ drm_dep, cairo_dep, util_dep, udev_dep, input_dep, xkb_dep, tsm_dep ]
 
-executable('fbcon',
-           sources             : fbcon_srcs,
-           dependencies        : fbcon_deps,
-           install             : true)
-install_data('fbcon.desktop',
-             install_dir : 'share/wayland-sessions')
+if tsm_dep.found()
+    executable('fbcon',
+               sources             : fbcon_srcs,
+               dependencies        : fbcon_deps,
+               install             : true)
+    install_data('fbcon.desktop',
+                 install_dir : 'share/wayland-sessions')
+endif
 
 # build kbdtest
 executable('kbdtest',

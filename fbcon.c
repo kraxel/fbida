@@ -26,12 +26,12 @@
 #include <libudev.h>
 #include <libinput.h>
 #include <xkbcommon/xkbcommon.h>
+#include <libtsm.h>
 
 #include "fbtools.h"
 #include "drmtools.h"
 #include "vt.h"
 #include "kbd.h"
-#include "tmt.h"
 
 /* ---------------------------------------------------------------------- */
 
@@ -40,14 +40,15 @@ static char *font_name = "monospace";
 static int font_size = 16;
 
 static gfxstate *gfx;
-static cairo_surface_t *surface1;
-static cairo_surface_t *surface2;
-static cairo_t *context1;
-static cairo_t *context2;
-cairo_font_extents_t extents;
+static cairo_font_extents_t extents;
+static struct cairo_state {
+    cairo_surface_t *surface;
+    cairo_t *context;
+    tsm_age_t age;
+    int clear;
+} state1, state2;
 
-static TMT *vt;
-static int clear, dirty, pty;
+static int dirty, pty;
 static struct udev *udev;
 static struct libinput *kbd;
 
@@ -61,6 +62,9 @@ static struct xkb_rule_names layout = {
     .variant = NULL,
     .options = NULL,
 };
+
+static struct tsm_screen *vts;
+static struct tsm_vte    *vte;
 
 int debug = 0;
 
@@ -118,7 +122,8 @@ static void console_switch_resume(void)
 {
     gfx->restore_display();
     libinput_resume(kbd);
-    clear++;
+    state1.clear++;
+    state2.clear++;
     dirty++;
 }
 
@@ -182,12 +187,7 @@ static void xkb_configure(void)
 
 /* ---------------------------------------------------------------------- */
 
-struct color {
-    float r;
-    float g;
-    float b;
-};
-
+#if 0
 static struct color tmt_colors_normal[] = {
     [ TMT_COLOR_BLACK   ] = { .r = 0.0, .g = 0.0, .b = 0.0 },
     [ TMT_COLOR_RED     ] = { .r = 0.7, .g = 0.0, .b = 0.0 },
@@ -230,80 +230,123 @@ struct color *tmt_background(struct TMTATTRS *a)
        bg = TMT_COLOR_BLACK;
     return tmt_colors_normal + bg;
 }
+#endif
 
 /* ---------------------------------------------------------------------- */
 
-static void render(void)
+struct color {
+    float r;
+    float g;
+    float b;
+};
+
+static const struct color black = { 0, 0, 0 };
+static const struct color white = { 1, 1, 1 };
+
+void tsm_log_cb(void *data, const char *file, int line,
+                const char *func, const char *subs, unsigned int sev,
+                const char *format, va_list args)
+{
+    if (sev == 7 /* debug */ && !debug)
+        return;
+
+    fprintf(stderr, "<%d> ", sev);
+    if (file)
+        fprintf(stderr, "[%s:%d] ", file, line);
+    vfprintf(stderr, format, args);
+    fprintf(stderr, "\n");
+}
+
+void tsm_write_cb(struct tsm_vte *vte, const char *u8, size_t len, void *data)
+{
+}
+
+int tsm_draw_cb(struct tsm_screen *con, uint32_t id,
+                const uint32_t *ch, size_t len,
+                unsigned int width, unsigned int posx, unsigned int posy,
+                const struct tsm_screen_attr *attr,
+                tsm_age_t age, void *data)
+{
+    struct cairo_state *s = data;
+    struct color bg = {
+        .r = attr->br / 255.0,
+        .g = attr->bg / 255.0,
+        .b = attr->bb / 255.0,
+    };
+    struct color fg = {
+        .r = attr->fr / 255.0,
+        .g = attr->fg / 255.0,
+        .b = attr->fb / 255.0,
+    };
+    int sw = tsm_screen_get_width(con) * extents.max_x_advance;
+    int sh = tsm_screen_get_height(con) * extents.height;
+    int tx = (gfx->hdisplay - sw) / 2;
+    int ty = (gfx->vdisplay - sh) / 2;
+    wchar_t ws[8];
+    char utf8[32];
+    int i;
+
+    if (posx == tsm_screen_get_cursor_x(con) &&
+        posy == tsm_screen_get_cursor_y(con) &&
+        !(tsm_screen_get_flags(con) & TSM_SCREEN_HIDE_CURSOR)) {
+        bg = white;
+        fg = black;
+    }
+
+    /* background */
+    cairo_rectangle(s->context,
+                    tx + posx * extents.max_x_advance,
+                    ty + posy * extents.height,
+                    extents.max_x_advance * width,
+                    extents.height);
+    cairo_set_source_rgb(s->context, bg.r, bg.g, bg.b);
+    cairo_fill(s->context);
+
+    /* char */
+    cairo_move_to(s->context,
+                  tx + posx * extents.max_x_advance,
+                  ty + posy * extents.height + extents.ascent);
+    cairo_set_source_rgb(s->context, fg.r, fg.g, fg.b);
+    for (i = 0; i < len && i < ARRAY_SIZE(ws)-1; i++)
+        ws[i] = ch[i];
+    ws[i] = 0;
+    wcstombs(utf8, ws, sizeof(utf8));
+    cairo_show_text(s->context, utf8);
+
+    return 0;
+}
+
+static void cairo_render(void)
 {
     static bool second;
-    const TMTSCREEN *s = tmt_screen(vt);
-    const TMTPOINT *cursor = tmt_cursor(vt);
-    cairo_t *context;
-    int line, col, tx, ty;
-    wchar_t ws[2];
-    char utf8[10];
+    struct cairo_state *s;
 
-    if (surface2)
+    if (state2.surface)
         second = !second;
-    context = second ? context2 : context1;
+    s = second ? &state2 : &state1;
 
-    tx = (gfx->hdisplay - (extents.max_x_advance * s->ncol)) / 2;
-    ty = (gfx->vdisplay - (extents.height * s->nline)) / 2;
-
-    if (clear) {
-        cairo_set_source_rgb(context, 0, 0, 0);
-        cairo_paint(context);
+    if (s->clear) {
+        s->clear = 0;
+        cairo_set_source_rgb(s->context, 0, 0, 0);
+        cairo_paint(s->context);
+        s->age = 0;
     }
 
-    for (line = 0; line < s->nline; line++) {
-        for (col = 0; col < s->ncol; col++) {
-            TMTCHAR *c = &s->lines[line]->chars[col];
-            struct color *bg = tmt_background(&c->a);
-            struct color *fg = tmt_foreground(&c->a);
-
-            if (cursor->r == line && cursor->c == col) {
-                bg = tmt_colors_normal + TMT_COLOR_WHITE;
-                fg = tmt_colors_normal + TMT_COLOR_BLACK;
-            }
-
-            /* background */
-            cairo_rectangle(context,
-                            tx + col * extents.max_x_advance,
-                            ty + line * extents.height,
-                            extents.max_x_advance,
-                            extents.height);
-            cairo_set_source_rgb(context, bg->r, bg->g, bg->b);
-            cairo_fill(context);
-
-            /* char */
-            cairo_move_to(context,
-                          tx + col * extents.max_x_advance,
-                          ty + line * extents.height + extents.ascent);
-            cairo_set_source_rgb(context, fg->r, fg->g, fg->b);
-            ws[0] = c->c;
-            ws[1] = 0;
-            wcstombs(utf8, ws, sizeof(utf8));
-            cairo_show_text(context, utf8);
-        }
-    }
-
-    cairo_show_page(context);
+    s->age = tsm_screen_draw(vts, tsm_draw_cb, s);
+    cairo_show_page(s->context);
 
     if (gfx->flush_display)
         gfx->flush_display(second);
 }
 
-static void tmt_callback(tmt_msg_t m, TMT *vt, const void *a, void *p)
+static void cairo_state_init(struct cairo_state *s,
+                             const char *font_name, int font_size)
 {
-    switch (m) {
-    case TMT_MSG_UPDATE:
-        dirty++;
-        break;
-    case TMT_MSG_ANSWER:
-        write(pty, a, strlen(a));
-    default:
-        break;
-    }
+    s->context = cairo_create(s->surface);
+    cairo_select_font_face(s->context, font_name,
+                           CAIRO_FONT_SLANT_NORMAL,
+                           CAIRO_FONT_WEIGHT_NORMAL);
+    cairo_set_font_size(s->context, font_size);
 }
 
 static void child_exec_shell(struct winsize *win)
@@ -335,7 +378,7 @@ static void child_exec_shell(struct winsize *win)
     /* prepare environment, run shell */
     snprintf(lines, sizeof(lines), "%d", win->ws_row);
     snprintf(columns, sizeof(columns), "%d", win->ws_col);
-    setenv("TERM", "ansi", true);
+    setenv("TERM", "xterm-256color", true);
     setenv("LINES", lines, true);
     setenv("COLUMNS", columns, true);
 
@@ -402,28 +445,20 @@ int main(int argc, char *argv[])
     }
 
     /* init cairo */
-    surface1 = cairo_image_surface_create_for_data(gfx->mem,
-                                                   gfx->fmt->cairo,
-                                                   gfx->hdisplay,
-                                                   gfx->vdisplay,
-                                                   gfx->stride);
-    context1 = cairo_create(surface1);
-    cairo_select_font_face(context1, font_name,
-                           CAIRO_FONT_SLANT_NORMAL,
-                           CAIRO_FONT_WEIGHT_NORMAL);
-    cairo_set_font_size(context1, font_size);
-    cairo_font_extents(context1, &extents);
+    state1.surface = cairo_image_surface_create_for_data(gfx->mem,
+                                                         gfx->fmt->cairo,
+                                                         gfx->hdisplay,
+                                                         gfx->vdisplay,
+                                                         gfx->stride);
+    cairo_state_init(&state1, font_name, font_size);
+    cairo_font_extents(state1.context, &extents);
     if (gfx->mem2) {
-        surface2 = cairo_image_surface_create_for_data(gfx->mem2,
-                                                       gfx->fmt->cairo,
-                                                       gfx->hdisplay,
-                                                       gfx->vdisplay,
-                                                       gfx->stride);
-        context2 = cairo_create(surface2);
-        cairo_select_font_face(context2, font_name,
-                               CAIRO_FONT_SLANT_NORMAL,
-                               CAIRO_FONT_WEIGHT_NORMAL);
-        cairo_set_font_size(context2, font_size);
+        state2.surface = cairo_image_surface_create_for_data(gfx->mem2,
+                                                             gfx->fmt->cairo,
+                                                             gfx->hdisplay,
+                                                             gfx->vdisplay,
+                                                             gfx->stride);
+        cairo_state_init(&state2, font_name, font_size);
     }
 
     /* init libinput */
@@ -450,7 +485,12 @@ int main(int argc, char *argv[])
     win.ws_row = gfx->vdisplay / extents.height;
     win.ws_xpixel = extents.max_x_advance;
     win.ws_ypixel = extents.height;
-    vt = tmt_open(win.ws_row, win.ws_col, tmt_callback, NULL, NULL);
+
+    tsm_screen_new(&vts, tsm_log_cb, NULL);
+    tsm_screen_resize(vts, win.ws_col, win.ws_row);
+    tsm_vte_new(&vte, vts, tsm_write_cb, NULL, tsm_log_cb, NULL);
+
+    /* run shell */
     child = forkpty(&pty, NULL, NULL, &win);
     if (0 == child) {
         child_exec_shell(&win);
@@ -460,14 +500,17 @@ int main(int argc, char *argv[])
     }
 
     /* parent */
-    clear++;
+    state1.clear++;
+    state2.clear++;
     dirty++;
     for (;;) {
         fd_set set;
         int rc, max;
 
-        if (dirty)
-            render();
+        if (dirty) {
+            cairo_render();
+            dirty = 0;
+        }
 
         max = 0;
         FD_ZERO(&set);
@@ -489,8 +532,10 @@ int main(int argc, char *argv[])
                 break; /* read error */
             if (rc == 0)
                 break; /* no data -> EOF */
-            if (rc > 0)
-                tmt_write(vt, buf, rc);
+            if (rc > 0) {
+                tsm_vte_input(vte, buf, rc);
+                dirty++;
+            }
         }
 
         if (FD_ISSET(input, &set)) {
@@ -520,6 +565,7 @@ int main(int argc, char *argv[])
                             if (rc > 0)
                                 write(pty, buf, rc);
                         }
+                        dirty++;
                     }
                     break;
                 default:
