@@ -129,34 +129,6 @@ static void console_switch_resume(void)
 
 /* ---------------------------------------------------------------------- */
 
-const char *ansiseq[KEY_MAX] = {
-    [ KEY_UP       ] = "\x1b[A",
-    [ KEY_DOWN     ] = "\x1b[B",
-    [ KEY_RIGHT    ] = "\x1b[C",
-    [ KEY_LEFT     ] = "\x1b[D",
-    [ KEY_END      ] = "\x1b[F",
-    [ KEY_HOME     ] = "\x1b[H",
-
-    [ KEY_INSERT   ] = "\x1b[2~",
-    [ KEY_DELETE   ] = "\x1b[3~",
-    [ KEY_PAGEUP   ] = "\x1b[5~",
-    [ KEY_PAGEDOWN ] = "\x1b[6~",
-
-    [ KEY_F1       ] = "\x1b[OP",
-    [ KEY_F2       ] = "\x1b[OQ",
-    [ KEY_F3       ] = "\x1b[OR",
-    [ KEY_F4       ] = "\x1b[OS",
-
-    [ KEY_F5       ] = "\x1b[15~",
-    [ KEY_F6       ] = "\x1b[17~",
-    [ KEY_F7       ] = "\x1b[18~",
-    [ KEY_F8       ] = "\x1b[19~",
-    [ KEY_F9       ] = "\x1b[20~",
-    [ KEY_F10      ] = "\x1b[21~",
-    [ KEY_F11      ] = "\x1b[23~",
-    [ KEY_F12      ] = "\x1b[24~",
-};
-
 static void xkb_configure(void)
 {
     char line[128], *m, *v, *h;
@@ -187,53 +159,6 @@ static void xkb_configure(void)
 
 /* ---------------------------------------------------------------------- */
 
-#if 0
-static struct color tmt_colors_normal[] = {
-    [ TMT_COLOR_BLACK   ] = { .r = 0.0, .g = 0.0, .b = 0.0 },
-    [ TMT_COLOR_RED     ] = { .r = 0.7, .g = 0.0, .b = 0.0 },
-    [ TMT_COLOR_GREEN   ] = { .r = 0.0, .g = 0.7, .b = 0.0 },
-    [ TMT_COLOR_YELLOW  ] = { .r = 0.7, .g = 0.7, .b = 0.0 },
-    [ TMT_COLOR_BLUE    ] = { .r = 0.0, .g = 0.0, .b = 0.7 },
-    [ TMT_COLOR_MAGENTA ] = { .r = 0.7, .g = 0.0, .b = 0.7 },
-    [ TMT_COLOR_CYAN    ] = { .r = 0.0, .g = 0.7, .b = 0.7 },
-    [ TMT_COLOR_WHITE   ] = { .r = 0.7, .g = 0.7, .b = 0.7 },
-};
-
-static struct color tmt_colors_bold[] = {
-    [ TMT_COLOR_BLACK   ] = { .r = 0.3, .g = 0.3, .b = 0.3 },
-    [ TMT_COLOR_RED     ] = { .r = 1.0, .g = 0.3, .b = 0.3 },
-    [ TMT_COLOR_GREEN   ] = { .r = 0.3, .g = 1.0, .b = 0.3 },
-    [ TMT_COLOR_YELLOW  ] = { .r = 1.0, .g = 1.0, .b = 0.3 },
-    [ TMT_COLOR_BLUE    ] = { .r = 0.3, .g = 0.3, .b = 1.0 },
-    [ TMT_COLOR_MAGENTA ] = { .r = 1.0, .g = 0.3, .b = 1.0 },
-    [ TMT_COLOR_CYAN    ] = { .r = 0.3, .g = 1.0, .b = 1.0 },
-    [ TMT_COLOR_WHITE   ] = { .r = 1.0, .g = 1.0, .b = 1.0 },
-};
-
-struct color *tmt_foreground(struct TMTATTRS *a)
-{
-    struct color *tmt_colors = tmt_colors_normal;
-    int fg = a->fg;
-
-    if (a->bold)
-        tmt_colors = tmt_colors_bold;
-    if (fg == TMT_COLOR_DEFAULT)
-        fg = TMT_COLOR_WHITE;
-    return tmt_colors + fg;
-}
-
-struct color *tmt_background(struct TMTATTRS *a)
-{
-    int bg = a->bg;
-
-    if (bg == TMT_COLOR_DEFAULT)
-       bg = TMT_COLOR_BLACK;
-    return tmt_colors_normal + bg;
-}
-#endif
-
-/* ---------------------------------------------------------------------- */
-
 struct color {
     float r;
     float g;
@@ -259,6 +184,7 @@ void tsm_log_cb(void *data, const char *file, int line,
 
 void tsm_write_cb(struct tsm_vte *vte, const char *u8, size_t len, void *data)
 {
+    write(pty, u8, len);
 }
 
 int tsm_draw_cb(struct tsm_screen *con, uint32_t id,
@@ -347,6 +273,40 @@ static void cairo_state_init(struct cairo_state *s,
                            CAIRO_FONT_SLANT_NORMAL,
                            CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_font_size(s->context, font_size);
+}
+
+static uint32_t xkb_to_tsm_mods(struct xkb_state *state)
+{
+    static const struct {
+        const char *xkb;
+        uint32_t tsm;
+    } map[] = {
+        { XKB_MOD_NAME_SHIFT, TSM_SHIFT_MASK   },
+        { XKB_MOD_NAME_CAPS,  TSM_LOCK_MASK    },
+        { XKB_MOD_NAME_CTRL,  TSM_CONTROL_MASK },
+        { XKB_MOD_NAME_ALT,   TSM_ALT_MASK     },
+        { XKB_MOD_NAME_LOGO,  TSM_LOGO_MASK    },
+    };
+    uint32_t i, mods = 0;
+
+    for (i = 0; i < ARRAY_SIZE(map); i++) {
+        if (!xkb_state_mod_name_is_active(state, map[i].xkb,
+                                          XKB_STATE_MODS_EFFECTIVE))
+            continue;
+        mods |= map[i].tsm;
+    }
+    return mods;
+}
+
+static void handle_keydown(struct xkb_state *state,
+                           xkb_keycode_t key)
+{
+    xkb_keysym_t sym = xkb_state_key_get_one_sym(state, key);
+    uint32_t utf32 = xkb_state_key_get_utf32(state, key);
+    uint32_t mods = xkb_to_tsm_mods(state);
+
+    tsm_vte_handle_keyboard(vte, sym, 0, mods, utf32);
+    dirty++;
 }
 
 static void child_exec_shell(struct winsize *win)
@@ -543,7 +503,6 @@ int main(int argc, char *argv[])
             struct libinput_event_keyboard *kevt;
             xkb_keycode_t key;
             bool down;
-            char buf[32];
 
             rc = libinput_dispatch(kbd);
             if (rc < 0)
@@ -556,16 +515,7 @@ int main(int argc, char *argv[])
                     down = libinput_event_keyboard_get_key_state(kevt);
                     xkb_state_update_key(state, key, down);
                     if (down) {
-                        if (ansiseq[key - 8]) {
-                            write(pty, ansiseq[key - 8],
-                                  strlen(ansiseq[key - 8]));
-                        } else {
-                            rc = xkb_state_key_get_utf8(state, key,
-                                                        buf, sizeof(buf));
-                            if (rc > 0)
-                                write(pty, buf, rc);
-                        }
-                        dirty++;
+                        handle_keydown(state, key);
                     }
                     break;
                 default:
