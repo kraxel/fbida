@@ -227,8 +227,12 @@ void logind_init(void)
     if (r < 0) {
         fprintf(stderr, "TakeControl failed: %s\n", error.message);
         sd_bus_error_free(&error);
+        sd_bus_unref(dbus);
+        dbus = NULL;
         return;
     }
+
+    fprintf(stderr, "Opening input devices via logind.\n");
 }
 
 bool use_logind(void)
@@ -277,6 +281,7 @@ int logind_open(const char *path)
     fd = dup(handle);
     sd_bus_message_unref(m);
 
+    fprintf(stderr, "open %s: got fd %d via logind.\n", path, fd);
     return fd;
 }
 
