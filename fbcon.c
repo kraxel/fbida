@@ -22,6 +22,7 @@
 
 #include <linux/input.h>
 
+#include <glib.h>
 #include <cairo.h>
 #include <libudev.h>
 #include <libinput.h>
@@ -36,8 +37,11 @@
 /* ---------------------------------------------------------------------- */
 
 static char *seat_name = "seat0";
+
+/* config */
 static char *font_name = "monospace";
 static int font_size = 16;
+static bool verbose;
 
 static gfxstate *gfx;
 static cairo_font_extents_t extents;
@@ -68,6 +72,55 @@ static struct tsm_vte    *vte;
 static bool tsm_sb;
 
 int debug = 0;
+
+/* ---------------------------------------------------------------------- */
+
+#define FBCON_CFG_FILE       ".config/fbcon.conf"
+#define FBCON_CFG_GROUP      "fbcon"
+#define FBCON_CFG_FONT_FACE  "font-face"
+#define FBCON_CFG_FONT_SIZE  "font-size"
+#define FBCON_CFG_VERBOSE    "verbose"
+
+static void fbcon_read_config(void)
+{
+    char *filename;
+    GKeyFile *cfg;
+    char *string;
+    int integer;
+
+    cfg = g_key_file_new();
+    filename = g_strdup_printf("%s/%s", getenv("HOME"), FBCON_CFG_FILE);
+    g_key_file_load_from_file(cfg, filename, G_KEY_FILE_NONE, NULL);
+
+    string = g_key_file_get_string(cfg, FBCON_CFG_GROUP, FBCON_CFG_FONT_FACE, NULL);
+    if (string)
+        font_name = string;
+
+    integer = g_key_file_get_integer(cfg, FBCON_CFG_GROUP, FBCON_CFG_FONT_SIZE, NULL);
+    if (integer)
+        font_size =integer;
+
+    verbose = g_key_file_get_boolean(cfg, FBCON_CFG_GROUP, FBCON_CFG_VERBOSE, NULL);
+
+    g_free(filename);
+}
+
+static void fbcon_write_config(void)
+{
+    char *filename;
+    GKeyFile *cfg;
+
+    cfg = g_key_file_new();
+    filename = g_strdup_printf("%s/%s", getenv("HOME"), FBCON_CFG_FILE);
+    g_key_file_load_from_file(cfg, filename, G_KEY_FILE_KEEP_COMMENTS, NULL);
+
+    g_key_file_set_string(cfg, FBCON_CFG_GROUP, FBCON_CFG_FONT_FACE, font_name);
+    g_key_file_set_integer(cfg, FBCON_CFG_GROUP, FBCON_CFG_FONT_SIZE, font_size);
+    g_key_file_set_boolean(cfg, FBCON_CFG_GROUP, FBCON_CFG_VERBOSE, verbose);
+
+    g_key_file_save_to_file(cfg, filename, NULL);
+    g_free(filename);
+}
 
 /* ---------------------------------------------------------------------- */
 
@@ -369,11 +422,13 @@ static void fbcon_handle_keydown(struct xkb_state *state,
     if (ctrlalt && sym == XKB_KEY_plus) {
         font_size += 2;
         fbcon_resize();
+        fbcon_write_config();
         return;
     }
     if (ctrlalt && sym == XKB_KEY_minus && font_size > 8) {
         font_size -= 2;
         fbcon_resize();
+        fbcon_write_config();
         return;
     }
 
@@ -424,19 +479,19 @@ static void fbcon_child_exec_shell(struct winsize *win)
         return;
     }
 
-#if 1
-    fprintf(stderr, "#\n");
-    fprintf(stderr, "# This is fbcon @%s\n", seat_name);
-    fprintf(stderr, "#   device: %s\n", gfx->devpath);
-    fprintf(stderr, "#   format: %c%c%c%c\n",
-            (gfx->fmt->fourcc >>  0) & 0xff,
-            (gfx->fmt->fourcc >>  8) & 0xff,
-            (gfx->fmt->fourcc >> 16) & 0xff,
-            (gfx->fmt->fourcc >> 24) & 0xff);
-    fprintf(stderr, "#   font:   %s-%d\n", font_name, font_size);
-    fprintf(stderr, "#   size:   %dx%d\n", win->ws_col, win->ws_row);
-    fprintf(stderr, "#\n");
-#endif
+    if (verbose) {
+        fprintf(stderr, "#\n");
+        fprintf(stderr, "# This is fbcon @%s\n", seat_name);
+        fprintf(stderr, "#   device: %s\n", gfx->devpath);
+        fprintf(stderr, "#   format: %c%c%c%c\n",
+                (gfx->fmt->fourcc >>  0) & 0xff,
+                (gfx->fmt->fourcc >>  8) & 0xff,
+                (gfx->fmt->fourcc >> 16) & 0xff,
+                (gfx->fmt->fourcc >> 24) & 0xff);
+        fprintf(stderr, "#   font:   %s-%d\n", font_name, font_size);
+        fprintf(stderr, "#   size:   %dx%d\n", win->ws_col, win->ws_row);
+        fprintf(stderr, "#\n");
+    }
 
     /* prepare environment, run shell */
     snprintf(lines, sizeof(lines), "%d", win->ws_row);
@@ -462,6 +517,7 @@ int main(int argc, char *argv[])
     pid_t child;
 
     setlocale(LC_ALL,"");
+    fbcon_read_config();
 
     /* look for gfx devices */
     udev = udev_new();

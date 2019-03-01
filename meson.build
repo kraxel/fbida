@@ -27,6 +27,7 @@ webp_dep     = dependency('libwebp', required : false)
 udev_dep     = dependency('libudev')
 input_dep    = dependency('libinput')
 xkb_dep      = dependency('xkbcommon')
+glib_dep     = dependency('glib-2.0')
 tsm_dep      = dependency('libtsm', required : false)
 
 # other library deps
@@ -129,7 +130,7 @@ executable('fbpdf',
 
 # build fbcon
 fbcon_srcs   = [ 'fbcon.c', 'drmtools.c', 'fbtools.c', 'gfx.c', 'vt.c', 'kbd.c' ]
-fbcon_deps   = [ drm_dep, cairo_dep, util_dep, udev_dep, input_dep, xkb_dep, tsm_dep ]
+fbcon_deps   = [ drm_dep, cairo_dep, util_dep, udev_dep, input_dep, xkb_dep, glib_dep, tsm_dep ]
 
 if tsm_dep.found()
     executable('fbcon',
