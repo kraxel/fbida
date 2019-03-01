@@ -168,9 +168,9 @@ struct color {
 static const struct color black = { 0, 0, 0 };
 static const struct color white = { 1, 1, 1 };
 
-void tsm_log_cb(void *data, const char *file, int line,
-                const char *func, const char *subs, unsigned int sev,
-                const char *format, va_list args)
+void fbcon_tsm_log_cb(void *data, const char *file, int line,
+                      const char *func, const char *subs, unsigned int sev,
+                      const char *format, va_list args)
 {
     if (sev == 7 /* debug */ && !debug)
         return;
@@ -182,7 +182,7 @@ void tsm_log_cb(void *data, const char *file, int line,
     fprintf(stderr, "\n");
 }
 
-void tsm_write_cb(struct tsm_vte *vte, const char *u8, size_t len, void *data)
+void fbcon_tsm_write_cb(struct tsm_vte *vte, const char *u8, size_t len, void *data)
 {
     if (debug) {
         for (int i = 0; i < len; i++) {
@@ -194,8 +194,8 @@ void tsm_write_cb(struct tsm_vte *vte, const char *u8, size_t len, void *data)
     dirty++;
 }
 
-struct color tsm_color(const struct tsm_screen_attr *attr,
-                       bool fg)
+struct color fbcon_tsm_color(const struct tsm_screen_attr *attr,
+                             bool fg)
 {
     struct color c;
 
@@ -214,11 +214,11 @@ struct color tsm_color(const struct tsm_screen_attr *attr,
     return c;
 }
 
-int tsm_draw_cb(struct tsm_screen *con, uint32_t id,
-                const uint32_t *ch, size_t len,
-                unsigned int width, unsigned int posx, unsigned int posy,
-                const struct tsm_screen_attr *attr,
-                tsm_age_t age, void *data)
+int fbcon_tsm_draw_cb(struct tsm_screen *con, uint32_t id,
+                      const uint32_t *ch, size_t len,
+                      unsigned int width, unsigned int posx, unsigned int posy,
+                      const struct tsm_screen_attr *attr,
+                      tsm_age_t age, void *data)
 {
     struct cairo_state *s = data;
     struct color fg, bg;
@@ -229,8 +229,8 @@ int tsm_draw_cb(struct tsm_screen *con, uint32_t id,
     if (s->age && age && age < s->age)
         return 0;
 
-    fg = tsm_color(attr, true);
-    bg = tsm_color(attr, false);
+    fg = fbcon_tsm_color(attr, true);
+    bg = fbcon_tsm_color(attr, false);
     if (posx == tsm_screen_get_cursor_x(con) &&
         posy == tsm_screen_get_cursor_y(con) &&
         !(tsm_screen_get_flags(con) & TSM_SCREEN_HIDE_CURSOR)) {
@@ -261,7 +261,7 @@ int tsm_draw_cb(struct tsm_screen *con, uint32_t id,
     return 0;
 }
 
-static void cairo_render(void)
+static void fbcon_tsm_render(void)
 {
     static bool second;
     struct cairo_state *s;
@@ -281,21 +281,52 @@ static void cairo_render(void)
 
     s->tx = (gfx->hdisplay - sw) / 2;
     s->ty = (gfx->vdisplay - sh) / 2;
-    s->age = tsm_screen_draw(vts, tsm_draw_cb, s);
+    s->age = tsm_screen_draw(vts, fbcon_tsm_draw_cb, s);
     cairo_show_page(s->context);
 
     if (gfx->flush_display)
         gfx->flush_display(second);
 }
 
-static void cairo_state_init(struct cairo_state *s,
-                             const char *font_name, int font_size)
+static void fbcon_cairo_update_one(struct cairo_state *s,
+                                   const char *font_name, int font_size)
 {
-    s->context = cairo_create(s->surface);
+    if (!s->surface)
+        return;
+    if (!s->context)
+        s->context = cairo_create(s->surface);
     cairo_select_font_face(s->context, font_name,
                            CAIRO_FONT_SLANT_NORMAL,
                            CAIRO_FONT_WEIGHT_NORMAL);
     cairo_set_font_size(s->context, font_size);
+}
+
+static void fbcon_cairo_update(const char *font_name, int font_size)
+{
+    fbcon_cairo_update_one(&state1, font_name, font_size);
+    fbcon_cairo_update_one(&state2, font_name, font_size);
+    cairo_font_extents(state1.context, &extents);
+}
+
+static void fbcon_winsize(struct winsize *win)
+{
+    win->ws_col = gfx->hdisplay / extents.max_x_advance;
+    win->ws_row = gfx->vdisplay / extents.height;
+    win->ws_xpixel = extents.max_x_advance;
+    win->ws_ypixel = extents.height;
+}
+
+static void fbcon_resize()
+{
+    struct winsize win;
+
+    fbcon_cairo_update(font_name, font_size);
+    fbcon_winsize(&win);
+    tsm_screen_resize(vts, win.ws_col, win.ws_row);
+    ioctl(pty, TIOCSWINSZ, &win);
+    state1.clear++;
+    state2.clear++;
+    dirty++;
 }
 
 static uint32_t xkb_to_tsm_mods(struct xkb_state *state)
@@ -321,12 +352,24 @@ static uint32_t xkb_to_tsm_mods(struct xkb_state *state)
     return mods;
 }
 
-static void handle_keydown(struct xkb_state *state,
-                           xkb_keycode_t key)
+static void fbcon_handle_keydown(struct xkb_state *state,
+                                 xkb_keycode_t key)
 {
     xkb_keysym_t sym = xkb_state_key_get_one_sym(state, key);
     uint32_t utf32 = xkb_state_key_get_utf32(state, key);
     uint32_t mods = xkb_to_tsm_mods(state);
+    bool ctrlalt = (mods == (TSM_CONTROL_MASK | TSM_ALT_MASK));
+
+    if (ctrlalt && sym == XKB_KEY_plus) {
+        font_size += 2;
+        fbcon_resize();
+        return;
+    }
+    if (ctrlalt && sym == XKB_KEY_minus && font_size > 8) {
+        font_size -= 2;
+        fbcon_resize();
+        return;
+    }
 
     if (!utf32)
         utf32 = TSM_VTE_INVALID;
@@ -334,7 +377,7 @@ static void handle_keydown(struct xkb_state *state,
     dirty++;
 }
 
-static void child_exec_shell(struct winsize *win)
+static void fbcon_child_exec_shell(struct winsize *win)
 {
     char lines[10], columns[10];
 
@@ -349,23 +392,26 @@ static void child_exec_shell(struct winsize *win)
     }
 
 #if 1
-    fprintf(stderr, "# \n");
-    fprintf(stderr, "# This is fbcon @%s, device %s, format %c%c%c%c, font %s-%d.\n",
-            seat_name, gfx->devpath,
+    fprintf(stderr, "#\n");
+    fprintf(stderr, "# This is fbcon @%s\n", seat_name);
+    fprintf(stderr, "#   device: %s\n", gfx->devpath);
+    fprintf(stderr, "#   format: %c%c%c%c\n",
             (gfx->fmt->fourcc >>  0) & 0xff,
             (gfx->fmt->fourcc >>  8) & 0xff,
             (gfx->fmt->fourcc >> 16) & 0xff,
-            (gfx->fmt->fourcc >> 24) & 0xff,
-            font_name, font_size);
-    fprintf(stderr, "# \n");
+            (gfx->fmt->fourcc >> 24) & 0xff);
+    fprintf(stderr, "#   font:   %s-%d\n", font_name, font_size);
+    fprintf(stderr, "#\n");
 #endif
 
     /* prepare environment, run shell */
     snprintf(lines, sizeof(lines), "%d", win->ws_row);
     snprintf(columns, sizeof(columns), "%d", win->ws_col);
     setenv("TERM", "xterm-256color", true);
+#if 0
     setenv("LINES", lines, true);
     setenv("COLUMNS", columns, true);
+#endif
 
     execl("/bin/sh", "-sh", NULL);
     fprintf(stderr, "failed to exec /bin/sh: %s\n", strerror(errno));
@@ -435,16 +481,14 @@ int main(int argc, char *argv[])
                                                          gfx->hdisplay,
                                                          gfx->vdisplay,
                                                          gfx->stride);
-    cairo_state_init(&state1, font_name, font_size);
-    cairo_font_extents(state1.context, &extents);
     if (gfx->mem2) {
         state2.surface = cairo_image_surface_create_for_data(gfx->mem2,
                                                              gfx->fmt->cairo,
                                                              gfx->hdisplay,
                                                              gfx->vdisplay,
                                                              gfx->stride);
-        cairo_state_init(&state2, font_name, font_size);
     }
+    fbcon_cairo_update(font_name, font_size);
 
     /* init libinput */
     kbd = libinput_udev_create_context(&libinput_interface, NULL, udev);
@@ -466,19 +510,16 @@ int main(int argc, char *argv[])
     state = xkb_state_new(map);
 
     /* init terminal emulation */
-    win.ws_col = gfx->hdisplay / extents.max_x_advance;
-    win.ws_row = gfx->vdisplay / extents.height;
-    win.ws_xpixel = extents.max_x_advance;
-    win.ws_ypixel = extents.height;
+    fbcon_winsize(&win);
 
-    tsm_screen_new(&vts, tsm_log_cb, NULL);
+    tsm_screen_new(&vts, fbcon_tsm_log_cb, NULL);
     tsm_screen_resize(vts, win.ws_col, win.ws_row);
-    tsm_vte_new(&vte, vts, tsm_write_cb, NULL, tsm_log_cb, NULL);
+    tsm_vte_new(&vte, vts, fbcon_tsm_write_cb, NULL, fbcon_tsm_log_cb, NULL);
 
     /* run shell */
     child = forkpty(&pty, NULL, NULL, &win);
     if (0 == child) {
-        child_exec_shell(&win);
+        fbcon_child_exec_shell(&win);
         /* only reached on errors ... */
         sleep(3);
         exit(1);
@@ -493,7 +534,7 @@ int main(int argc, char *argv[])
         int rc, max;
 
         if (dirty) {
-            cairo_render();
+            fbcon_tsm_render();
             dirty = 0;
         }
 
@@ -540,7 +581,7 @@ int main(int argc, char *argv[])
                     down = libinput_event_keyboard_get_key_state(kevt);
                     xkb_state_update_key(state, key, down);
                     if (down) {
-                        handle_keydown(state, key);
+                        fbcon_handle_keydown(state, key);
                     }
                     break;
                 default:
