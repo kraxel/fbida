@@ -246,7 +246,7 @@ int logind_open(const char *path)
     sd_bus_message *m = NULL;
     struct stat st;
     unsigned int maj, min;
-    bool unused;
+    bool inactive;
     int handle, fd, r;
 
     r = stat(path, &st);
@@ -273,15 +273,17 @@ int logind_open(const char *path)
         return -1;
     }
 
-    r = sd_bus_message_read(m, "hb", &handle, &unused);
+    r = sd_bus_message_read(m, "hb", &handle, &inactive);
     if (r < 0) {
-        fprintf(stderr, "Parse TakeDevice reply failed: %s\n", strerror(-r));
+        fprintf(stderr, "Parsing TakeDevice reply failed: %s\n", strerror(-r));
         fd = -1;
+    } else {
+        fd = dup(handle);
     }
-    fd = dup(handle);
     sd_bus_message_unref(m);
 
-    fprintf(stderr, "open %s: got fd %d via logind.\n", path, fd);
+    fprintf(stderr, "open %s: got fd %d via logind (handle %d, inactive %s).\n",
+            path, fd, handle, inactive ? "true" : "false");
     return fd;
 }
 
