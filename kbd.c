@@ -282,7 +282,37 @@ int logind_open(const char *path)
 
 void logind_close(int fd)
 {
-    /* FIXME */
+    sd_bus_error error = SD_BUS_ERROR_NULL;
+    sd_bus_message *m = NULL;
+    struct stat st;
+    unsigned int maj, min;
+    int r;
+
+    r = fstat(fd, &st);
+    if (r < 0) {
+        fprintf(stderr, "fstat failed: %s\n", strerror(errno));
+        return;
+    }
+    close(fd);
+
+    maj = major(st.st_rdev);
+    min = minor(st.st_rdev);
+    r = sd_bus_call_method(dbus,
+                           "org.freedesktop.login1",
+                           "/org/freedesktop/login1/session/self",
+                           "org.freedesktop.login1.Session",
+                           "ReleaseDevice",
+                           &error,
+                           &m,
+                           "uu",
+                           maj,
+                           min);
+    if (r < 0) {
+        fprintf(stderr, "ReleaseDevice failed: %s\n", error.message);
+        sd_bus_error_free(&error);
+        return;
+    }
+    sd_bus_message_unref(m);
 }
 
 #else
