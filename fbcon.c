@@ -326,6 +326,7 @@ static void fbcon_resize()
     fbcon_cairo_update(font_name, font_size);
     fbcon_winsize(&win);
     tsm_screen_resize(vts, win.ws_col, win.ws_row);
+    tsm_screen_clear_sb(vts);
     ioctl(pty, TIOCSWINSZ, &win);
     state1.clear++;
     state2.clear++;
