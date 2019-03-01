@@ -26,8 +26,8 @@
 #include <cairo.h>
 #include <libudev.h>
 #include <libinput.h>
-#include <xkbcommon/xkbcommon.h>
 #include <libtsm.h>
+#include <xkbcommon/xkbcommon.h>
 
 #include "fbtools.h"
 #include "drmtools.h"
@@ -36,10 +36,10 @@
 
 /* ---------------------------------------------------------------------- */
 
-static char *seat_name = "seat0";
+static const char *seat_name = "seat0";
 
 /* config */
-static char *font_name = "monospace";
+static const char *font_name = "monospace";
 static int font_size = 16;
 static bool verbose;
 
@@ -362,6 +362,9 @@ static void fbcon_cairo_update(const char *font_name, int font_size)
     fbcon_cairo_update_one(&state1, font_name, font_size);
     fbcon_cairo_update_one(&state2, font_name, font_size);
     cairo_font_extents(state1.context, &extents);
+
+    /* underline quirk */
+    extents.height++;
 }
 
 static void fbcon_winsize(struct winsize *win)
@@ -506,6 +509,8 @@ static void fbcon_child_exec_shell(struct winsize *win)
     fprintf(stderr, "failed to exec /bin/sh: %s\n", strerror(errno));
 }
 
+/* ---------------------------------------------------------------------- */
+
 int main(int argc, char *argv[])
 {
     struct udev_enumerate *uenum;
@@ -513,11 +518,19 @@ int main(int argc, char *argv[])
     struct winsize win;
     const char *drm_node = NULL;
     const char *fb_node = NULL;
+    const char *string;
     int input;
     pid_t child;
 
     setlocale(LC_ALL,"");
     fbcon_read_config();
+
+    string = getenv("XDG_SEAT");
+    if (string)
+        seat_name = string;
+
+    if (getenv("XDG_SESSION_ID"))
+        logind_init();
 
     /* look for gfx devices */
     udev = udev_new();

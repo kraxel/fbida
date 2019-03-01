@@ -19,3 +19,8 @@ int kbd_read(char *buf, uint32_t len,
 void kbd_suspend(void);
 void kbd_resume(void);
 void kbd_fini(void);
+
+void logind_init(void);
+bool use_logind(void);
+int logind_open(const char *path);
+void logind_close(int fd);

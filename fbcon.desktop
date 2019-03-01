@@ -3,4 +3,3 @@ Name=text console
 Exec=/usr/bin/fbcon
 TryExec=/usr/bin/fbcon
 Type=Application
-DesktopNames=fbcon

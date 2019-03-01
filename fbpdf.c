@@ -246,7 +246,7 @@ int main(int argc, char *argv[])
     bool use_libinput;
     bool quit, newpage, pageflip;
     char cwd[1024];
-    char uri[1024];
+    char uri[1048];
     char key[32];
     uint32_t keycode, keymod;
     int index = 0;

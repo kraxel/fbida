@@ -9,6 +9,13 @@
 #include <errno.h>
 #include <termios.h>
 
+#include <sys/stat.h>
+
+#include "config.h"
+#ifdef HAVE_SYSTEMD
+# include <systemd/sd-bus.h>
+#endif
+
 #include "kbd.h"
 
 /* ---------------------------------------------------------------------- */
@@ -192,12 +199,133 @@ static int file_wait(int fd, int timeout)
 
 /* ---------------------------------------------------------------------- */
 
+#ifdef HAVE_SYSTEMD
+
+static sd_bus *dbus = NULL;
+
+void logind_init(void)
+{
+    sd_bus_error error = SD_BUS_ERROR_NULL;
+    sd_bus_message *m = NULL;
+    int r;
+
+    r = sd_bus_open_system(&dbus);
+    if (r < 0) {
+        fprintf(stderr, "Failed to connect to system bus: %s\n", strerror(-r));
+        return;
+    }
+
+    r = sd_bus_call_method(dbus,
+                           "org.freedesktop.login1",
+                           "/org/freedesktop/login1/session/self",
+                           "org.freedesktop.login1.Session",
+                           "TakeControl",
+                           &error,
+                           &m,
+                           "b",
+                           false);
+    if (r < 0) {
+        fprintf(stderr, "TakeControl failed: %s\n", error.message);
+        sd_bus_error_free(&error);
+        return;
+    }
+}
+
+bool use_logind(void)
+{
+    return dbus != NULL;
+}
+
+int logind_open(const char *path)
+{
+    sd_bus_error error = SD_BUS_ERROR_NULL;
+    sd_bus_message *m = NULL;
+    struct stat st;
+    unsigned int maj, min;
+    bool unused;
+    int handle, fd, r;
+
+    r = stat(path, &st);
+    if (r < 0) {
+        fprintf(stderr, "stat %s failed: %s\n", path, strerror(errno));
+        return -1;
+    }
+
+    maj = major(st.st_rdev);
+    min = minor(st.st_rdev);
+    r = sd_bus_call_method(dbus,
+                           "org.freedesktop.login1",
+                           "/org/freedesktop/login1/session/self",
+                           "org.freedesktop.login1.Session",
+                           "TakeDevice",
+                           &error,
+                           &m,
+                           "uu",
+                           maj,
+                           min);
+    if (r < 0) {
+        fprintf(stderr, "TakeDevice failed: %s\n", error.message);
+        sd_bus_error_free(&error);
+        return -1;
+    }
+
+    r = sd_bus_message_read(m, "hb", &handle, &unused);
+    if (r < 0) {
+        fprintf(stderr, "Parse TakeDevice reply failed: %s\n", strerror(-r));
+        fd = -1;
+    }
+    fd = dup(handle);
+    sd_bus_message_unref(m);
+
+    return fd;
+}
+
+void logind_close(int fd)
+{
+    /* FIXME */
+}
+
+#else
+
+void logind_init(void)
+{
+    fprintf(stderr, "warning: compiled without logind support.\n");
+}
+
+bool use_logind(void)
+{
+    return false;
+}
+
+int logind_open(const char *path)
+{
+    errno = ENOSYS;
+    return -1;
+}
+
+void logind_close(int fd)
+{
+}
+
+#endif
+
+/* ---------------------------------------------------------------------- */
+
 int libinput_devcount;
 int libinput_deverror;
 
 static int open_restricted(const char *path, int flags, void *user_data)
 {
     int fd;
+
+    if (use_logind()) {
+        fd = logind_open(path);
+        if (fd < 0)
+            libinput_deverror++;
+        else
+            libinput_devcount++;
+        return fd;
+    }
 
     fd = open(path, flags | O_CLOEXEC);
     if (fd < 0) {
@@ -214,9 +342,15 @@ static int open_restricted(const char *path, int flags, void *user_data)
 
 static void close_restricted(int fd, void *user_data)
 {
-    libinput_devcount--;
+    if (use_logind()) {
+        logind_close(fd);
+        libinput_devcount--;
+        return;
+    }
+
     ioctl(fd, EVIOCGRAB, 0);
     close(fd);
+    libinput_devcount--;
 }
 
 const struct libinput_interface libinput_interface = {
