@@ -201,7 +201,7 @@ static int file_wait(int fd, int timeout)
 
 #ifdef HAVE_SYSTEMD
 
-static sd_bus *dbus = NULL;
+static sd_bus *logind_dbus = NULL;
 
 void logind_init(void)
 {
@@ -209,13 +209,13 @@ void logind_init(void)
     sd_bus_message *m = NULL;
     int r;
 
-    r = sd_bus_open_system(&dbus);
+    r = sd_bus_open_system(&logind_dbus);
     if (r < 0) {
         fprintf(stderr, "Failed to connect to system bus: %s\n", strerror(-r));
         return;
     }
 
-    r = sd_bus_call_method(dbus,
+    r = sd_bus_call_method(logind_dbus,
                            "org.freedesktop.login1",
                            "/org/freedesktop/login1/session/self",
                            "org.freedesktop.login1.Session",
@@ -227,8 +227,8 @@ void logind_init(void)
     if (r < 0) {
         fprintf(stderr, "TakeControl failed: %s\n", error.message);
         sd_bus_error_free(&error);
-        sd_bus_unref(dbus);
-        dbus = NULL;
+        sd_bus_unref(logind_dbus);
+        logind_dbus = NULL;
         return;
     }
 
@@ -237,7 +237,7 @@ void logind_init(void)
 
 bool use_logind(void)
 {
-    return dbus != NULL;
+    return logind_dbus != NULL;
 }
 
 int logind_open(const char *path)
@@ -257,7 +257,7 @@ int logind_open(const char *path)
 
     maj = major(st.st_rdev);
     min = minor(st.st_rdev);
-    r = sd_bus_call_method(dbus,
+    r = sd_bus_call_method(logind_dbus,
                            "org.freedesktop.login1",
                            "/org/freedesktop/login1/session/self",
                            "org.freedesktop.login1.Session",
@@ -273,9 +273,13 @@ int logind_open(const char *path)
         return -1;
     }
 
+    handle = -1;
     r = sd_bus_message_read(m, "hb", &handle, &inactive);
     if (r < 0) {
         fprintf(stderr, "Parsing TakeDevice reply failed: %s\n", strerror(-r));
+        fd = -1;
+    } else if (handle < 0) {
+        fprintf(stderr, "Huh? handle is %d\n", handle);
         fd = -1;
     } else {
         fd = dup(handle);
@@ -304,7 +308,7 @@ void logind_close(int fd)
 
     maj = major(st.st_rdev);
     min = minor(st.st_rdev);
-    r = sd_bus_call_method(dbus,
+    r = sd_bus_call_method(logind_dbus,
                            "org.freedesktop.login1",
                            "/org/freedesktop/login1/session/self",
                            "org.freedesktop.login1.Session",

@@ -518,18 +518,18 @@ int main(int argc, char *argv[])
     struct winsize win;
     const char *drm_node = NULL;
     const char *fb_node = NULL;
-    const char *string;
+    const char *xdg_seat, *xdg_session_id;
     int input;
     pid_t child;
 
     setlocale(LC_ALL,"");
     fbcon_read_config();
 
-    string = getenv("XDG_SEAT");
-    if (string)
-        seat_name = string;
-
-    if (getenv("XDG_SESSION_ID"))
+    xdg_seat = getenv("XDG_SEAT");
+    xdg_session_id = getenv("XDG_SESSION_ID");
+    if (xdg_seat)
+        seat_name = xdg_seat;
+    if (xdg_seat && xdg_session_id)
         logind_init();
 
     /* look for gfx devices */
