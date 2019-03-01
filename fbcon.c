@@ -65,6 +65,7 @@ static struct xkb_rule_names layout = {
 
 static struct tsm_screen *vts;
 static struct tsm_vte    *vte;
+static bool tsm_sb;
 
 int debug = 0;
 
@@ -233,7 +234,8 @@ int fbcon_tsm_draw_cb(struct tsm_screen *con, uint32_t id,
     bg = fbcon_tsm_color(attr, false);
     if (posx == tsm_screen_get_cursor_x(con) &&
         posy == tsm_screen_get_cursor_y(con) &&
-        !(tsm_screen_get_flags(con) & TSM_SCREEN_HIDE_CURSOR)) {
+        !(tsm_screen_get_flags(con) & TSM_SCREEN_HIDE_CURSOR) &&
+        !tsm_sb) {
         bg = white;
         fg = black;
     }
@@ -275,7 +277,8 @@ static void fbcon_tsm_render(void)
     if (s->clear) {
         s->clear = 0;
         cairo_set_source_rgb(s->context, 0, 0, 0);
-        cairo_paint(s->context);
+        cairo_rectangle(s->context, 0, 0, gfx->hdisplay, gfx->vdisplay);
+        cairo_fill(s->context);
         s->age = 0;
     }
 
@@ -359,7 +362,9 @@ static void fbcon_handle_keydown(struct xkb_state *state,
     uint32_t utf32 = xkb_state_key_get_utf32(state, key);
     uint32_t mods = xkb_to_tsm_mods(state);
     bool ctrlalt = (mods == (TSM_CONTROL_MASK | TSM_ALT_MASK));
+    bool shift = (mods == TSM_SHIFT_MASK);
 
+    /* change font size */
     if (ctrlalt && sym == XKB_KEY_plus) {
         font_size += 2;
         fbcon_resize();
@@ -371,6 +376,33 @@ static void fbcon_handle_keydown(struct xkb_state *state,
         return;
     }
 
+    /* scrollback */
+    if (shift && sym == XKB_KEY_Up) {
+        tsm_screen_sb_up(vts, 1);
+        tsm_sb = true; dirty++;
+        return;
+    }
+    if (shift && sym == XKB_KEY_Down) {
+        tsm_screen_sb_down(vts, 1);
+        tsm_sb = true; dirty++;
+        return;
+    }
+    if (shift && sym == XKB_KEY_Page_Up) {
+        tsm_screen_sb_page_up(vts, 1);
+        tsm_sb = true; dirty++;
+        return;
+    }
+    if (shift && sym == XKB_KEY_Page_Down) {
+        tsm_screen_sb_page_down(vts, 1);
+        tsm_sb = true; dirty++;
+        return;
+    }
+    if (tsm_sb) {
+        tsm_screen_sb_reset(vts);
+        tsm_sb = false; dirty++;
+    }
+
+    /* send key to terminal */
     if (!utf32)
         utf32 = TSM_VTE_INVALID;
     tsm_vte_handle_keyboard(vte, sym, 0, mods, utf32);
@@ -401,6 +433,7 @@ static void fbcon_child_exec_shell(struct winsize *win)
             (gfx->fmt->fourcc >> 16) & 0xff,
             (gfx->fmt->fourcc >> 24) & 0xff);
     fprintf(stderr, "#   font:   %s-%d\n", font_name, font_size);
+    fprintf(stderr, "#   size:   %dx%d\n", win->ws_col, win->ws_row);
     fprintf(stderr, "#\n");
 #endif
 
@@ -514,6 +547,7 @@ int main(int argc, char *argv[])
 
     tsm_screen_new(&vts, fbcon_tsm_log_cb, NULL);
     tsm_screen_resize(vts, win.ws_col, win.ws_row);
+    tsm_screen_set_max_sb(vts, 10000);
     tsm_vte_new(&vte, vts, fbcon_tsm_write_cb, NULL, fbcon_tsm_log_cb, NULL);
 
     /* run shell */
