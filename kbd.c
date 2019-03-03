@@ -282,7 +282,7 @@ int logind_open(const char *path)
     } else {
         fd = fcntl(handle, F_DUPFD_CLOEXEC, 0);
         fprintf(stderr, "open %s: got fd %d via logind.\n",
-                path, fd, handle, inactive);
+                path, fd);
     }
     sd_bus_message_unref(m);
 
