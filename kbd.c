@@ -277,15 +277,15 @@ int logind_open(const char *path)
     inactive = -1;
     r = sd_bus_message_read(m, "hb", &handle, &inactive);
     if (r < 0) {
-        fprintf(stderr, "Parsing TakeDevice reply failed: %s\n", strerror(-r));
         fd = -1;
+        fprintf(stderr, "Parsing TakeDevice reply failed: %s\n", strerror(-r));
     } else {
         fd = fcntl(handle, F_DUPFD_CLOEXEC, 0);
+        fprintf(stderr, "open %s: got fd %d via logind.\n",
+                path, fd, handle, inactive);
     }
     sd_bus_message_unref(m);
 
-    fprintf(stderr, "open %s: got fd %d via logind.\n",
-            path, fd, handle, inactive);
     return fd;
 }
 
