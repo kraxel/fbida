@@ -48,6 +48,8 @@ int logind_init(void)
 
 int logind_dbus_fd(void)
 {
+    if (!logind_dbus)
+        return -1;
     return sd_bus_get_fd(logind_dbus);
 }
 
@@ -55,6 +57,9 @@ void logind_dbus_input(void)
 {
     sd_bus_message *m = NULL;
     int ret;
+
+    if (!logind_dbus)
+        return;
 
     do {
         ret = sd_bus_process(logind_dbus, &m);
@@ -69,6 +74,9 @@ int logind_take_control(void)
     sd_bus_error error = SD_BUS_ERROR_NULL;
     sd_bus_message *m = NULL;
     int r;
+
+    if (!logind_dbus)
+        return -1;
 
     r = sd_bus_call_method(logind_dbus,
                            "org.freedesktop.login1",
@@ -93,6 +101,9 @@ int logind_release_control(void)
     sd_bus_error error = SD_BUS_ERROR_NULL;
     sd_bus_message *m = NULL;
     int r;
+
+    if (!logind_dbus)
+        return -1;
 
     r = sd_bus_call_method(logind_dbus,
                            "org.freedesktop.login1",
