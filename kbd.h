@@ -10,7 +10,7 @@
 
 extern int libinput_devcount;
 extern int libinput_deverror;
-extern const struct libinput_interface libinput_interface;
+extern const struct libinput_interface libinput_if_default;
 
 void kbd_init(int use_libinput, dev_t gfx);
 int kbd_wait(int timeout);
@@ -19,8 +19,3 @@ int kbd_read(char *buf, uint32_t len,
 void kbd_suspend(void);
 void kbd_resume(void);
 void kbd_fini(void);
-
-void logind_init(void);
-bool use_logind(void);
-int logind_open(const char *path);
-void logind_close(int fd);

@@ -93,7 +93,7 @@ fbi_srcs     = [ 'fbi.c', 'fb-gui.c', 'desktop.c',
                  trans_src, read_srcs ]
 fbi_deps     = [ drm_dep, pixman_dep, cairo_dep,
                  exif_dep, image_deps,
-                 math_dep, udev_dep, input_dep, systemd_dep ]
+                 math_dep, udev_dep, input_dep ]
 
 executable('fbi',
            sources             : fbi_srcs,
@@ -125,7 +125,7 @@ fbpdf_srcs   = [ 'fbpdf.c', 'parseconfig.c', 'fbiconfig.c',
                  'vt.c', 'kbd.c', 'fbtools.c', 'drmtools.c', 'gfx.c' ]
 fbpdf_deps   = [ drm_dep, gbm_dep, epoxy_dep,
                  pixman_dep, poppler_dep, cairo_dep,
-                 udev_dep, input_dep, systemd_dep ]
+                 udev_dep, input_dep ]
 
 executable('fbpdf',
            sources             : fbpdf_srcs,
@@ -133,7 +133,7 @@ executable('fbpdf',
            install             : true)
 
 # build fbcon
-fbcon_srcs   = [ 'fbcon.c', 'drmtools.c', 'fbtools.c', 'gfx.c', 'vt.c', 'kbd.c' ]
+fbcon_srcs   = [ 'fbcon.c', 'drmtools.c', 'fbtools.c', 'gfx.c', 'vt.c', 'kbd.c', 'logind.c' ]
 fbcon_deps   = [ drm_dep, cairo_dep, util_dep, udev_dep, input_dep, xkb_dep, glib_dep,
                  tsm_dep, systemd_dep ]
 

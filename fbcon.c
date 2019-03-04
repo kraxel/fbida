@@ -33,6 +33,7 @@
 #include "drmtools.h"
 #include "vt.h"
 #include "kbd.h"
+#include "logind.h"
 
 /* ---------------------------------------------------------------------- */
 
@@ -519,6 +520,7 @@ int main(int argc, char *argv[])
     const char *drm_node = NULL;
     const char *fb_node = NULL;
     const char *xdg_seat, *xdg_session_id;
+    bool logind = false;
     int input;
     pid_t child;
 
@@ -530,7 +532,8 @@ int main(int argc, char *argv[])
     if (xdg_seat)
         seat_name = xdg_seat;
     if (xdg_seat && xdg_session_id)
-        logind_init();
+        if (logind_init() == 0)
+            logind = true;
 
     /* look for gfx devices */
     udev = udev_new();
@@ -594,7 +597,10 @@ int main(int argc, char *argv[])
     fbcon_cairo_update(font_name, font_size);
 
     /* init libinput */
-    kbd = libinput_udev_create_context(&libinput_interface, NULL, udev);
+    kbd = libinput_udev_create_context(logind
+                                       ? &libinput_if_logind
+                                       : &libinput_if_default,
+                                       NULL, udev);
     libinput_udev_assign_seat(kbd, seat_name);
     input = libinput_get_fd(kbd);
 
