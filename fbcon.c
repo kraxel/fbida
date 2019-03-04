@@ -521,7 +521,7 @@ int main(int argc, char *argv[])
     const char *fb_node = NULL;
     const char *xdg_seat, *xdg_session_id;
     bool logind = false;
-    int input;
+    int input, dbus;
     pid_t child;
 
     setlocale(LC_ALL,"");
@@ -531,9 +531,12 @@ int main(int argc, char *argv[])
     xdg_session_id = getenv("XDG_SESSION_ID");
     if (xdg_seat)
         seat_name = xdg_seat;
-    if (xdg_seat && xdg_session_id)
-        if (logind_init() == 0)
+    if (xdg_seat && xdg_session_id) {
+        if (logind_init() == 0) {
+            dbus = logind_dbus_fd();
             logind = true;
+        }
+    }
 
     /* look for gfx devices */
     udev = udev_new();
@@ -656,6 +659,11 @@ int main(int argc, char *argv[])
         FD_SET(input, &set);
         if (max < input)
             max = input;
+        if (logind) {
+            FD_SET(dbus, &set);
+            if (max < dbus)
+                max = dbus;
+        }
 
         rc = select(max+ 1, &set, NULL, NULL, NULL);
         if (rc < 0)
@@ -700,6 +708,10 @@ int main(int argc, char *argv[])
                 }
                 libinput_event_destroy(evt);
             }
+        }
+
+        if (logind && FD_ISSET(dbus, &set)) {
+            logind_dbus_input();
         }
     }
 

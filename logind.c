@@ -46,6 +46,24 @@ int logind_init(void)
     return 0;
 }
 
+int logind_dbus_fd(void)
+{
+    return sd_bus_get_fd(logind_dbus);
+}
+
+void logind_dbus_input(void)
+{
+    sd_bus_message *m = NULL;
+    int ret;
+
+    do {
+        ret = sd_bus_process(logind_dbus, &m);
+        fprintf(stderr, "%s: path %s\n", __func__,
+                sd_bus_message_get_path(m));
+        sd_bus_message_unref(m);
+    } while (ret > 0);
+}
+
 int logind_take_control(void)
 {
     sd_bus_error error = SD_BUS_ERROR_NULL;
@@ -63,6 +81,29 @@ int logind_take_control(void)
                            false);
     if (r < 0) {
         fprintf(stderr, "TakeControl failed: %s\n", error.message);
+        sd_bus_error_free(&error);
+    }
+    sd_bus_message_unref(m);
+
+    return r;
+}
+
+int logind_release_control(void)
+{
+    sd_bus_error error = SD_BUS_ERROR_NULL;
+    sd_bus_message *m = NULL;
+    int r;
+
+    r = sd_bus_call_method(logind_dbus,
+                           "org.freedesktop.login1",
+                           "/org/freedesktop/login1/session/self",
+                           "org.freedesktop.login1.Session",
+                           "ReleaseControl",
+                           &error,
+                           &m,
+                           "");
+    if (r < 0) {
+        fprintf(stderr, "ReleaseControl failed: %s\n", error.message);
         sd_bus_error_free(&error);
     }
     sd_bus_message_unref(m);
@@ -169,6 +210,15 @@ int logind_init(void)
     return -1;
 }
 
+int logind_dbus_fd(void)
+{
+    return -1;
+}
+
+void logind_dbus_input(void)
+{
+}
+
 int logind_take_control(void)
 {
     return -1;
@@ -178,7 +228,6 @@ int logind_open(const char *path, int flags, void *user_data)
 {
     fprintf(stderr, "error: compiled without logind support.\n");
     libinput_deverror++;
-    errno = ENOSYS;
     return -1;
 }
 
