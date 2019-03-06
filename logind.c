@@ -69,6 +69,33 @@ void logind_dbus_input(void)
     } while (ret > 0);
 }
 
+int logind_switch_vt(int vt)
+{
+    sd_bus_error error = SD_BUS_ERROR_NULL;
+    sd_bus_message *m = NULL;
+    int r;
+
+    if (!logind_dbus)
+        return -1;
+
+    r = sd_bus_call_method(logind_dbus,
+                           "org.freedesktop.login1",
+                           "/org/freedesktop/login1/seat/self",
+                           "org.freedesktop.login1.Seat",
+                           "SwitchTo",
+                           &error,
+                           &m,
+                           "u",
+                           vt);
+    if (r < 0) {
+        fprintf(stderr, "SwitchTo failed: %s\n", error.message);
+        sd_bus_error_free(&error);
+    }
+    sd_bus_message_unref(m);
+
+    return r;
+}
+
 int logind_take_control(void)
 {
     sd_bus_error error = SD_BUS_ERROR_NULL;
@@ -230,7 +257,17 @@ void logind_dbus_input(void)
 {
 }
 
+int logind_switch_vt(int vt)
+{
+    return -1;
+}
+
 int logind_take_control(void)
+{
+    return -1;
+}
+
+int logind_release_control(void)
 {
     return -1;
 }

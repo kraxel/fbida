@@ -56,6 +56,7 @@ static struct cairo_state {
 static int dirty, pty;
 static struct udev *udev;
 static struct libinput *kbd;
+static bool logind = false;
 
 static struct xkb_context *xkb;
 static struct xkb_keymap *map;
@@ -171,11 +172,13 @@ static void cleanup_and_exit(int code)
 static void console_switch_suspend(void)
 {
     libinput_suspend(kbd);
+    logind_release_control();
 }
 
 static void console_switch_resume(void)
 {
     gfx->restore_display();
+    logind_take_control();
     libinput_resume(kbd);
     state1.clear++;
     state2.clear++;
@@ -436,6 +439,19 @@ static void fbcon_handle_keydown(struct xkb_state *state,
         return;
     }
 
+#if 0
+    /* WIP & broken */
+    if (logind && ctrlalt) {
+        if (sym >= XKB_KEY_F1 && sym <= XKB_KEY_F12) {
+            int vt = sym - XKB_KEY_F1 + 1;
+            fprintf(stderr, "console switch to vt %d\n", vt);
+            console_switch_suspend();
+            logind_switch_vt(vt);
+            return;
+        }
+    }
+#endif
+
     /* scrollback */
     if (shift && sym == XKB_KEY_Up) {
         tsm_screen_sb_up(vts, 1);
@@ -520,8 +536,7 @@ int main(int argc, char *argv[])
     const char *drm_node = NULL;
     const char *fb_node = NULL;
     const char *xdg_seat, *xdg_session_id;
-    bool logind = false;
-    int input, dbus;
+    int input, dbus = 0;
     pid_t child;
 
     setlocale(LC_ALL,"");
