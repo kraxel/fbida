@@ -16,6 +16,7 @@
 #include <wchar.h>
 #include <setjmp.h>
 #include <pty.h>
+#include <pwd.h>
 
 #include <sys/time.h>
 #include <sys/ioctl.h>
@@ -495,6 +496,9 @@ static void fbcon_child_exec(struct winsize *win,
                              enum fbcon_mode mode,
                              int argc, char **argv)
 {
+    struct passwd *pwent;
+    char *shell;
+
     /* reset terminal */
     fprintf(stderr, "\x1b[0m");
 
@@ -525,12 +529,18 @@ static void fbcon_child_exec(struct winsize *win,
     switch (mode) {
     case FBCON_MODE_EXEC:
         execvp(argv[0], argv);
-        fprintf(stderr, "failed to exec %s: %s\n", argv[0], strerror(errno));
+        fprintf(stderr, "failed to exec %s: %s\n",
+                argv[0], strerror(errno));
         break;
     case FBCON_MODE_SHELL:
     default:
-        execl("/bin/sh", "-sh", NULL);
-        fprintf(stderr, "failed to exec /bin/sh: %s\n", strerror(errno));
+        pwent = getpwent();
+        shell = strdup(pwent->pw_shell);
+        shell = strrchr(shell, '/');
+        *shell = '-';
+        execl(pwent->pw_shell, shell, NULL);
+        fprintf(stderr, "failed to exec %s: %s\n",
+                pwent->pw_shell, strerror(errno));
         break;
     }
 }
