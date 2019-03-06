@@ -220,6 +220,7 @@ static int flist_add_list(const char *listfile)
 static int flist_del(struct flist *f)
 {
     list_del(&f->list);
+    list_del(&f->lru);
     free(f->name);
     free(f);
     return 0;
@@ -252,15 +253,18 @@ static int flist_check_reload_list(const char *listfile)
     if (st.st_mtime == liststat.st_mtime)
         return 0;
 
+    list_for_each(item, &flist) {
+	f = list_entry(item, struct flist, list);
+        f->list_check = false;
+    }
+
     ret = flist_add_list(listfile);
     if (ret != 0)
         return ret;
 
     list_for_each_safe(item, safe, &flist) {
 	f = list_entry(item, struct flist, list);
-        if (f->list_check) {
-            f->list_check = false;
-        } else {
+        if (!f->list_check) {
             flist_img_free(f);
             flist_del(f);
         }
@@ -1010,6 +1014,8 @@ static char *make_info(struct ida_image *img, float scale)
 
 static struct ida_image *flist_img_get(struct flist *f)
 {
+    if (!f)
+        return NULL;
     if (1 != f->scale)
 	return f->simg;
     else
@@ -1109,6 +1115,11 @@ static void flist_img_load(struct flist *f, int prefetch)
 	snprintf(linebuffer,sizeof(linebuffer),
 		 "%s: loading FAILED",f->name);
 	status_error(linebuffer);
+        if (f == fcurrent)
+            fcurrent = NULL;
+        flist_img_free(f);
+        flist_del(f);
+        flist_renumber();
 	return;
     }
 
@@ -1215,6 +1226,7 @@ int main(int argc, char *argv[])
     char             *info, *desc, *device, *output, *mode;
     char             linebuffer[128];
     struct flist     *fprev = NULL;
+    struct flist     *fnext = NULL;
 
 #if 0
     /* debug aid, to attach gdb ... */
@@ -1340,7 +1352,26 @@ int main(int argc, char *argv[])
     desc = NULL;
     info = NULL;
     for (;;) {
-	flist_img_load(fcurrent, 0);
+        for (;;) {
+            fnext = flist_next(fcurrent, once, 1);
+            if (fnext == fcurrent)
+                fnext = NULL;
+            flist_img_load(fcurrent, 0);
+            if (fcurrent) {
+                /* load ok */
+                break;
+            }
+            if (fnext) {
+                /* load failed, try next in list */
+                fcurrent = fnext;
+                continue;
+            }
+            /* list is empty */
+            flist_check_reload_list(filelist);
+            if (list_empty(&flist))
+                cleanup_and_exit(0);
+            fcurrent = flist_first();
+        }
 	flist_img_release_memory();
 	img = flist_img_get(fcurrent);
 	if (img) {
