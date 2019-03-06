@@ -19,6 +19,7 @@
 
 #include <sys/time.h>
 #include <sys/ioctl.h>
+#include <sys/wait.h>
 
 #include <linux/input.h>
 
@@ -74,6 +75,11 @@ static struct tsm_vte    *vte;
 static bool tsm_sb;
 
 int debug = 0;
+
+enum fbcon_mode {
+    FBCON_MODE_SHELL,
+    FBCON_MODE_EXEC,
+};
 
 /* ---------------------------------------------------------------------- */
 
@@ -485,10 +491,10 @@ static void fbcon_handle_keydown(struct xkb_state *state,
     dirty++;
 }
 
-static void fbcon_child_exec_shell(struct winsize *win)
+static void fbcon_child_exec(struct winsize *win,
+                             enum fbcon_mode mode,
+                             int argc, char **argv)
 {
-    char lines[10], columns[10];
-
     /* reset terminal */
     fprintf(stderr, "\x1b[0m");
 
@@ -514,19 +520,35 @@ static void fbcon_child_exec_shell(struct winsize *win)
     }
 
     /* prepare environment, run shell */
-    snprintf(lines, sizeof(lines), "%d", win->ws_row);
-    snprintf(columns, sizeof(columns), "%d", win->ws_col);
     setenv("TERM", "xterm-256color", true);
-#if 0
-    setenv("LINES", lines, true);
-    setenv("COLUMNS", columns, true);
-#endif
 
-    execl("/bin/sh", "-sh", NULL);
-    fprintf(stderr, "failed to exec /bin/sh: %s\n", strerror(errno));
+    switch (mode) {
+    case FBCON_MODE_EXEC:
+        execvp(argv[0], argv);
+        fprintf(stderr, "failed to exec %s: %s\n", argv[0], strerror(errno));
+        break;
+    case FBCON_MODE_SHELL:
+    default:
+        execl("/bin/sh", "-sh", NULL);
+        fprintf(stderr, "failed to exec /bin/sh: %s\n", strerror(errno));
+        break;
+    }
 }
 
 /* ---------------------------------------------------------------------- */
+
+static void usage(FILE *fp)
+{
+    fprintf(fp,
+            "\n"
+            "usage: fbcon [ options ]\n"
+            "\n"
+            "options:\n"
+            "  -h         print this text\n"
+            "  -s         run shell (default)\n"
+            "  -e <cmd>   run command\n"
+            "\n");
+}
 
 int main(int argc, char *argv[])
 {
@@ -536,11 +558,32 @@ int main(int argc, char *argv[])
     const char *drm_node = NULL;
     const char *fb_node = NULL;
     const char *xdg_seat, *xdg_session_id;
-    int input, dbus = 0;
+    enum fbcon_mode mode = FBCON_MODE_SHELL;
+    int c, status, input, dbus = 0;
     pid_t child;
 
     setlocale(LC_ALL,"");
     fbcon_read_config();
+
+    for (;;) {
+        c = getopt(argc, argv, "hse");
+        if (c == -1)
+            break;
+        switch (c) {
+        case 's':
+            mode = FBCON_MODE_SHELL;
+            break;
+        case 'e':
+            mode = FBCON_MODE_EXEC;
+            break;
+        case 'h':
+            usage(stdout);
+            exit(0);
+        default:
+            usage(stderr);
+            exit(1);
+        }
+    }
 
     xdg_seat = getenv("XDG_SEAT");
     xdg_session_id = getenv("XDG_SESSION_ID");
@@ -647,7 +690,7 @@ int main(int argc, char *argv[])
     /* run shell */
     child = forkpty(&pty, NULL, NULL, &win);
     if (0 == child) {
-        fbcon_child_exec_shell(&win);
+        fbcon_child_exec(&win, mode, argc - optind, argv + optind);
         /* only reached on errors ... */
         sleep(3);
         exit(1);
@@ -730,6 +773,12 @@ int main(int argc, char *argv[])
         }
     }
 
+    if (child == waitpid(child, &status, WNOHANG)) {
+        if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+            /* keep error message on the screen for a moment */
+            sleep(3);
+        }
+    }
     cleanup_and_exit(0);
     return 0;
 }
