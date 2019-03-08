@@ -1235,7 +1235,7 @@ int main(int argc, char *argv[])
 #endif
 
     setlocale(LC_ALL,"");
-    fbi_read_config(".fbirc");
+    fbi_read_config(".config/fbi.conf", ".fbirc");
     cfg_parse_cmdline(&argc,argv,fbi_cmd);
     cfg_parse_cmdline(&argc,argv,fbi_cfg);
 
