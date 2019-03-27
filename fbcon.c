@@ -179,21 +179,25 @@ static void cleanup_and_exit(int code)
 
 static void console_switch_suspend(void)
 {
+    fprintf(stderr, "%s: start ...\n", __func__);
+    active = false;
     gfx->suspend_display();
     libinput_suspend(kbd);
     logind_release_control();
-    active = false;
+    fprintf(stderr, "%s: ... done\n", __func__);
 }
 
 static void console_switch_resume(void)
 {
-    active = true;
+    fprintf(stderr, "%s: start ...\n", __func__);
     logind_take_control();
     libinput_resume(kbd);
     gfx->resume_display();
     state1.clear++;
     state2.clear++;
     dirty++;
+    active = true;
+    fprintf(stderr, "%s: ... done\n", __func__);
 }
 
 /* ---------------------------------------------------------------------- */

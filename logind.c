@@ -25,6 +25,7 @@
 
 static sd_bus *logind_dbus = NULL;
 static sd_bus_slot *logind_signals;
+static const char *logind_session_path;
 
 static void (*session_suspend)(void);
 static void (*session_resume)(void);
@@ -129,7 +130,6 @@ static int logind_session_cb(sd_bus_message *m, void *data, sd_bus_error *ret_er
     unsigned int maj, min;
     int r;
 
-
     if (strcmp(member, "PauseDevice") == 0) {
         r = sd_bus_message_read(m, "uus", &maj, &min, &type);
         if (r < 0) {
@@ -137,7 +137,8 @@ static int logind_session_cb(sd_bus_message *m, void *data, sd_bus_error *ret_er
             return r;
         }
         fprintf(stderr, "signal : %s(%d,%d,%s)\n", member, maj, min, type);
-        logind_pause_device_complete(maj, min);
+        if (strcmp(type, "pause") == 0)
+            logind_pause_device_complete(maj, min);
     } else {
         fprintf(stderr, "signal : %s(...)\n", member);
     }
@@ -149,6 +150,9 @@ int logind_init(bool take_control,
                 void (*suspend)(void),
                 void (*resume)(void))
 {
+    sd_bus_error error = SD_BUS_ERROR_NULL;
+    sd_bus_message *m = NULL;
+    const char *session_id;
     int r;
 
     r = sd_bus_open_system(&logind_dbus);
@@ -159,16 +163,38 @@ int logind_init(bool take_control,
 
     if (take_control) {
         r = logind_take_control();
-        if (r < 0) {
-            sd_bus_unref(logind_dbus);
-            logind_dbus = NULL;
-            return -1;
-        }
+        if (r < 0)
+            goto err;
     }
+
+    session_id = getenv("XDG_SESSION_ID");
+    fprintf(stderr, "call   : GetSession(%s)\n", session_id);
+    r = sd_bus_call_method(logind_dbus,
+                           "org.freedesktop.login1",
+                           "/org/freedesktop/login1",
+                           "org.freedesktop.login1.Manager",
+                           "GetSession",
+                           &error,
+                           &m,
+                           "s",
+                           session_id);
+    if (r < 0) {
+        fprintf(stderr, "error  : GetSession failed: %s\n",
+                error.message);
+        sd_bus_error_free(&error);
+        goto err;
+    }
+    r = sd_bus_message_read(m, "o", &logind_session_path);
+    if (r < 0) {
+        fprintf(stderr, "error  : Parsing GetSession reply failed: %s\n",
+                strerror(-r));
+        goto err;
+    }
+    sd_bus_message_unref(m);
 
     sd_bus_match_signal(logind_dbus, &logind_signals,
                         "org.freedesktop.login1",
-                        NULL,
+                        logind_session_path,
                         NULL,
                         "PropertiesChanged",
                         logind_prop_cb,
@@ -187,6 +213,11 @@ int logind_init(bool take_control,
 
     fprintf(stderr, "Opening input devices via logind.\n");
     return 0;
+
+err:
+    sd_bus_unref(logind_dbus);
+    logind_dbus = NULL;
+    return -1;
 }
 
 int logind_dbus_fd(void)
