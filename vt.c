@@ -30,7 +30,6 @@ static bool console_switching_active;
 static int kd_mode;
 static struct vt_mode vt_mode;
 static struct vt_mode vt_omode;
-static int orig_vt_no = -1;
 static void (*console_suspend)(void);
 static void (*console_resume)(void);
 
@@ -147,44 +146,6 @@ int check_console_switch(void)
     }
     switch_last = console_switch_state;
     return 1;
-}
-
-int console_aquire_vt(void)
-{
-    struct vt_stat vts;
-    int vtno = -1;
-
-    if (-1 == ioctl(STDIN_FILENO, VT_OPENQRY, &vtno) || vtno == -1) {
-        perror("ioctl VT_OPENQRY");
-        return -1;
-    }
-    fprintf(stderr, "using vt %d\n", vtno);
-
-    if (-1 == ioctl(STDIN_FILENO,VT_GETSTATE, &vts)) {
-	perror("ioctl VT_GETSTATE");
-	exit(1);
-    }
-    orig_vt_no = vts.v_active;
-    if (-1 == ioctl(STDIN_FILENO,VT_ACTIVATE, vtno)) {
-	perror("ioctl VT_ACTIVATE");
-	exit(1);
-    }
-    if (-1 == ioctl(STDIN_FILENO,VT_WAITACTIVE, vtno)) {
-	perror("ioctl VT_WAITACTIVE");
-	exit(1);
-    }
-    return 0;
-}
-
-void console_restore_vt(void)
-{
-    if (orig_vt_no < 0)
-        return;
-
-    if (ioctl(STDIN_FILENO, VT_ACTIVATE, orig_vt_no) < 0)
-	perror("ioctl VT_ACTIVATE");
-    if (ioctl(STDIN_FILENO, VT_WAITACTIVE, orig_vt_no) < 0)
-	perror("ioctl VT_WAITACTIVE");
 }
 
 /* Hmm. radeonfb needs this. matroxfb doesn't. */
