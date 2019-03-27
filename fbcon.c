@@ -179,17 +179,14 @@ static void cleanup_and_exit(int code)
 
 static void console_switch_suspend(void)
 {
-    fprintf(stderr, "%s: start ...\n", __func__);
     active = false;
     gfx->suspend_display();
     libinput_suspend(kbd);
     logind_release_control();
-    fprintf(stderr, "%s: ... done\n", __func__);
 }
 
 static void console_switch_resume(void)
 {
-    fprintf(stderr, "%s: start ...\n", __func__);
     logind_take_control();
     libinput_resume(kbd);
     gfx->resume_display();
@@ -197,7 +194,6 @@ static void console_switch_resume(void)
     state2.clear++;
     dirty++;
     active = true;
-    fprintf(stderr, "%s: ... done\n", __func__);
 }
 
 /* ---------------------------------------------------------------------- */
@@ -442,13 +438,19 @@ static void fbcon_handle_keydown(struct xkb_state *state,
 
     /* change font size */
     if (ctrlalt && sym == XKB_KEY_plus) {
-        font_size += 2;
+        if (font_size >= 20)
+            font_size += 4;
+        else
+            font_size += 2;
         fbcon_resize();
         fbcon_write_config();
         return;
     }
     if (ctrlalt && sym == XKB_KEY_minus && font_size > 8) {
-        font_size -= 2;
+        if (font_size > 20)
+            font_size -= 4;
+        else
+            font_size -= 2;
         fbcon_resize();
         fbcon_write_config();
         return;

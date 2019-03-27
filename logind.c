@@ -23,6 +23,7 @@
 
 /* ---------------------------------------------------------------------- */
 
+static int logind_debug = 0;
 static sd_bus *logind_dbus = NULL;
 static sd_bus_slot *logind_signals;
 static const char *logind_session_path;
@@ -39,7 +40,8 @@ static void logind_pause_device_complete(unsigned int maj,
     sd_bus_message *m = NULL;
     int r;
 
-    fprintf(stderr, "call   : PauseDeviceComplete(%d,%d)\n", maj, min);
+    if (logind_debug)
+        fprintf(stderr, "call   : PauseDeviceComplete(%d,%d)\n", maj, min);
     r = sd_bus_call_method(logind_dbus,
                            "org.freedesktop.login1",
                            "/org/freedesktop/login1/session/self",
@@ -67,9 +69,6 @@ static int logind_prop_cb(sd_bus_message *m, void *data, sd_bus_error *ret_err)
     char type;
     int err;
 
-    fprintf(stderr, "%s: %s\n", __func__,
-            sd_bus_message_get_path(m));
-
     err = sd_bus_message_read(m, "s", &intf);
     if (err < 0)
         return err;
@@ -91,14 +90,16 @@ static int logind_prop_cb(sd_bus_message *m, void *data, sd_bus_error *ret_err)
             if (err < 0)
                 return err;
             if (!active) {
-                fprintf(stderr, "Active off (callback %s)\n",
-                        session_suspend ? "yes" : "no");
+                if (logind_debug)
+                    fprintf(stderr, "prop   : Active off (callback %s)\n",
+                            session_suspend ? "yes" : "no");
                 if (session_suspend)
                     session_suspend();
             }
             if (active) {
-                fprintf(stderr, "Active on (callback %s)\n",
-                        session_resume ? "yes" : "no");
+                if (logind_debug)
+                    fprintf(stderr, "prop   : Active on (callback %s)\n",
+                            session_resume ? "yes" : "no");
                 if (session_resume)
                     session_resume();
             }
@@ -136,7 +137,8 @@ static int logind_session_cb(sd_bus_message *m, void *data, sd_bus_error *ret_er
             fprintf(stderr, "error  : parsing PauseDevice msg failed\n");
             return r;
         }
-        fprintf(stderr, "signal : %s(%d,%d,%s)\n", member, maj, min, type);
+        if (logind_debug)
+            fprintf(stderr, "signal : %s(%d,%d,%s)\n", member, maj, min, type);
         if (strcmp(type, "pause") == 0)
             logind_pause_device_complete(maj, min);
     } else {
@@ -168,7 +170,8 @@ int logind_init(bool take_control,
     }
 
     session_id = getenv("XDG_SESSION_ID");
-    fprintf(stderr, "call   : GetSession(%s)\n", session_id);
+    if (logind_debug)
+        fprintf(stderr, "call   : GetSession(%s)\n", session_id);
     r = sd_bus_call_method(logind_dbus,
                            "org.freedesktop.login1",
                            "/org/freedesktop/login1",
@@ -248,7 +251,8 @@ int logind_switch_vt(int vt)
     if (!logind_dbus)
         return -1;
 
-    fprintf(stderr, "call   : SwitchTo(%d)\n", vt);
+    if (logind_debug)
+        fprintf(stderr, "call   : SwitchTo(%d)\n", vt);
     r = sd_bus_call_method(logind_dbus,
                            "org.freedesktop.login1",
                            "/org/freedesktop/login1/seat/self",
@@ -277,7 +281,8 @@ int logind_take_control(void)
     if (!logind_dbus)
         return -1;
 
-    fprintf(stderr, "call   : TakeControl()\n");
+    if (logind_debug)
+        fprintf(stderr, "call   : TakeControl()\n");
     r = sd_bus_call_method(logind_dbus,
                            "org.freedesktop.login1",
                            "/org/freedesktop/login1/session/self",
@@ -306,7 +311,8 @@ int logind_release_control(void)
     if (!logind_dbus)
         return -1;
 
-    fprintf(stderr, "call   : ReleaseControl()\n");
+    if (logind_debug)
+        fprintf(stderr, "call   : ReleaseControl()\n");
     r = sd_bus_call_method(logind_dbus,
                            "org.freedesktop.login1",
                            "/org/freedesktop/login1/session/self",
@@ -343,7 +349,8 @@ int logind_open(const char *path, int flags, void *user_data)
 
     maj = major(st.st_rdev);
     min = minor(st.st_rdev);
-    fprintf(stderr, "call   : TakeDevice(%d,%d)\n", maj, min);
+    if (logind_debug)
+        fprintf(stderr, "call   : TakeDevice(%d,%d)\n", maj, min);
     r = sd_bus_call_method(logind_dbus,
                            "org.freedesktop.login1",
                            "/org/freedesktop/login1/session/self",
@@ -398,7 +405,8 @@ void logind_close(int fd, void *user_data)
 
     maj = major(st.st_rdev);
     min = minor(st.st_rdev);
-    fprintf(stderr, "call   : ReleaseDevice(%d,%d)\n", maj, min);
+    if (logind_debug)
+        fprintf(stderr, "call   : ReleaseDevice(%d,%d)\n", maj, min);
     r = sd_bus_call_method(logind_dbus,
                            "org.freedesktop.login1",
                            "/org/freedesktop/login1/session/self",

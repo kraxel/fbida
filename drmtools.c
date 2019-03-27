@@ -224,7 +224,6 @@ static int drm_show_fb(struct drmfb *fb)
 {
     int rc;
 
-    fprintf(stderr, "%s: fb %d\n", __func__, fb->id);
     rc = drmModeSetCrtc(drm_fd, drm_enc->crtc_id, fb->id, 0, 0,
                         &drm_conn->connector_id, 1,
                         drm_mode);
