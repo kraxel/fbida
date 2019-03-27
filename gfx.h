@@ -43,7 +43,8 @@ struct gfxstate {
     dev_t devnum;
 
     /* calls */
-    void (*restore_display)(void);
+    void (*suspend_display)(void);
+    void (*resume_display)(void);
     void (*cleanup_display)(void);
     void (*flush_display)(bool second);
 };

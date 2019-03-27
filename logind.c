@@ -182,6 +182,9 @@ int logind_init(bool take_control,
                         logind_session_cb,
                         NULL);
 
+    session_suspend = suspend;
+    session_resume = resume;
+
     fprintf(stderr, "Opening input devices via logind.\n");
     return 0;
 }

@@ -18,11 +18,15 @@
 /* ------------------------------------------------------------------ */
 
 /* device */
+
 int drm_fd;
 drmModeEncoder *drm_enc = NULL;
 drmModeModeInfo *drm_mode = NULL;
 drmModeConnector *drm_conn = NULL;
+
 static drmModeCrtc *scrtc = NULL;
+static gfxfmt *drm_fmt = NULL;
+static char drm_dev[64];
 
 struct drmfb {
     uint32_t id;
@@ -200,13 +204,19 @@ static int drm_init_fb(struct drmfb *fb, struct gfxfmt *fmt, bool logerrors)
             fprintf(stderr, "drm: DRM_IOCTL_MODE_MAP_DUMB: %s\n", strerror(errno));
         return -1;
     }
-    fb->mem = mmap(0, fb->creq.size, PROT_READ | PROT_WRITE, MAP_SHARED,
+    fb->mem = mmap(fb->mem, fb->creq.size, PROT_READ | PROT_WRITE, MAP_SHARED,
                    drm_fd, mreq.offset);
     if (fb->mem == MAP_FAILED) {
         if (logerrors)
             fprintf(stderr, "drm: framebuffer mmap: %s\n", strerror(errno));
         return -1;
     }
+    return 0;
+}
+
+static int drm_fini_fb(struct drmfb *fb)
+{
+    munmap(fb->mem, fb->creq.size);
     return 0;
 }
 
@@ -226,8 +236,21 @@ static int drm_show_fb(struct drmfb *fb)
 
 /* ------------------------------------------------------------------ */
 
-static void drm_restore_display(void)
+static void drm_suspend_display(void)
 {
+    if (fb2.mem)
+        drm_fini_fb(&fb2);
+    drm_fini_fb(&fb1);
+    close(drm_fd);
+    drm_fd = -1;
+}
+
+static void drm_resume_display(void)
+{
+    drm_fd = open(drm_dev, O_RDWR | O_CLOEXEC);
+    drm_init_fb(&fb1, drm_fmt, false);
+    if (fb2.mem)
+        drm_init_fb(&fb2, drm_fmt, false);
     drm_show_fb(fbc);
 }
 
@@ -243,26 +266,24 @@ gfxstate *drm_init(const char *device, const char *output,
 {
     struct stat st;
     gfxstate *gfx;
-    gfxfmt *fmt = NULL;
-    char dev[64];
     int i;
 
     if (device) {
-        snprintf(dev, sizeof(dev), "%s", device);
+        snprintf(drm_dev, sizeof(drm_dev), "%s", device);
     } else {
-        snprintf(dev, sizeof(dev), DRM_DEV_NAME, DRM_DIR_NAME, 0);
+        snprintf(drm_dev, sizeof(drm_dev), DRM_DEV_NAME, DRM_DIR_NAME, 0);
     }
-    fprintf(stderr, "trying drm: %s ...\n", dev);
+    fprintf(stderr, "trying drm: %s ...\n", drm_dev);
 
-    if (drm_init_dev(dev, output, mode) < 0)
+    if (drm_init_dev(drm_dev, output, mode) < 0)
         return NULL;
     for (i = 0; i < fmt_count; i++) {
         if (drm_init_fb(&fb1, fmt_list + i, true) < 0)
             continue;
-        fmt = fmt_list + i;
+        drm_fmt = fmt_list + i;
         break;
     }
-    if (fmt == NULL)
+    if (drm_fmt == NULL)
         return NULL;
     if (drm_show_fb(&fb1) < 0)
         return NULL;
@@ -275,18 +296,19 @@ gfxstate *drm_init(const char *device, const char *output,
     gfx->vdisplay        = drm_mode->vdisplay;
     gfx->stride          = fb1.creq.pitch;
     gfx->mem             = fb1.mem;
-    gfx->fmt             = fmt;
+    gfx->fmt             = drm_fmt;
 
-    gfx->restore_display = drm_restore_display;
+    gfx->suspend_display = drm_suspend_display;
+    gfx->resume_display  = drm_resume_display;
     gfx->cleanup_display = drm_cleanup_display;
     gfx->flush_display   = drm_flush_display;
 
     fstat(drm_fd, &st);
     gfx->devnum = st.st_rdev;
-    snprintf(gfx->devpath, sizeof(gfx->devpath), "%s", dev);
+    snprintf(gfx->devpath, sizeof(gfx->devpath), "%s", drm_dev);
 
     if (pageflip) {
-        if (drm_init_fb(&fb2, fmt, false) == 0) {
+        if (drm_init_fb(&fb2, drm_fmt, false) == 0) {
             gfx->mem2 = fb2.mem;
         } else {
             fprintf(stderr, "drm: can't alloc two fbs, pageflip disabled.\n");

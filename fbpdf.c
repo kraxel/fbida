@@ -205,7 +205,7 @@ static void console_switch_suspend(void)
 
 static void console_switch_resume(void)
 {
-    gfx->restore_display();
+    gfx->resume_display();
     kbd_resume();
 }
 

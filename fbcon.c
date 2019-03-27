@@ -47,6 +47,7 @@ static int font_size = 16;
 static bool verbose;
 
 static gfxstate *gfx;
+static bool active;
 static cairo_font_extents_t extents;
 static struct cairo_state {
     cairo_surface_t *surface;
@@ -178,15 +179,18 @@ static void cleanup_and_exit(int code)
 
 static void console_switch_suspend(void)
 {
+    gfx->suspend_display();
     libinput_suspend(kbd);
     logind_release_control();
+    active = false;
 }
 
 static void console_switch_resume(void)
 {
-    gfx->restore_display();
+    active = true;
     logind_take_control();
     libinput_resume(kbd);
+    gfx->resume_display();
     state1.clear++;
     state2.clear++;
     dirty++;
@@ -643,10 +647,13 @@ int main(int argc, char *argv[])
         exit(1);
     exit_signals_init();
     signal(SIGTSTP,SIG_IGN);
+#if 0
     if (console_switch_init(console_switch_suspend,
                             console_switch_resume) < 0) {
         fprintf(stderr, "NOTICE: No vt switching available on terminal.\n");
     }
+#endif
+    active = true;
 
     /* init cairo */
     state1.surface = cairo_image_surface_create_for_data(gfx->mem,
@@ -710,7 +717,7 @@ int main(int argc, char *argv[])
         fd_set set;
         int rc, max;
 
-        if (dirty) {
+        if (active && dirty) {
             fbcon_tsm_render();
             dirty = 0;
         }

@@ -180,7 +180,11 @@ fb_setmode(char *name)
     return -1;
 }
 
-static void fb_restore_display(void)
+static void fb_suspend_display(void)
+{
+}
+
+static void fb_resume_display(void)
 {
     ioctl(fb,FBIOPAN_DISPLAY,&fb_var);
     fb_set_palette();
@@ -310,7 +314,8 @@ gfxstate* fb_init(const char *device, char *mode)
     gfx->mem             = fb_mem;
     gfx->fmt             = fmt;
 
-    gfx->restore_display = fb_restore_display;
+    gfx->suspend_display = fb_suspend_display;
+    gfx->resume_display  = fb_resume_display;
     gfx->cleanup_display = fb_cleanup_display;
 
     fstat(fb, &st);
