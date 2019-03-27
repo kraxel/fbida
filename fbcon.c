@@ -446,18 +446,13 @@ static void fbcon_handle_keydown(struct xkb_state *state,
         return;
     }
 
-#if 0
     /* WIP & broken */
-    if (logind && ctrlalt) {
-        if (sym >= XKB_KEY_F1 && sym <= XKB_KEY_F12) {
-            int vt = sym - XKB_KEY_F1 + 1;
-            fprintf(stderr, "console switch to vt %d\n", vt);
-            console_switch_suspend();
-            logind_switch_vt(vt);
-            return;
-        }
+    if (logind && sym >= XKB_KEY_XF86Switch_VT_1 && sym <= XKB_KEY_XF86Switch_VT_12) {
+        int vt = sym - XKB_KEY_XF86Switch_VT_1 + 1;
+        console_switch_suspend();
+        logind_switch_vt(vt);
+        return;
     }
-#endif
 
     /* scrollback */
     if (shift && sym == XKB_KEY_Up) {
@@ -600,7 +595,8 @@ int main(int argc, char *argv[])
     if (xdg_seat)
         seat_name = xdg_seat;
     if (xdg_seat && xdg_session_id) {
-        if (logind_init(true) == 0) {
+        if (logind_init(true, NULL,
+                        console_switch_resume) == 0) {
             dbus = logind_dbus_fd();
             logind = true;
         }

@@ -27,7 +27,7 @@ int main(int argc, char *argv[])
 
     fprintf(stderr, "session %s at %s\n",
             xdg_session_id, xdg_seat);
-    if (logind_init(false) != 0) {
+    if (logind_init(false, NULL, NULL) != 0) {
         fprintf(stderr, "logind init failed\n");
         exit(1);
     }

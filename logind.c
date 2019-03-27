@@ -26,6 +26,39 @@
 static sd_bus *logind_dbus = NULL;
 static sd_bus_slot *logind_signals;
 
+static void (*session_suspend)(void);
+static void (*session_resume)(void);
+
+/* ---------------------------------------------------------------------- */
+
+static void logind_pause_device_complete(unsigned int maj,
+                                         unsigned int min)
+{
+    sd_bus_error error = SD_BUS_ERROR_NULL;
+    sd_bus_message *m = NULL;
+    int r;
+
+    fprintf(stderr, "call   : PauseDeviceComplete(%d,%d)\n", maj, min);
+    r = sd_bus_call_method(logind_dbus,
+                           "org.freedesktop.login1",
+                           "/org/freedesktop/login1/session/self",
+                           "org.freedesktop.login1.Session",
+                           "PauseDeviceComplete",
+                           &error,
+                           &m,
+                           "uu",
+                           maj,
+                           min);
+    if (r < 0) {
+        fprintf(stderr, "error  : PauseDeviceComplete failed: %s\n",
+                error.message);
+        sd_bus_error_free(&error);
+        return;
+    }
+
+    sd_bus_message_unref(m);
+}
+
 static int logind_prop_cb(sd_bus_message *m, void *data, sd_bus_error *ret_err)
 {
     const char *intf, *prop, *unused;
@@ -56,12 +89,22 @@ static int logind_prop_cb(sd_bus_message *m, void *data, sd_bus_error *ret_err)
             err = sd_bus_message_read(m, "b", &active);
             if (err < 0)
                 return err;
-            printf("    Property: %s=%d\n", prop, active);
+            if (!active) {
+                fprintf(stderr, "Active off (callback %s)\n",
+                        session_suspend ? "yes" : "no");
+                if (session_suspend)
+                    session_suspend();
+            }
+            if (active) {
+                fprintf(stderr, "Active on (callback %s)\n",
+                        session_resume ? "yes" : "no");
+                if (session_resume)
+                    session_resume();
+            }
         } else {
             err = sd_bus_message_skip(m, unused);
             if (err < 0)
                 return err;
-            printf("    Property: %s\n", prop);
         }
         /* variant */
         err = sd_bus_message_exit_container(m);
@@ -81,14 +124,30 @@ static int logind_prop_cb(sd_bus_message *m, void *data, sd_bus_error *ret_err)
 
 static int logind_session_cb(sd_bus_message *m, void *data, sd_bus_error *ret_err)
 {
-    fprintf(stderr, "%s: %s %s\n", __func__,
-            sd_bus_message_get_path(m),
-            sd_bus_message_get_member(m));
+    const char *member = sd_bus_message_get_member(m);
+    const char *type;
+    unsigned int maj, min;
+    int r;
+
+
+    if (strcmp(member, "PauseDevice") == 0) {
+        r = sd_bus_message_read(m, "uus", &maj, &min, &type);
+        if (r < 0) {
+            fprintf(stderr, "error  : parsing PauseDevice msg failed\n");
+            return r;
+        }
+        fprintf(stderr, "signal : %s(%d,%d,%s)\n", member, maj, min, type);
+        logind_pause_device_complete(maj, min);
+    } else {
+        fprintf(stderr, "signal : %s(...)\n", member);
+    }
 
     return 0;
 }
 
-int logind_init(bool take_control)
+int logind_init(bool take_control,
+                void (*suspend)(void),
+                void (*resume)(void))
 {
     int r;
 
@@ -155,6 +214,7 @@ int logind_switch_vt(int vt)
     if (!logind_dbus)
         return -1;
 
+    fprintf(stderr, "call   : SwitchTo(%d)\n", vt);
     r = sd_bus_call_method(logind_dbus,
                            "org.freedesktop.login1",
                            "/org/freedesktop/login1/seat/self",
@@ -165,7 +225,8 @@ int logind_switch_vt(int vt)
                            "u",
                            vt);
     if (r < 0) {
-        fprintf(stderr, "SwitchTo failed: %s\n", error.message);
+        fprintf(stderr, "error  : SwitchTo failed: %s\n",
+                error.message);
         sd_bus_error_free(&error);
     }
     sd_bus_message_unref(m);
@@ -182,6 +243,7 @@ int logind_take_control(void)
     if (!logind_dbus)
         return -1;
 
+    fprintf(stderr, "call   : TakeControl()\n");
     r = sd_bus_call_method(logind_dbus,
                            "org.freedesktop.login1",
                            "/org/freedesktop/login1/session/self",
@@ -192,7 +254,8 @@ int logind_take_control(void)
                            "b",
                            false);
     if (r < 0) {
-        fprintf(stderr, "TakeControl failed: %s\n", error.message);
+        fprintf(stderr, "error  : TakeControl failed: %s\n",
+                error.message);
         sd_bus_error_free(&error);
     }
     sd_bus_message_unref(m);
@@ -209,6 +272,7 @@ int logind_release_control(void)
     if (!logind_dbus)
         return -1;
 
+    fprintf(stderr, "call   : ReleaseControl()\n");
     r = sd_bus_call_method(logind_dbus,
                            "org.freedesktop.login1",
                            "/org/freedesktop/login1/session/self",
@@ -218,7 +282,8 @@ int logind_release_control(void)
                            &m,
                            "");
     if (r < 0) {
-        fprintf(stderr, "ReleaseControl failed: %s\n", error.message);
+        fprintf(stderr, "error  : ReleaseControl failed: %s\n",
+                error.message);
         sd_bus_error_free(&error);
     }
     sd_bus_message_unref(m);
@@ -244,6 +309,7 @@ int logind_open(const char *path, int flags, void *user_data)
 
     maj = major(st.st_rdev);
     min = minor(st.st_rdev);
+    fprintf(stderr, "call   : TakeDevice(%d,%d)\n", maj, min);
     r = sd_bus_call_method(logind_dbus,
                            "org.freedesktop.login1",
                            "/org/freedesktop/login1/session/self",
@@ -255,7 +321,8 @@ int logind_open(const char *path, int flags, void *user_data)
                            maj,
                            min);
     if (r < 0) {
-        fprintf(stderr, "TakeDevice failed: %s\n", error.message);
+        fprintf(stderr, "error  : TakeDevice failed: %s\n",
+                error.message);
         sd_bus_error_free(&error);
         libinput_deverror++;
         return -1;
@@ -266,7 +333,8 @@ int logind_open(const char *path, int flags, void *user_data)
     r = sd_bus_message_read(m, "hb", &handle, &inactive);
     if (r < 0) {
         fd = -1;
-        fprintf(stderr, "Parsing TakeDevice reply failed: %s\n", strerror(-r));
+        fprintf(stderr, "error  : Parsing TakeDevice reply failed: %s\n",
+                strerror(-r));
         libinput_deverror++;
     } else {
         fd = fcntl(handle, F_DUPFD_CLOEXEC, 0);
@@ -296,6 +364,7 @@ void logind_close(int fd, void *user_data)
 
     maj = major(st.st_rdev);
     min = minor(st.st_rdev);
+    fprintf(stderr, "call   : ReleaseDevice(%d,%d)\n", maj, min);
     r = sd_bus_call_method(logind_dbus,
                            "org.freedesktop.login1",
                            "/org/freedesktop/login1/session/self",
@@ -307,7 +376,8 @@ void logind_close(int fd, void *user_data)
                            maj,
                            min);
     if (r < 0) {
-        fprintf(stderr, "ReleaseDevice failed: %s\n", error.message);
+        fprintf(stderr, "error  : ReleaseDevice failed: %s\n",
+                error.message);
         sd_bus_error_free(&error);
     }
     sd_bus_message_unref(m);
@@ -319,7 +389,9 @@ void logind_close(int fd, void *user_data)
 
 /* ---------------------------------------------------------------------- */
 
-int logind_init(bool take_control)
+int logind_init(bool take_control,
+                void (*suspend)(void),
+                void (*resume)(void))
 {
     fprintf(stderr, "warning: compiled without logind support.\n");
     return -1;
