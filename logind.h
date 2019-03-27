@@ -6,7 +6,7 @@
 
 extern const struct libinput_interface libinput_if_logind;
 
-int logind_init(void);
+int logind_init(bool take_control);
 int logind_dbus_fd(void);
 void logind_dbus_input(void);
 int logind_switch_vt(int vt);

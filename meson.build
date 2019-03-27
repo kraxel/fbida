@@ -151,6 +151,11 @@ executable('kbdtest',
            sources             : [ 'kbdtest.c', 'kbd.c' ],
            dependencies        : [ udev_dep, input_dep, systemd_dep ] )
 
+# build vttest
+executable('vttest',
+           sources             : [ 'vttest.c', 'kbd.c', 'logind.c' ],
+           dependencies        : [ udev_dep, input_dep, systemd_dep ] )
+
 # build ida
 mkfallback   = find_program('scripts/fallback.pl')
 hexify       = find_program('scripts/hexify.sh')

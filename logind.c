@@ -24,8 +24,71 @@
 /* ---------------------------------------------------------------------- */
 
 static sd_bus *logind_dbus = NULL;
+static sd_bus_slot *logind_signals;
 
-int logind_init(void)
+static int logind_prop_cb(sd_bus_message *m, void *data, sd_bus_error *ret_err)
+{
+    const char *intf, *prop, *unused;
+    bool active;
+    char type;
+    int err;
+
+    fprintf(stderr, "%s: %s\n", __func__,
+            sd_bus_message_get_path(m));
+
+    err = sd_bus_message_read(m, "s", &intf);
+    if (err < 0)
+        return err;
+
+    err = sd_bus_message_enter_container(m, SD_BUS_TYPE_ARRAY, "{sv}");
+    while ((err = sd_bus_message_enter_container(m, SD_BUS_TYPE_DICT_ENTRY, "sv")) > 0) {
+        err = sd_bus_message_read(m, "s", &prop);
+        if (err < 0)
+            return err;
+        err = sd_bus_message_peek_type(m, &type, &unused);
+        if (err < 0)
+            return err;
+        /* Need to enter the variant, regarless we want it or not */
+        err = sd_bus_message_enter_container(m, SD_BUS_TYPE_VARIANT, unused);
+        if (err < 0)
+            return err;
+        if (strcmp(prop, "Active") == 0) {
+            err = sd_bus_message_read(m, "b", &active);
+            if (err < 0)
+                return err;
+            printf("    Property: %s=%d\n", prop, active);
+        } else {
+            err = sd_bus_message_skip(m, unused);
+            if (err < 0)
+                return err;
+            printf("    Property: %s\n", prop);
+        }
+        /* variant */
+        err = sd_bus_message_exit_container(m);
+        if (err < 0)
+            return err;
+        /* dict entry */
+        err = sd_bus_message_exit_container(m);
+        if (err < 0)
+            return err;
+    }
+    /* array */
+    err = sd_bus_message_exit_container(m);
+    if (err < 0)
+        return err;
+    return 0;
+}
+
+static int logind_session_cb(sd_bus_message *m, void *data, sd_bus_error *ret_err)
+{
+    fprintf(stderr, "%s: %s %s\n", __func__,
+            sd_bus_message_get_path(m),
+            sd_bus_message_get_member(m));
+
+    return 0;
+}
+
+int logind_init(bool take_control)
 {
     int r;
 
@@ -35,12 +98,30 @@ int logind_init(void)
         return -1;
     }
 
-    r = logind_take_control();
-    if (r < 0) {
-        sd_bus_unref(logind_dbus);
-        logind_dbus = NULL;
-        return -1;
+    if (take_control) {
+        r = logind_take_control();
+        if (r < 0) {
+            sd_bus_unref(logind_dbus);
+            logind_dbus = NULL;
+            return -1;
+        }
     }
+
+    sd_bus_match_signal(logind_dbus, &logind_signals,
+                        "org.freedesktop.login1",
+                        NULL,
+                        NULL,
+                        "PropertiesChanged",
+                        logind_prop_cb,
+                        NULL);
+
+    sd_bus_match_signal(logind_dbus, &logind_signals,
+                        "org.freedesktop.login1",
+                        NULL,
+                        "org.freedesktop.login1.Session",
+                        NULL,
+                        logind_session_cb,
+                        NULL);
 
     fprintf(stderr, "Opening input devices via logind.\n");
     return 0;
@@ -55,17 +136,13 @@ int logind_dbus_fd(void)
 
 void logind_dbus_input(void)
 {
-    sd_bus_message *m = NULL;
     int ret;
 
     if (!logind_dbus)
         return;
 
     do {
-        ret = sd_bus_process(logind_dbus, &m);
-        fprintf(stderr, "%s: path %s\n", __func__,
-                sd_bus_message_get_path(m));
-        sd_bus_message_unref(m);
+        ret = sd_bus_process(logind_dbus, NULL);
     } while (ret > 0);
 }
 
@@ -242,7 +319,7 @@ void logind_close(int fd, void *user_data)
 
 /* ---------------------------------------------------------------------- */
 
-int logind_init(void)
+int logind_init(bool take_control)
 {
     fprintf(stderr, "warning: compiled without logind support.\n");
     return -1;

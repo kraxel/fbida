@@ -600,7 +600,7 @@ int main(int argc, char *argv[])
     if (xdg_seat)
         seat_name = xdg_seat;
     if (xdg_seat && xdg_session_id) {
-        if (logind_init() == 0) {
+        if (logind_init(true) == 0) {
             dbus = logind_dbus_fd();
             logind = true;
         }
