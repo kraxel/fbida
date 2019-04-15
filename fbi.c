@@ -25,10 +25,6 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 
-#include <linux/kd.h>
-#include <linux/vt.h>
-#include <linux/fb.h>
-
 #include <jpeglib.h>
 
 #include <libexif/exif-data.h>
@@ -94,9 +90,6 @@ int                        debug;
 /* framebuffer */
 char                       *fbdev = NULL;
 char                       *fbmode  = NULL;
-
-unsigned short red[256],  green[256],  blue[256];
-struct fb_cmap cmap  = { 0, 256, red,  green,  blue };
 
 /* Command line options. */
 int autodown;
