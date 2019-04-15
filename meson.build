@@ -93,7 +93,7 @@ fbi_srcs     = [ 'fbi.c', 'fb-gui.c', 'desktop.c',
                  trans_src, read_srcs ]
 fbi_deps     = [ drm_dep, pixman_dep, cairo_dep,
                  exif_dep, image_deps,
-                 math_dep, udev_dep, input_dep ]
+                 math_dep, udev_dep, input_dep, xkb_dep ]
 
 executable('fbi',
            sources             : fbi_srcs,
@@ -125,7 +125,7 @@ fbpdf_srcs   = [ 'fbpdf.c', 'parseconfig.c', 'fbiconfig.c',
                  'vt.c', 'kbd.c', 'fbtools.c', 'drmtools.c', 'gfx.c' ]
 fbpdf_deps   = [ drm_dep, gbm_dep, epoxy_dep,
                  pixman_dep, poppler_dep, cairo_dep,
-                 udev_dep, input_dep ]
+                 udev_dep, input_dep, xkb_dep ]
 
 executable('fbpdf',
            sources             : fbpdf_srcs,
@@ -149,12 +149,12 @@ endif
 # build kbdtest
 executable('kbdtest',
            sources             : [ 'kbdtest.c', 'kbd.c' ],
-           dependencies        : [ udev_dep, input_dep, systemd_dep ] )
+           dependencies        : [ udev_dep, input_dep, xkb_dep, systemd_dep ] )
 
 # build vttest
 executable('vttest',
            sources             : [ 'vttest.c', 'kbd.c', 'logind.c' ],
-           dependencies        : [ udev_dep, input_dep, systemd_dep ] )
+           dependencies        : [ udev_dep, input_dep, xkb_dep, systemd_dep ] )
 
 # build ida
 mkfallback   = find_program('scripts/fallback.pl')

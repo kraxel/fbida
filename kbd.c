@@ -54,6 +54,24 @@ void xkb_configure(void)
     fclose(fp);
 }
 
+void xkb_init(void)
+{
+    xkb_ctx = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+    xkb_map = xkb_keymap_new_from_names(xkb_ctx, &xkb_layout,
+                                        XKB_KEYMAP_COMPILE_NO_FLAGS);
+    if (!xkb_map) {
+        xkb_layout.variant = NULL;
+        xkb_map = xkb_keymap_new_from_names(xkb_ctx, &xkb_layout,
+                                            XKB_KEYMAP_COMPILE_NO_FLAGS);
+        if (!xkb_map) {
+            xkb_layout.layout = "us";
+            xkb_map = xkb_keymap_new_from_names(xkb_ctx, &xkb_layout,
+                                                XKB_KEYMAP_COMPILE_NO_FLAGS);
+        }
+    }
+    xkb_state = xkb_state_new(xkb_map);
+}
+
 /* ---------------------------------------------------------------------- */
 
 struct termctrl {
