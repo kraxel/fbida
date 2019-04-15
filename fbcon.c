@@ -61,10 +61,10 @@ static struct udev *udev;
 static struct libinput *kbd;
 static bool logind = false;
 
-static struct xkb_context *xkb;
-static struct xkb_keymap *map;
-static struct xkb_state *state;
-static struct xkb_rule_names layout = {
+static struct xkb_context *xkb_ctx;
+static struct xkb_keymap *xkb_map;
+static struct xkb_state *xkb_state;
+static struct xkb_rule_names xkb_layout = {
     .rules   = NULL,
     .model   = "pc105",
     .layout  = "us",
@@ -219,9 +219,9 @@ static void xkb_configure(void)
         v = strchr(m, '-');
         if (v) {
             *(v++) = 0;
-            layout.variant = strdup(v);
+            xkb_layout.variant = strdup(v);
         }
-        layout.layout = strdup(m);
+        xkb_layout.layout = strdup(m);
     }
     fclose(fp);
 }
@@ -686,17 +686,20 @@ int main(int argc, char *argv[])
 
     /* init udev + xkbcommon */
     xkb_configure();
-    xkb = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
-    map = xkb_keymap_new_from_names(xkb, &layout, XKB_KEYMAP_COMPILE_NO_FLAGS);
-    if (!map) {
-        layout.variant = NULL;
-        map = xkb_keymap_new_from_names(xkb, &layout, XKB_KEYMAP_COMPILE_NO_FLAGS);
-        if (!map) {
-            layout.layout = "us";
-            map = xkb_keymap_new_from_names(xkb, &layout, XKB_KEYMAP_COMPILE_NO_FLAGS);
+    xkb_ctx = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+    xkb_map = xkb_keymap_new_from_names(xkb_ctx, &xkb_layout,
+                                        XKB_KEYMAP_COMPILE_NO_FLAGS);
+    if (!xkb_map) {
+        xkb_layout.variant = NULL;
+        xkb_map = xkb_keymap_new_from_names(xkb_ctx, &xkb_layout,
+                                            XKB_KEYMAP_COMPILE_NO_FLAGS);
+        if (!xkb_map) {
+            xkb_layout.layout = "us";
+            xkb_map = xkb_keymap_new_from_names(xkb_ctx, &xkb_layout,
+                                                XKB_KEYMAP_COMPILE_NO_FLAGS);
         }
     }
-    state = xkb_state_new(map);
+    xkb_state = xkb_state_new(xkb_map);
 
     /* init terminal emulation */
     fbcon_winsize(&win);
@@ -774,9 +777,9 @@ int main(int argc, char *argv[])
                     kevt = libinput_event_get_keyboard_event(evt);
                     key = libinput_event_keyboard_get_key(kevt) + 8;
                     down = libinput_event_keyboard_get_key_state(kevt);
-                    xkb_state_update_key(state, key, down);
+                    xkb_state_update_key(xkb_state, key, down);
                     if (down) {
-                        fbcon_handle_keydown(state, key);
+                        fbcon_handle_keydown(xkb_state, key);
                     }
                     break;
                 default:
