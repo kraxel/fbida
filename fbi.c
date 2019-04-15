@@ -798,74 +798,74 @@ svga_show(struct flist *f, struct flist *prev,
 
         rc = kbd_read(key, sizeof(key), &keycode, &keymod);
         if (rc < 0)
-            return KEY_ESC; /* EOF */
+            return XKB_KEY_Escape; /* EOF */
 
         switch (keycode) {
-        case KEY_SPACE:
+        case XKB_KEY_space:
 	    if (textreading && f->top < (int)(img->i.height - gfx->vdisplay)) {
 		redraw = 1;
 		f->top += f->text_steps;
 	    } else {
-		skip = KEY_SPACE;
-		return KEY_SPACE;
+		skip = XKB_KEY_space;
+		return XKB_KEY_space;
 	    }
             break;
 
-        case KEY_UP:
+        case XKB_KEY_UP:
 	    redraw = 1;
 	    f->top -= v_steps;
             break;
-        case KEY_DOWN:
+        case XKB_KEY_DOWN:
 	    redraw = 1;
 	    f->top += v_steps;
             break;
-        case KEY_HOME:
+        case XKB_KEY_Home:
 	    redraw = 1;
 	    f->top = 0;
             break;
-        case KEY_END:
+        case XKB_KEY_End:
 	    redraw = 1;
 	    f->top = img->i.height - gfx->vdisplay;
             break;
-        case KEY_LEFT:
+        case XKB_KEY_Left:
 	    redraw = 1;
 	    f->left -= h_steps;
             break;
-        case KEY_RIGHT:
+        case XKB_KEY_Right:
 	    redraw = 1;
 	    f->left += h_steps;
             break;
 
-        case KEY_PAGEUP:
-        case KEY_K:
+        case XKB_KEY_Page_Up:
+        case XKB_KEY_K:
 	    if (textreading && f->top > 0) {
 		redraw = 1;
 		f->top -= f->text_steps;
 	    } else {
-		skip = KEY_PAGEUP;
-		return KEY_PAGEUP;
+		skip = XKB_KEY_Page_Up;
+		return XKB_KEY_Page_Up;
 	    }
             break;
-        case KEY_PAGEDOWN:
-        case KEY_J:
-        case KEY_N:
+        case XKB_KEY_Page_Down:
+        case XKB_KEY_J:
+        case XKB_KEY_N:
 	    if (textreading && f->top < (int)(img->i.height - gfx->vdisplay)) {
 		redraw = 1;
 		f->top += f->text_steps;
 	    } else {
-		skip = KEY_PAGEDOWN;
-		return KEY_PAGEDOWN;
+		skip = XKB_KEY_Page_Down;
+		return XKB_KEY_Page_Down;
 	    }
             break;
 
-        case KEY_P:
+        case XKB_KEY_P:
 	    if (0 != timeout) {
 		paused = !paused;
 		status_update(paused ? "pause on " : "pause off", NULL);
 	    }
             break;
 
-        case KEY_H:
+        case XKB_KEY_H:
 	    if (!help) {
 		show_help();
 		help = 1;
@@ -876,7 +876,7 @@ svga_show(struct flist *f, struct flist *prev,
 	    exif = 0;
             break;
 
-        case KEY_I:
+        case XKB_KEY_I:
 	    if (!exif) {
 		show_exif(fcurrent);
 		exif = 1;
@@ -887,28 +887,28 @@ svga_show(struct flist *f, struct flist *prev,
 	    help = 0;
             break;
 
-        case KEY_0:
-        case KEY_1:
-        case KEY_2:
-        case KEY_3:
-        case KEY_4:
-        case KEY_5:
-        case KEY_6:
-        case KEY_7:
-        case KEY_8:
-        case KEY_9:
+        case XKB_KEY_0:
+        case XKB_KEY_1:
+        case XKB_KEY_2:
+        case XKB_KEY_3:
+        case XKB_KEY_4:
+        case XKB_KEY_5:
+        case XKB_KEY_6:
+        case XKB_KEY_7:
+        case XKB_KEY_8:
+        case XKB_KEY_9:
 	    *nr = *nr * 10;
-            if (keycode != KEY_0)
-                *nr += keycode - KEY_1 + 1;
+            if (keycode != XKB_KEY_0)
+                *nr += keycode - XKB_KEY_1 + 1;
 	    snprintf(linebuffer, sizeof(linebuffer), "> %d",*nr);
 	    status_update(linebuffer, NULL);
             break;
 
-        case KEY_D:
+        case XKB_KEY_D:
             /* need shift state for this one */
-            return KEY_D | (keymod << 16);
+            return XKB_KEY_D | (keymod << 16);
 
-        case KEY_RESERVED:
+        case XKB_KEY_VoidSymbol:
             /* ignored event */
             break;
 
@@ -1375,7 +1375,7 @@ int main(int argc, char *argv[])
 	key = svga_show(fcurrent, fprev, timeout, desc, info, &arg);
 	fprev = fcurrent;
 	switch (key) {
-	case KEY_D | (KEY_MOD_SHIFT << 16):
+	case XKB_KEY_D | (KEY_MOD_SHIFT << 16):
 	    if (editable) {
 		struct flist *fdel = fcurrent;
 		if (flist_islast(fcurrent))
@@ -1394,8 +1394,8 @@ int main(int argc, char *argv[])
 		status_error("readonly mode, sorry [start with --edit?]");
 	    }
 	    break;
-	case KEY_R:
-	case KEY_L:
+	case XKB_KEY_R:
+	case XKB_KEY_L:
 	{
 	    if (editable) {
 		snprintf(linebuffer,sizeof(linebuffer),
@@ -1403,7 +1403,7 @@ int main(int argc, char *argv[])
 		status_update(linebuffer, NULL);
 		jpeg_transform_inplace
 		    (fcurrent->name,
-		     (key == KEY_R) ? JXFORM_ROT_90 : JXFORM_ROT_270,
+		     (key == XKB_KEY_R) ? JXFORM_ROT_90 : JXFORM_ROT_270,
 		     NULL,
 		     NULL,0,
 		     (backup   ? JFLAG_FILE_BACKUP    : 0) |
@@ -1418,8 +1418,8 @@ int main(int argc, char *argv[])
 	    }
 	    break;
 	}
-	case KEY_X:
-	case KEY_Y:
+	case XKB_KEY_X:
+	case XKB_KEY_Y:
 	{
 	    if (editable) {
 		snprintf(linebuffer,sizeof(linebuffer),
@@ -1427,7 +1427,7 @@ int main(int argc, char *argv[])
 		status_update(linebuffer, NULL);
 		jpeg_transform_inplace
 		    (fcurrent->name,
-		     (key == KEY_X) ? JXFORM_FLIP_V : JXFORM_FLIP_H,
+		     (key == XKB_KEY_X) ? JXFORM_FLIP_V : JXFORM_FLIP_H,
 		     NULL,
 		     NULL,0,
 		     (backup   ? JFLAG_FILE_BACKUP    : 0) |
@@ -1442,25 +1442,23 @@ int main(int argc, char *argv[])
 	    }
 	    break;
 	}
-	case KEY_ENTER:
+	case XKB_KEY_Return:
 	    fcurrent->tag = !fcurrent->tag;
 	    /* fall throuth */
-	case KEY_SPACE:
+	case XKB_KEY_space:
             fcurrent = flist_next(fcurrent,1,0);
 	    if (NULL != fcurrent)
 		break;
 	    /* else fall */
-	case KEY_ESC:
-	case KEY_Q:
-	case KEY_E:
+	case XKB_KEY_Escape:
+	case XKB_KEY_Q:
+	case XKB_KEY_E:
 	    cleanup_and_exit(0);
 	    break;
-	case KEY_PAGEDOWN:
-        case BTN_LEFT:
+	case XKB_KEY_Page_Down:
 	    fcurrent = flist_next(fcurrent,0,1);
 	    break;
-	case KEY_PAGEUP:
-        case BTN_RIGHT:
+	case XKB_KEY_Page_Up:
 	    fcurrent = flist_prev(fcurrent,1);
 	    break;
 	case -1: /* timeout */
@@ -1475,18 +1473,18 @@ int main(int argc, char *argv[])
 	    }
 	    /* FIXME: wrap around */
 	    break;
-	case KEY_KPPLUS:
-	case KEY_KPMINUS:
-	case KEY_A:
-	case KEY_S:
+	case XKB_KEY_KP_Add:
+	case XKB_KEY_KP_Subtract:
+	case XKB_KEY_A:
+	case XKB_KEY_S:
 	    {
 		float newscale, oldscale = fcurrent->scale;
 
-		if (key == KEY_KPPLUS) {
+		if (key == XKB_KEY_KP_Add) {
 		    newscale = fcurrent->scale * 1.6;
-		} else if (key == KEY_KPMINUS) {
+		} else if (key == XKB_KEY_KP_Subtract) {
 		    newscale = fcurrent->scale / 1.6;
-		} else if (key == KEY_A) {
+		} else if (key == XKB_KEY_A) {
 		    newscale = auto_scale(fcurrent->fimg);
 		} else {
 		    newscale = arg / 100.0;
@@ -1499,16 +1497,16 @@ int main(int argc, char *argv[])
 		scale_fix_top_left(fcurrent, oldscale, newscale);
 		break;
 	    }
-	case KEY_G:
+	case XKB_KEY_G:
 	    if (arg > 0 && arg <= fcount)
 		fcurrent = flist_goto(arg);
 	    break;
 #if 0 /* FIXME */
-	case KEY_DELAY:
+	case XKB_KEY_DELAY:
 	    timeout = arg;
 	    break;
 #endif
-	case KEY_V:
+	case XKB_KEY_V:
 	    statusline = !statusline;
 	    break;
 	}

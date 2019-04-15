@@ -80,6 +80,9 @@ trans_inc    = include_directories(''.join(['jpeg/', jpeg_ver]))
 if motif_dep.found()
     config.set('HAVE_MOTIF', true)
 endif
+if target_machine.system() == 'linux'
+    config.set('SYSTEM_LINUX', true)
+endif
 configure_file(output : 'config.h', configuration : config)
 add_global_arguments(['-include', 'config.h'], language : 'c')
 

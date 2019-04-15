@@ -382,41 +382,41 @@ int main(int argc, char *argv[])
         kbd_read(key, sizeof(key), &keycode, &keymod);
 
         switch (keycode) {
-        case KEY_ESC:
-        case KEY_Q:
+        case XKB_KEY_Escape:
+        case XKB_KEY_Q:
             quit = true;
             break;
-        case KEY_PAGEUP:
+        case XKB_KEY_Page_Up:
             if (index > 0) {
                 index--;
                 newpage = true;
             }
             break;
-        case KEY_PAGEDOWN:
+        case XKB_KEY_Page_Down:
             if (index+1 < poppler_document_get_n_pages(doc)) {
                 index++;
                 newpage = true;
             }
             break;
-        case KEY_UP:
+        case XKB_KEY_Up:
             page_move(0, 0.2);
             break;
-        case KEY_DOWN:
+        case XKB_KEY_Down:
             page_move(0, -0.2);
             break;
-        case KEY_LEFT:
+        case XKB_KEY_Left:
             page_move(0.2, 0);
             break;
-        case KEY_RIGHT:
+        case XKB_KEY_Right:
             page_move(-0.2, 0);
             break;
-        case KEY_KPMINUS:
+        case XKB_KEY_KP_Subtract:
             page_scale(0.7);
             break;
-        case KEY_KPPLUS:
+        case XKB_KEY_KP_Add:
             page_scale(1.5);
             break;
-        case KEY_SPACE:
+        case XKB_KEY_space:
             if (ty > gfx->vdisplay - sh) {
                 page_move(0, -0.75);
                 break;

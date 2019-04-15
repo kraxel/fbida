@@ -13,6 +13,10 @@
 
 #include "kbd.h"
 
+#ifdef SYSTEM_LINUX
+# include <linux/input.h>
+#endif
+
 /* ---------------------------------------------------------------------- */
 
 struct xkb_context *xkb_ctx;
@@ -81,117 +85,117 @@ struct termctrl {
 };
 
 static struct termctrl termctrl[] = {
-    { .seq = "a", .code = KEY_A },
-    { .seq = "b", .code = KEY_B },
-    { .seq = "c", .code = KEY_C },
-    { .seq = "d", .code = KEY_D },
-    { .seq = "e", .code = KEY_E },
-    { .seq = "f", .code = KEY_F },
-    { .seq = "g", .code = KEY_G },
-    { .seq = "h", .code = KEY_H },
-    { .seq = "i", .code = KEY_I },
-    { .seq = "j", .code = KEY_J },
-    { .seq = "k", .code = KEY_K },
-    { .seq = "l", .code = KEY_L },
-    { .seq = "m", .code = KEY_M },
-    { .seq = "n", .code = KEY_N },
-    { .seq = "o", .code = KEY_O },
-    { .seq = "p", .code = KEY_P },
-    { .seq = "q", .code = KEY_Q },
-    { .seq = "r", .code = KEY_R },
-    { .seq = "s", .code = KEY_S },
-    { .seq = "t", .code = KEY_T },
-    { .seq = "u", .code = KEY_U },
-    { .seq = "v", .code = KEY_V },
-    { .seq = "w", .code = KEY_W },
-    { .seq = "x", .code = KEY_X },
-    { .seq = "y", .code = KEY_Y },
-    { .seq = "z", .code = KEY_Z },
+    { .seq = "a", .code = XKB_KEY_A },
+    { .seq = "b", .code = XKB_KEY_B },
+    { .seq = "c", .code = XKB_KEY_C },
+    { .seq = "d", .code = XKB_KEY_D },
+    { .seq = "e", .code = XKB_KEY_E },
+    { .seq = "f", .code = XKB_KEY_F },
+    { .seq = "g", .code = XKB_KEY_G },
+    { .seq = "h", .code = XKB_KEY_H },
+    { .seq = "i", .code = XKB_KEY_I },
+    { .seq = "j", .code = XKB_KEY_J },
+    { .seq = "k", .code = XKB_KEY_K },
+    { .seq = "l", .code = XKB_KEY_L },
+    { .seq = "m", .code = XKB_KEY_M },
+    { .seq = "n", .code = XKB_KEY_N },
+    { .seq = "o", .code = XKB_KEY_O },
+    { .seq = "p", .code = XKB_KEY_P },
+    { .seq = "q", .code = XKB_KEY_Q },
+    { .seq = "r", .code = XKB_KEY_R },
+    { .seq = "s", .code = XKB_KEY_S },
+    { .seq = "t", .code = XKB_KEY_T },
+    { .seq = "u", .code = XKB_KEY_U },
+    { .seq = "v", .code = XKB_KEY_V },
+    { .seq = "w", .code = XKB_KEY_W },
+    { .seq = "x", .code = XKB_KEY_X },
+    { .seq = "y", .code = XKB_KEY_Y },
+    { .seq = "z", .code = XKB_KEY_Z },
 
-    { .seq = "A", .code = KEY_A, .mod = KEY_MOD_SHIFT },
-    { .seq = "B", .code = KEY_B, .mod = KEY_MOD_SHIFT },
-    { .seq = "C", .code = KEY_C, .mod = KEY_MOD_SHIFT },
-    { .seq = "D", .code = KEY_D, .mod = KEY_MOD_SHIFT },
-    { .seq = "E", .code = KEY_E, .mod = KEY_MOD_SHIFT },
-    { .seq = "F", .code = KEY_F, .mod = KEY_MOD_SHIFT },
-    { .seq = "G", .code = KEY_G, .mod = KEY_MOD_SHIFT },
-    { .seq = "H", .code = KEY_H, .mod = KEY_MOD_SHIFT },
-    { .seq = "I", .code = KEY_I, .mod = KEY_MOD_SHIFT },
-    { .seq = "J", .code = KEY_J, .mod = KEY_MOD_SHIFT },
-    { .seq = "K", .code = KEY_K, .mod = KEY_MOD_SHIFT },
-    { .seq = "L", .code = KEY_L, .mod = KEY_MOD_SHIFT },
-    { .seq = "M", .code = KEY_M, .mod = KEY_MOD_SHIFT },
-    { .seq = "N", .code = KEY_N, .mod = KEY_MOD_SHIFT },
-    { .seq = "O", .code = KEY_O, .mod = KEY_MOD_SHIFT },
-    { .seq = "P", .code = KEY_P, .mod = KEY_MOD_SHIFT },
-    { .seq = "Q", .code = KEY_Q, .mod = KEY_MOD_SHIFT },
-    { .seq = "R", .code = KEY_R, .mod = KEY_MOD_SHIFT },
-    { .seq = "S", .code = KEY_S, .mod = KEY_MOD_SHIFT },
-    { .seq = "T", .code = KEY_T, .mod = KEY_MOD_SHIFT },
-    { .seq = "U", .code = KEY_U, .mod = KEY_MOD_SHIFT },
-    { .seq = "V", .code = KEY_V, .mod = KEY_MOD_SHIFT },
-    { .seq = "W", .code = KEY_W, .mod = KEY_MOD_SHIFT },
-    { .seq = "X", .code = KEY_X, .mod = KEY_MOD_SHIFT },
-    { .seq = "Y", .code = KEY_Y, .mod = KEY_MOD_SHIFT },
-    { .seq = "Z", .code = KEY_Z, .mod = KEY_MOD_SHIFT },
+    { .seq = "A", .code = XKB_KEY_A, .mod = KEY_MOD_SHIFT },
+    { .seq = "B", .code = XKB_KEY_B, .mod = KEY_MOD_SHIFT },
+    { .seq = "C", .code = XKB_KEY_C, .mod = KEY_MOD_SHIFT },
+    { .seq = "D", .code = XKB_KEY_D, .mod = KEY_MOD_SHIFT },
+    { .seq = "E", .code = XKB_KEY_E, .mod = KEY_MOD_SHIFT },
+    { .seq = "F", .code = XKB_KEY_F, .mod = KEY_MOD_SHIFT },
+    { .seq = "G", .code = XKB_KEY_G, .mod = KEY_MOD_SHIFT },
+    { .seq = "H", .code = XKB_KEY_H, .mod = KEY_MOD_SHIFT },
+    { .seq = "I", .code = XKB_KEY_I, .mod = KEY_MOD_SHIFT },
+    { .seq = "J", .code = XKB_KEY_J, .mod = KEY_MOD_SHIFT },
+    { .seq = "K", .code = XKB_KEY_K, .mod = KEY_MOD_SHIFT },
+    { .seq = "L", .code = XKB_KEY_L, .mod = KEY_MOD_SHIFT },
+    { .seq = "M", .code = XKB_KEY_M, .mod = KEY_MOD_SHIFT },
+    { .seq = "N", .code = XKB_KEY_N, .mod = KEY_MOD_SHIFT },
+    { .seq = "O", .code = XKB_KEY_O, .mod = KEY_MOD_SHIFT },
+    { .seq = "P", .code = XKB_KEY_P, .mod = KEY_MOD_SHIFT },
+    { .seq = "Q", .code = XKB_KEY_Q, .mod = KEY_MOD_SHIFT },
+    { .seq = "R", .code = XKB_KEY_R, .mod = KEY_MOD_SHIFT },
+    { .seq = "S", .code = XKB_KEY_S, .mod = KEY_MOD_SHIFT },
+    { .seq = "T", .code = XKB_KEY_T, .mod = KEY_MOD_SHIFT },
+    { .seq = "U", .code = XKB_KEY_U, .mod = KEY_MOD_SHIFT },
+    { .seq = "V", .code = XKB_KEY_V, .mod = KEY_MOD_SHIFT },
+    { .seq = "W", .code = XKB_KEY_W, .mod = KEY_MOD_SHIFT },
+    { .seq = "X", .code = XKB_KEY_X, .mod = KEY_MOD_SHIFT },
+    { .seq = "Y", .code = XKB_KEY_Y, .mod = KEY_MOD_SHIFT },
+    { .seq = "Z", .code = XKB_KEY_Z, .mod = KEY_MOD_SHIFT },
 
-    { .seq = "\x01", .code = KEY_A, .mod = KEY_MOD_CTRL },
-    { .seq = "\x02", .code = KEY_B, .mod = KEY_MOD_CTRL },
-    { .seq = "\x03", .code = KEY_C, .mod = KEY_MOD_CTRL },
-    { .seq = "\x04", .code = KEY_D, .mod = KEY_MOD_CTRL },
-    { .seq = "\x05", .code = KEY_E, .mod = KEY_MOD_CTRL },
-    { .seq = "\x06", .code = KEY_F, .mod = KEY_MOD_CTRL },
-    { .seq = "\x07", .code = KEY_G, .mod = KEY_MOD_CTRL },
-    { .seq = "\x08", .code = KEY_H, .mod = KEY_MOD_CTRL },
-    { .seq = "\x09", .code = KEY_I, .mod = KEY_MOD_CTRL },
-    { .seq = "\x0a", .code = KEY_ENTER },
-    { .seq = "\x0b", .code = KEY_K, .mod = KEY_MOD_CTRL },
-    { .seq = "\x0c", .code = KEY_L, .mod = KEY_MOD_CTRL },
-    { .seq = "\x0d", .code = KEY_M, .mod = KEY_MOD_CTRL },
-    { .seq = "\x0e", .code = KEY_N, .mod = KEY_MOD_CTRL },
-    { .seq = "\x0f", .code = KEY_O, .mod = KEY_MOD_CTRL },
-    { .seq = "\x10", .code = KEY_P, .mod = KEY_MOD_CTRL },
-    { .seq = "\x11", .code = KEY_Q, .mod = KEY_MOD_CTRL },
-    { .seq = "\x12", .code = KEY_R, .mod = KEY_MOD_CTRL },
-    { .seq = "\x13", .code = KEY_S, .mod = KEY_MOD_CTRL },
-    { .seq = "\x14", .code = KEY_T, .mod = KEY_MOD_CTRL },
-    { .seq = "\x15", .code = KEY_U, .mod = KEY_MOD_CTRL },
-    { .seq = "\x16", .code = KEY_V, .mod = KEY_MOD_CTRL },
-    { .seq = "\x17", .code = KEY_W, .mod = KEY_MOD_CTRL },
-    { .seq = "\x18", .code = KEY_X, .mod = KEY_MOD_CTRL },
-    { .seq = "\x19", .code = KEY_Y, .mod = KEY_MOD_CTRL },
-    { .seq = "\x1a", .code = KEY_Z, .mod = KEY_MOD_CTRL },
+    { .seq = "\x01", .code = XKB_KEY_A, .mod = KEY_MOD_CTRL },
+    { .seq = "\x02", .code = XKB_KEY_B, .mod = KEY_MOD_CTRL },
+    { .seq = "\x03", .code = XKB_KEY_C, .mod = KEY_MOD_CTRL },
+    { .seq = "\x04", .code = XKB_KEY_D, .mod = KEY_MOD_CTRL },
+    { .seq = "\x05", .code = XKB_KEY_E, .mod = KEY_MOD_CTRL },
+    { .seq = "\x06", .code = XKB_KEY_F, .mod = KEY_MOD_CTRL },
+    { .seq = "\x07", .code = XKB_KEY_G, .mod = KEY_MOD_CTRL },
+    { .seq = "\x08", .code = XKB_KEY_H, .mod = KEY_MOD_CTRL },
+    { .seq = "\x09", .code = XKB_KEY_I, .mod = KEY_MOD_CTRL },
+    { .seq = "\x0a", .code = XKB_KEY_Return },
+    { .seq = "\x0b", .code = XKB_KEY_K, .mod = KEY_MOD_CTRL },
+    { .seq = "\x0c", .code = XKB_KEY_L, .mod = KEY_MOD_CTRL },
+    { .seq = "\x0d", .code = XKB_KEY_M, .mod = KEY_MOD_CTRL },
+    { .seq = "\x0e", .code = XKB_KEY_N, .mod = KEY_MOD_CTRL },
+    { .seq = "\x0f", .code = XKB_KEY_O, .mod = KEY_MOD_CTRL },
+    { .seq = "\x10", .code = XKB_KEY_P, .mod = KEY_MOD_CTRL },
+    { .seq = "\x11", .code = XKB_KEY_Q, .mod = KEY_MOD_CTRL },
+    { .seq = "\x12", .code = XKB_KEY_R, .mod = KEY_MOD_CTRL },
+    { .seq = "\x13", .code = XKB_KEY_S, .mod = KEY_MOD_CTRL },
+    { .seq = "\x14", .code = XKB_KEY_T, .mod = KEY_MOD_CTRL },
+    { .seq = "\x15", .code = XKB_KEY_U, .mod = KEY_MOD_CTRL },
+    { .seq = "\x16", .code = XKB_KEY_V, .mod = KEY_MOD_CTRL },
+    { .seq = "\x17", .code = XKB_KEY_W, .mod = KEY_MOD_CTRL },
+    { .seq = "\x18", .code = XKB_KEY_X, .mod = KEY_MOD_CTRL },
+    { .seq = "\x19", .code = XKB_KEY_Y, .mod = KEY_MOD_CTRL },
+    { .seq = "\x1a", .code = XKB_KEY_Z, .mod = KEY_MOD_CTRL },
 
-    { .seq = "0", .code = KEY_0 },
-    { .seq = "1", .code = KEY_1 },
-    { .seq = "2", .code = KEY_2 },
-    { .seq = "3", .code = KEY_3 },
-    { .seq = "4", .code = KEY_4 },
-    { .seq = "5", .code = KEY_5 },
-    { .seq = "6", .code = KEY_6 },
-    { .seq = "7", .code = KEY_7 },
-    { .seq = "8", .code = KEY_8 },
-    { .seq = "9", .code = KEY_9 },
+    { .seq = "0", .code = XKB_KEY_0 },
+    { .seq = "1", .code = XKB_KEY_1 },
+    { .seq = "2", .code = XKB_KEY_2 },
+    { .seq = "3", .code = XKB_KEY_3 },
+    { .seq = "4", .code = XKB_KEY_4 },
+    { .seq = "5", .code = XKB_KEY_5 },
+    { .seq = "6", .code = XKB_KEY_6 },
+    { .seq = "7", .code = XKB_KEY_7 },
+    { .seq = "8", .code = XKB_KEY_8 },
+    { .seq = "9", .code = XKB_KEY_9 },
 
-    { .seq = " ",         .code = KEY_SPACE    },
-    { .seq = "\x1b",      .code = KEY_ESC      },
-    { .seq = "+",         .code = KEY_KPPLUS   },
-    { .seq = "-",         .code = KEY_KPMINUS  },
-    { .seq = "\x7f",      .code = KEY_BACKSPACE},
+    { .seq = " ",         .code = XKB_KEY_space        },
+    { .seq = "\x1b",      .code = XKB_KEY_Escape       },
+    { .seq = "+",         .code = XKB_KEY_KP_Add       },
+    { .seq = "-",         .code = XKB_KEY_KP_Subtract  },
+    { .seq = "\x7f",      .code = XKB_KEY_BackSpace    },
 
-    { .seq = "\x1b[A",    .code = KEY_UP       },
-    { .seq = "\x1b[B",    .code = KEY_DOWN     },
-    { .seq = "\x1b[C",    .code = KEY_RIGHT    },
-    { .seq = "\x1b[D",    .code = KEY_LEFT     },
-    { .seq = "\x1b[F",    .code = KEY_END      },
-    { .seq = "\x1b[H",    .code = KEY_HOME     },
+    { .seq = "\x1b[A",    .code = XKB_KEY_Up           },
+    { .seq = "\x1b[B",    .code = XKB_KEY_Down         },
+    { .seq = "\x1b[C",    .code = XKB_KEY_Right        },
+    { .seq = "\x1b[D",    .code = XKB_KEY_Left         },
+    { .seq = "\x1b[F",    .code = XKB_KEY_End          },
+    { .seq = "\x1b[H",    .code = XKB_KEY_Home         },
 
-    { .seq = "\x1b[1~",   .code = KEY_HOME     },
-    { .seq = "\x1b[2~",   .code = KEY_INSERT   },
-    { .seq = "\x1b[3~",   .code = KEY_DELETE   },
-    { .seq = "\x1b[4~",   .code = KEY_END      },
-    { .seq = "\x1b[5~",   .code = KEY_PAGEUP   },
-    { .seq = "\x1b[6~",   .code = KEY_PAGEDOWN },
+    { .seq = "\x1b[1~",   .code = XKB_KEY_Home         },
+    { .seq = "\x1b[2~",   .code = XKB_KEY_Insert       },
+    { .seq = "\x1b[3~",   .code = XKB_KEY_Delete       },
+    { .seq = "\x1b[4~",   .code = XKB_KEY_End          },
+    { .seq = "\x1b[5~",   .code = XKB_KEY_Page_Up      },
+    { .seq = "\x1b[6~",   .code = XKB_KEY_Page_Down    },
 
     { /* EOF */ }
 };
@@ -207,7 +211,7 @@ static uint32_t tty_parse(const char *key, uint32_t *mod)
         }
     }
     *mod = 0;
-    return KEY_RESERVED;
+    return XKB_KEY_VoidSymbol;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -268,14 +272,18 @@ static int open_restricted(const char *path, int flags, void *user_data)
     }
 
     fprintf(stderr, "kbd: using %s\n", path);
+#ifdef EVIOCGRAB
     ioctl(fd, EVIOCGRAB, 1);
+#endif
     libinput_devcount++;
     return fd;
 }
 
 static void close_restricted(int fd, void *user_data)
 {
+#ifdef EVIOCGRAB
     ioctl(fd, EVIOCGRAB, 0);
+#endif
     close(fd);
     libinput_devcount--;
 }
@@ -304,6 +312,13 @@ void kbd_init(int use_libinput, dev_t gfx)
         libinput_udev_assign_seat(ctx, seat);
         fprintf(stderr, "kbd: using libinput (%d devices, %s)\n",
                 libinput_devcount, seat);
+        if (libinput_deverror != 0 || libinput_devcount == 0) {
+            fprintf(stderr, "ERROR: failed to open input devices (%d ok, %d failed)\n",
+                    libinput_devcount, libinput_deverror);
+            return;
+        }
+        xkb_configure();
+        xkb_init();
     } else {
         fprintf(stderr, "kbd: using stdin from terminal\n");
         tty_raw();
@@ -333,11 +348,15 @@ int kbd_read(char *buf, uint32_t len,
 {
     struct libinput_event *evt;
     struct libinput_event_keyboard *kbd;
+#if 0
     struct libinput_event_pointer *ptr;
-    int rc;
+#endif
+    xkb_keycode_t key;
+    bool down;
+    int rc, events = 0;
 
     memset(buf, 0, len);
-    *keycode = KEY_RESERVED;
+    *keycode = XKB_KEY_VoidSymbol;
     *modifier = 0;
 
     if (ctx) {
@@ -348,22 +367,35 @@ int kbd_read(char *buf, uint32_t len,
             switch (libinput_event_get_type(evt)) {
             case LIBINPUT_EVENT_KEYBOARD_KEY:
                 kbd = libinput_event_get_keyboard_event(evt);
-                if (libinput_event_keyboard_get_key_state(kbd))
-                    *keycode = libinput_event_keyboard_get_key(kbd);
-                /* TODO: track modifier state */
-                /* TODO: fill buf with typed chars */
+                key = libinput_event_keyboard_get_key(kbd) + 8;
+                down = libinput_event_keyboard_get_key_state(kbd);
+                xkb_state_update_key(xkb_state, key, down);
+                if (down) {
+                    *keycode = xkb_state_key_get_one_sym(xkb_state, key);
+                    if (xkb_state_mod_name_is_active(xkb_state, XKB_MOD_NAME_SHIFT,
+                                                     XKB_STATE_MODS_EFFECTIVE))
+                        *modifier |= KEY_MOD_SHIFT;
+                    if (xkb_state_mod_name_is_active(xkb_state, XKB_MOD_NAME_CTRL,
+                                                     XKB_STATE_MODS_EFFECTIVE))
+                        *modifier |= KEY_MOD_CTRL;
+                }
                 break;
+#if 0
             case LIBINPUT_EVENT_POINTER_BUTTON:
                 ptr = libinput_event_get_pointer_event(evt);
                 if (libinput_event_pointer_get_button_state(ptr))
                     *keycode = libinput_event_pointer_get_button(ptr);
                 break;
+#endif
             default:
                 /* ignore event */
                 break;
             }
             libinput_event_destroy(evt);
+            events++;
         }
+        if (!events)
+            return -1;
         return 0;
     } else {
         rc = read(STDIN_FILENO, buf, len-1);

@@ -1,6 +1,5 @@
 #include <stdbool.h>
 #include <inttypes.h>
-#include <linux/input.h>
 
 #include <libudev.h>
 #include <libinput.h>
