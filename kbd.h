@@ -18,6 +18,8 @@ extern struct xkb_keymap *xkb_map;
 extern struct xkb_state *xkb_state;
 extern struct xkb_rule_names xkb_layout;
 
+void xkb_configure(void);
+
 void kbd_init(int use_libinput, dev_t gfx);
 int kbd_wait(int timeout);
 int kbd_read(char *buf, uint32_t len,

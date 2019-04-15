@@ -186,36 +186,6 @@ static void console_switch_resume(void)
 
 /* ---------------------------------------------------------------------- */
 
-static void xkb_configure(void)
-{
-    char line[128], *m, *v, *h;
-    FILE *fp;
-
-    fp = fopen("/etc/vconsole.conf", "r");
-    if (!fp)
-        return;
-    while (fgets(line, sizeof(line), fp)) {
-        if (strncmp(line, "KEYMAP=", 7) != 0)
-            continue;
-        m = line + 7;
-        if (*m == '"')
-            m++;
-        if ((h = strchr(m, '\n')) != NULL)
-            *h = 0;
-        if ((h = strchr(m, '"')) != NULL)
-            *h = 0;
-        v = strchr(m, '-');
-        if (v) {
-            *(v++) = 0;
-            xkb_layout.variant = strdup(v);
-        }
-        xkb_layout.layout = strdup(m);
-    }
-    fclose(fp);
-}
-
-/* ---------------------------------------------------------------------- */
-
 struct color {
     float r;
     float g;
