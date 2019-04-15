@@ -15,6 +15,19 @@
 
 /* ---------------------------------------------------------------------- */
 
+struct xkb_context *xkb_ctx;
+struct xkb_keymap *xkb_map;
+struct xkb_state *xkb_state;
+struct xkb_rule_names xkb_layout = {
+    .rules   = NULL,
+    .model   = "pc105",
+    .layout  = "us",
+    .variant = NULL,
+    .options = NULL,
+};
+
+/* ---------------------------------------------------------------------- */
+
 struct termctrl {
     const char *seq;
     uint32_t code;

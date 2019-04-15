@@ -29,7 +29,6 @@
 #include <libudev.h>
 #include <libinput.h>
 #include <libtsm.h>
-#include <xkbcommon/xkbcommon.h>
 
 #include "fbtools.h"
 #include "drmtools.h"
@@ -60,17 +59,6 @@ static int dirty, pty;
 static struct udev *udev;
 static struct libinput *kbd;
 static bool logind = false;
-
-static struct xkb_context *xkb_ctx;
-static struct xkb_keymap *xkb_map;
-static struct xkb_state *xkb_state;
-static struct xkb_rule_names xkb_layout = {
-    .rules   = NULL,
-    .model   = "pc105",
-    .layout  = "us",
-    .variant = NULL,
-    .options = NULL,
-};
 
 static struct tsm_screen *vts;
 static struct tsm_vte    *vte;
