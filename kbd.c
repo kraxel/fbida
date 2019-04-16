@@ -316,11 +316,6 @@ void kbd_init(bool use_libinput, bool use_logind, dev_t gfx)
         libinput_udev_assign_seat(ctx, seat);
         fprintf(stderr, "kbd: using libinput (%d devices, %s)\n",
                 libinput_devcount, seat);
-        if (libinput_deverror != 0 || libinput_devcount == 0) {
-            fprintf(stderr, "ERROR: failed to open input devices (%d ok, %d failed)\n",
-                    libinput_devcount, libinput_deverror);
-            return;
-        }
         xkb_configure();
         xkb_init();
     } else {
