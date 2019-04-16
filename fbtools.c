@@ -185,10 +185,11 @@ static void fb_suspend_display(void)
 {
 }
 
-static void fb_resume_display(void)
+static int fb_resume_display(void)
 {
     ioctl(fb,FBIOPAN_DISPLAY,&fb_var);
     fb_set_palette();
+    return 0;
 }
 
 static void fb_cleanup_display(void)

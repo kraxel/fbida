@@ -44,7 +44,7 @@ struct gfxstate {
 
     /* calls */
     void (*suspend_display)(void);
-    void (*resume_display)(void);
+    int (*resume_display)(void);
     void (*cleanup_display)(void);
     void (*flush_display)(bool second);
 };

@@ -246,12 +246,17 @@ static void drm_suspend_display(void)
     drm_fd = -1;
 }
 
-static void drm_resume_display(void)
+static int drm_resume_display(void)
 {
     drm_fd = device_open(drm_dev);
+    if (drm_fd < 0) {
+        fprintf(stderr, "drm: open %s: %s\n", drm_dev, strerror(errno));
+        return -1;
+    }
     drm_init_fb(&fb1, drm_fmt, false);
     if (fb2.mem)
         drm_init_fb(&fb2, drm_fmt, false);
+    return 0;
 }
 
 static void drm_flush_display(bool second)

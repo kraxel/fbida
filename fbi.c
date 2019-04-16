@@ -38,6 +38,7 @@
 #include "filter.h"
 #include "desktop.h"
 #include "fbiconfig.h"
+#include "logind.h"
 
 #include "transupp.h"		/* Support routines for jpegtran */
 #include "jpegtools.h"
@@ -1201,11 +1202,15 @@ static void cleanup_and_exit(int code)
 static void console_switch_suspend(void)
 {
     kbd_suspend();
+    gfx->suspend_display();
+    logind_release_control();
 }
 
 static void console_switch_resume(void)
 {
-    gfx->resume_display();
+    logind_take_control();
+    if (gfx->resume_display() < 0)
+        cleanup_and_exit(1);
     shadow_render(gfx);
     kbd_resume();
 }
