@@ -349,7 +349,7 @@ int main(int argc, char *argv[])
                                                        gfx->stride);
     }
 
-    kbd_init(use_libinput, gfx->devnum);
+    kbd_init(use_libinput, false, gfx->devnum);
     if (use_libinput && (libinput_deverror != 0 ||
                          libinput_devcount == 0)) {
         fprintf(stderr, "ERROR: failed to open input devices (%d ok, %d failed)\n",

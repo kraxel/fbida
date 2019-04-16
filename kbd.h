@@ -20,7 +20,7 @@ extern struct xkb_rule_names xkb_layout;
 void xkb_configure(void);
 void xkb_init(void);
 
-void kbd_init(int use_libinput, dev_t gfx);
+void kbd_init(bool use_libinput, bool use_logind, dev_t gfx);
 int kbd_wait(int timeout);
 int kbd_read(char *buf, uint32_t len,
              uint32_t *keycode, uint32_t *modifier);

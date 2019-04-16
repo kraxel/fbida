@@ -611,12 +611,12 @@ int main(int argc, char *argv[])
         exit(1);
     exit_signals_init();
     signal(SIGTSTP,SIG_IGN);
-#if 0
-    if (console_switch_init(console_switch_suspend,
-                            console_switch_resume) < 0) {
-        fprintf(stderr, "NOTICE: No vt switching available on terminal.\n");
+    if (!logind) {
+        if (console_switch_init(console_switch_suspend,
+                                console_switch_resume) < 0) {
+            fprintf(stderr, "NOTICE: No vt switching available on terminal.\n");
+        }
     }
-#endif
     active = true;
 
     /* init cairo */

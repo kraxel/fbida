@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 
 #include "kbd.h"
+#include "logind.h"
 
 #ifdef SYSTEM_LINUX
 # include <linux/input.h>
@@ -295,7 +296,7 @@ const struct libinput_interface libinput_if_default = {
 
 static struct libinput *ctx;
 
-void kbd_init(int use_libinput, dev_t gfx)
+void kbd_init(bool use_libinput, bool use_logind, dev_t gfx)
 {
     struct udev        *udev;
     struct udev_device *ugfx;
@@ -308,7 +309,10 @@ void kbd_init(int use_libinput, dev_t gfx)
             seat = udev_device_get_property_value(ugfx, "ID_SEAT");
         if (!seat)
             seat = "seat0";
-        ctx = libinput_udev_create_context(&libinput_if_default, NULL, udev);
+        ctx = libinput_udev_create_context(use_logind
+                                           ? &libinput_if_logind
+                                           : &libinput_if_default,
+                                           NULL, udev);
         libinput_udev_assign_seat(ctx, seat);
         fprintf(stderr, "kbd: using libinput (%d devices, %s)\n",
                 libinput_devcount, seat);

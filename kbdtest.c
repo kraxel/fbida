@@ -10,6 +10,7 @@
 #include <termios.h>
 
 #include "kbd.h"
+#include "logind.h"
 
 /* ---------------------------------------------------------------------- */
 
@@ -45,9 +46,11 @@ static void usage(FILE *fp)
 
 int main(int argc, char *argv[])
 {
+    const char *xdg_seat, *xdg_session_id;
     uint32_t code, mod;
     char key[32];
     bool use_libinput = false;
+    bool use_logind = false;
     int rc, i, c;
 
     for (;;) {
@@ -67,7 +70,15 @@ int main(int argc, char *argv[])
         }
     }
 
-    kbd_init(use_libinput, 0);
+    xdg_seat = getenv("XDG_SEAT");
+    xdg_session_id = getenv("XDG_SESSION_ID");
+    if (use_libinput && xdg_seat && xdg_session_id) {
+        if (logind_init(true, NULL, NULL) == 0) {
+            use_logind = true;
+        }
+    }
+
+    kbd_init(use_libinput, use_logind, 0);
 
     for (;;) {
         kbd_wait(10);
