@@ -14,6 +14,7 @@
 
 #include "gfx.h"
 #include "drmtools.h"
+#include "logind.h"
 
 /* ------------------------------------------------------------------ */
 
@@ -88,7 +89,7 @@ int drm_init_dev(const char *dev, const char *output, const char *mode)
     int i, rc;
 
     /* open device */
-    drm_fd = open(dev, O_RDWR | O_CLOEXEC);
+    drm_fd = device_open(dev);
     if (drm_fd < 0) {
         fprintf(stderr, "drm: open %s: %s\n", dev, strerror(errno));
         return -1;
@@ -247,7 +248,7 @@ static void drm_suspend_display(void)
 
 static void drm_resume_display(void)
 {
-    drm_fd = open(drm_dev, O_RDWR | O_CLOEXEC);
+    drm_fd = device_open(drm_dev);
     drm_init_fb(&fb1, drm_fmt, false);
     if (fb2.mem)
         drm_init_fb(&fb2, drm_fmt, false);
@@ -333,7 +334,7 @@ void drm_info(const char *device)
     } else {
         snprintf(dev, sizeof(dev), DRM_DEV_NAME, DRM_DIR_NAME, 0);
     }
-    drm_fd = open(dev, O_RDWR | O_CLOEXEC);
+    drm_fd = device_open(dev);
     if (drm_fd < 0) {
         fprintf(stderr, "drm: open %s: %s\n", dev, strerror(errno));
         return;

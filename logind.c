@@ -340,6 +340,9 @@ int logind_open(const char *path, int flags, void *user_data)
     int inactive;
     int handle, fd, r;
 
+    if (!logind_dbus)
+        return -1;
+
     r = stat(path, &st);
     if (r < 0) {
         fprintf(stderr, "stat %s failed: %s\n", path, strerror(errno));
@@ -395,6 +398,9 @@ void logind_close(int fd, void *user_data)
     struct stat st;
     unsigned int maj, min;
     int r;
+
+    if (!logind_dbus)
+        return;
 
     r = fstat(fd, &st);
     if (r < 0) {
@@ -482,3 +488,21 @@ const struct libinput_interface libinput_if_logind = {
     .open_restricted  = logind_open,
     .close_restricted = logind_close,
 };
+
+int device_open(const char *device)
+{
+    int saved_errno, fd;
+
+    fd = open(device, O_RDWR | O_CLOEXEC);
+    if (fd < 0) {
+        saved_errno = errno;
+        fd = logind_open(device, 0, NULL);
+        if (fd < 0) {
+            errno = saved_errno;
+            return -1;
+        } else {
+            fprintf(stderr, "%s: got handle from logind\n", device);
+        }
+    }
+    return fd;
+}
