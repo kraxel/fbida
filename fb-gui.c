@@ -6,7 +6,6 @@
 #include <wchar.h>
 #include <inttypes.h>
 #include <sys/ioctl.h>
-#include <linux/fb.h>
 
 #include <pixman.h>
 

@@ -250,44 +250,44 @@ void  op_free_done(void *data) { free(data); }
 /* ----------------------------------------------------------------------- */
 
 struct ida_op desc_flip_vert = {
-    name:  "flip-vert",
-    init:  op_none_init,
-    work:  op_flip_vert,
-    done:  op_none_done,
+    .name =  "flip-vert",
+    .init =  op_none_init,
+    .work =  op_flip_vert,
+    .done =  op_none_done,
 };
 struct ida_op desc_flip_horz = {
-    name:  "flip-horz",
-    init:  op_none_init,
-    work:  op_flip_horz,
-    done:  op_none_done,
+    .name =  "flip-horz",
+    .init =  op_none_init,
+    .work =  op_flip_horz,
+    .done =  op_none_done,
 };
 struct ida_op desc_rotate_cw = {
-    name:  "rotate-cw",
-    init:  op_rotate_init,
-    work:  op_rotate_cw,
-    done:  op_none_done,
+    .name =  "rotate-cw",
+    .init =  op_rotate_init,
+    .work =  op_rotate_cw,
+    .done =  op_none_done,
 };
 struct ida_op desc_rotate_ccw = {
-    name:  "rotate-ccw",
-    init:  op_rotate_init,
-    work:  op_rotate_ccw,
-    done:  op_none_done,
+    .name =  "rotate-ccw",
+    .init =  op_rotate_init,
+    .work =  op_rotate_ccw,
+    .done =  op_none_done,
 };
 struct ida_op desc_invert = {
-    name:  "invert",
-    init:  op_none_init,
-    work:  op_invert,
-    done:  op_none_done,
+    .name =  "invert",
+    .init =  op_none_init,
+    .work =  op_invert,
+    .done =  op_none_done,
 };
 struct ida_op desc_crop = {
-    name:  "crop",
-    init:  op_crop_init,
-    work:  op_crop_work,
-    done:  op_none_done,
+    .name =  "crop",
+    .init =  op_crop_init,
+    .work =  op_crop_work,
+    .done =  op_none_done,
 };
 struct ida_op desc_autocrop = {
-    name:  "autocrop",
-    init:  op_autocrop_init,
-    work:  op_crop_work,
-    done:  op_none_done,
+    .name =  "autocrop",
+    .init =  op_autocrop_init,
+    .work =  op_crop_work,
+    .done =  op_none_done,
 };

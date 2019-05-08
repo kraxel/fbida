@@ -150,13 +150,13 @@ png_done(void *data)
 }
 
 static struct ida_loader png_loader = {
-    magic: "\x89PNG",
-    moff:  0,
-    mlen:  4,
-    name:  "libpng",
-    init:  png_init,
-    read:  png_read,
-    done:  png_done,
+    .magic = "\x89PNG",
+    .moff  = 0,
+    .mlen  = 4,
+    .name  = "libpng",
+    .init  = png_init,
+    .read  = png_read,
+    .done  = png_done,
 };
 
 static void __init init_rd(void)

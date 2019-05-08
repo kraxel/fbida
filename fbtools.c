@@ -18,13 +18,15 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 
-#include <linux/kd.h>
-#include <linux/vt.h>
-#include <linux/fb.h>
-
 #include "vt.h"
 #include "fbtools.h"
 #include "logind.h"
+
+#ifdef SYSTEM_LINUX
+
+#include <linux/kd.h>
+#include <linux/vt.h>
+#include <linux/fb.h>
 
 /* -------------------------------------------------------------------- */
 /* internal variables                                                   */
@@ -330,3 +332,11 @@ gfxstate* fb_init(const char *device, char *mode)
     fb_cleanup_display();
     exit(1);
 }
+
+#else /* SYSTEM_LINUX */
+
+gfxstate* fb_init(const char *device, char *mode)
+{
+    return NULL;
+}
+#endif

@@ -1,11 +1,11 @@
 #include <stdlib.h>
-#include <endian.h>
 #include <fcntl.h>
 #include <sys/types.h>
 
 #include <libdrm/drm_fourcc.h>
 
 #include "gfx.h"
+#include "byteorder.h"
 
 gfxfmt fmt_list[] = {
     {

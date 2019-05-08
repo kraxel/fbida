@@ -220,13 +220,13 @@ gif_done(void *data)
 }
 
 static struct ida_loader gif_loader = {
-    magic: "GIF",
-    moff:  0,
-    mlen:  3,
-    name:  "giflib",
-    init:  gif_init,
-    read:  gif_read,
-    done:  gif_done,
+    .magic = "GIF",
+    .moff  = 0,
+    .mlen  = 3,
+    .name  = "giflib",
+    .init  = gif_init,
+    .read  = gif_read,
+    .done  = gif_done,
 };
 
 static void __init init_rd(void)

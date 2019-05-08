@@ -26,10 +26,6 @@
 #include <sys/time.h>
 #include <sys/ioctl.h>
 
-#include <linux/kd.h>
-#include <linux/vt.h>
-#include <linux/fb.h>
-
 #include <poppler.h>
 #include <cairo.h>
 
@@ -153,7 +149,7 @@ static void page_render(void)
 
 /* ---------------------------------------------------------------------- */
 
-static jmp_buf fb_fatal_cleanup;
+static sigjmp_buf fb_fatal_cleanup;
 
 static void catch_exit_signal(int signal)
 {

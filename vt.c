@@ -8,12 +8,14 @@
 #include <signal.h>
 #include <sys/ioctl.h>
 
-#include <linux/kd.h>
-#include <linux/vt.h>
-
 #include "vt.h"
 
 /* -------------------------------------------------------------------- */
+
+#ifdef SYSTEM_LINUX
+
+#include <linux/kd.h>
+#include <linux/vt.h>
 
 #define CONSOLE_ACTIVE    0
 #define CONSOLE_REL_REQ   1
@@ -167,3 +169,26 @@ int console_activate_current(void)
     }
     return 0;
 }
+
+/* -------------------------------------------------------------------- */
+
+#else /* SYSTEM_LINUX */
+
+int console_visible = 1;
+
+int console_switch_init(void (*suspend)(void),
+                        void (*resume)(void))
+{
+    return -1;
+}
+
+void console_switch_cleanup(void)
+{
+}
+
+int check_console_switch(void)
+{
+    return 0;
+}
+
+#endif /* SYSTEM_LINUX */

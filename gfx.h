@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <inttypes.h>
+#include <sys/stat.h>  /* dev_t */
 
 #include <pixman.h>
 #include <cairo.h>

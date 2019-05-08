@@ -3,9 +3,9 @@
 #include <stddef.h>
 #include <string.h>
 #include <assert.h>
-#include <endian.h>
 
 #include "readers.h"
+#include "byteorder.h"
 
 /* ----------------------------------------------------------------------- */
 
@@ -13,7 +13,7 @@ void load_bits_lsb(unsigned char *dst, unsigned char *src, int width,
 		   int on, int off)
 {
     int i,mask,bit;
-    
+
     for (i = 0; i < width; i++) {
 	mask = 1 << (i & 0x07);
 	bit  = src[i>>3] & mask;
@@ -28,7 +28,7 @@ void load_bits_msb(unsigned char *dst, unsigned char *src, int width,
 		   int on, int off)
 {
     int i,mask,bit;
-    
+
     for (i = 0; i < width; i++) {
 	mask = 1 << (7 - (i & 0x07));
 	bit  = src[i>>3] & mask;

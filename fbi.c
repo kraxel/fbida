@@ -1151,7 +1151,7 @@ static void flist_img_load(struct flist *f, int prefetch)
 
 /* ---------------------------------------------------------------------- */
 
-static jmp_buf fb_fatal_cleanup;
+static sigjmp_buf fb_fatal_cleanup;
 
 static void catch_exit_signal(int signal)
 {

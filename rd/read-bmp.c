@@ -3,29 +3,14 @@
 #include <stddef.h>
 #include <string.h>
 #include <errno.h>
-#include <endian.h>
 
 #include "readers.h"
+#include "byteorder.h"
 
 /* ---------------------------------------------------------------------- */
 
 typedef unsigned int   uint32;
 typedef unsigned short uint16;
-
-/* bitmap files are little endian */
-#if BYTE_ORDER == LITTLE_ENDIAN
-# define le16_to_cpu(x) (x)
-# define le32_to_cpu(x) (x)
-#elif BYTE_ORDER == BIG_ENDIAN
-# define le16_to_cpu(x) (((x>>8) & 0x00ff) |\
-                         ((x<<8) & 0xff00))
-# define le32_to_cpu(x) (((x>>24) & 0x000000ff) |\
-                         ((x>>8)  & 0x0000ff00) |\
-                         ((x<<8)  & 0x00ff0000) |\
-                         ((x<<24) & 0xff000000))
-#else
-# error "Oops: unknown byte order"
-#endif
 
 /* ---------------------------------------------------------------------- */
 /* load                                                                   */
@@ -200,13 +185,13 @@ bmp_done(void *data)
 }
 
 static struct ida_loader bmp_loader = {
-    magic: "BM",
-    moff:  0,
-    mlen:  2,
-    name:  "bmp",
-    init:  bmp_init,
-    read:  bmp_read,
-    done:  bmp_done,
+    .magic = "BM",
+    .moff  = 0,
+    .mlen  = 2,
+    .name  = "bmp",
+    .init  = bmp_init,
+    .read  = bmp_read,
+    .done  = bmp_done,
 };
 
 static void __init init_rd(void)

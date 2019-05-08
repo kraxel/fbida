@@ -198,9 +198,9 @@ op_sharpe_work(struct ida_image *src, struct ida_rect *rect,
 	       unsigned char *dst, int line, void *data)
 {
     static struct op_3x3_parm laplace = {
-	f1: {  1,  1,  1 },
-	f2: {  1, -8,  1 },
-	f3: {  1,  1,  1 },
+        .f1 = {  1,  1,  1 },
+	.f2 = {  1, -8,  1 },
+	.f3 = {  1,  1,  1 },
     };
     struct op_sharpe_handle *h = data;
     unsigned char *scanline;
@@ -460,32 +460,32 @@ op_rotate_done(void *data)
 /* ----------------------------------------------------------------------- */
 
 struct ida_op desc_grayscale = {
-    name:  "grayscale",
-    init:  op_none_init,
-    work:  op_grayscale,
-    done:  op_none_done,
+    .name  = "grayscale",
+    .init  = op_none_init,
+    .work  = op_grayscale,
+    .done  = op_none_done,
 };
 struct ida_op desc_3x3 = {
-    name:  "3x3",
-    init:  op_3x3_init,
-    work:  op_3x3_work,
-    done:  op_3x3_free,
+    .name  = "3x3",
+    .init  = op_3x3_init,
+    .work  = op_3x3_work,
+    .done  = op_3x3_free,
 };
 struct ida_op desc_sharpe = {
-    name:  "sharpe",
-    init:  op_sharpe_init,
-    work:  op_sharpe_work,
-    done:  op_sharpe_free,
+    .name  = "sharpe",
+    .init  = op_sharpe_init,
+    .work  = op_sharpe_work,
+    .done  = op_sharpe_free,
 };
 struct ida_op desc_resize = {
-    name:  "resize",
-    init:  op_resize_init,
-    work:  op_resize_work,
-    done:  op_resize_done,
+    .name  = "resize",
+    .init  = op_resize_init,
+    .work  = op_resize_work,
+    .done  = op_resize_done,
 };
 struct ida_op desc_rotate = {
-    name:  "rotate",
-    init:  op_rotate_init,
-    work:  op_rotate_work,
-    done:  op_rotate_done,
+    .name  = "rotate",
+    .init  = op_rotate_init,
+    .work  = op_rotate_work,
+    .done  = op_rotate_done,
 };

@@ -194,13 +194,13 @@ jpeg_done(void *data)
 }
 
 struct ida_loader jpeg_loader = {
-    magic: "\xff\xd8",
-    moff:  0,
-    mlen:  2,
-    name:  "libjpeg",
-    init:  jpeg_init,
-    read:  jpeg_read,
-    done:  jpeg_done,
+    .magic = "\xff\xd8",
+    .moff  = 0,
+    .mlen  = 2,
+    .name  = "libjpeg",
+    .init  = jpeg_init,
+    .read  = jpeg_read,
+    .done  = jpeg_done,
 };
 
 static void __init init_rd(void)

@@ -3,7 +3,6 @@ project('fbida', 'c', default_options : [ 'c_std=gnu99' ])
 
 # tweak warnings
 add_global_arguments('-Wno-pointer-sign', language : 'c')
-add_global_arguments('-D_POSIX_SOURCE=1', language : 'c')
 add_global_arguments('-D_GNU_SOURCE=1', language : 'c')
 
 # init configuration
@@ -35,6 +34,7 @@ systemd_dep  = dependency('libsystemd', required : false, version : '>=221')
 cc           = meson.get_compiler('c')
 jpeg_dep     = cc.find_library('jpeg')
 util_dep     = cc.find_library('util')
+iconv_dep    = cc.find_library('iconv', required : false)
 math_dep     = cc.find_library('m', required : false)
 pcd_dep      = cc.find_library('pcd', required : false)
 gif_dep      = cc.find_library('gif', required : false)
@@ -96,7 +96,7 @@ fbi_srcs     = [ 'fbi.c', 'fb-gui.c', 'desktop.c',
                  'filter.c', 'op.c', 'jpegtools.c',
                  trans_src, read_srcs ]
 fbi_deps     = [ drm_dep, pixman_dep, cairo_dep,
-                 exif_dep, image_deps,
+                 exif_dep, image_deps, iconv_dep,
                  math_dep, udev_dep, input_dep, xkb_dep, systemd_dep ]
 
 executable('fbi',
@@ -143,7 +143,7 @@ fbcon_srcs   = [ 'fbcon.c', 'drmtools.c', 'fbtools.c', 'gfx.c',
 fbcon_deps   = [ drm_dep, cairo_dep, util_dep, udev_dep, input_dep, xkb_dep, glib_dep,
                  tsm_dep, systemd_dep ]
 
-if tsm_dep.found()
+if tsm_dep.found() and target_machine.system() == 'linux'
     executable('fbcon',
                sources             : fbcon_srcs,
                dependencies        : fbcon_deps,
@@ -182,7 +182,7 @@ ida_srcs     = [ 'ida.c', 'man.c', 'hex.c', 'x11.c', 'viewer.c',
                  trans_src, read_srcs, write_srcs,
                  'rd/read-xwd.c', 'rd/read-xpm.c',
                  ida_ad, ida_logo ]
-ida_deps     = [ pixman_dep, exif_dep, image_deps, math_dep,
+ida_deps     = [ pixman_dep, exif_dep, image_deps, iconv_dep, math_dep,
                  motif_dep, xpm_dep, xt_dep, xext_dep, x11_dep ]
 
 if motif_dep.found()
