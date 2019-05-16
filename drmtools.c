@@ -38,23 +38,28 @@ struct drmfb {
 /* ------------------------------------------------------------------ */
 
 static const char *conn_type[] = {
-    [ DRM_MODE_CONNECTOR_Unknown      ] = "unknown",
-    [ DRM_MODE_CONNECTOR_VGA          ] = "vga",
-    [ DRM_MODE_CONNECTOR_DVII         ] = "dvi-i",
-    [ DRM_MODE_CONNECTOR_DVID         ] = "dvi-d",
-    [ DRM_MODE_CONNECTOR_DVIA         ] = "dvi-a",
-    [ DRM_MODE_CONNECTOR_Composite    ] = "composite",
-    [ DRM_MODE_CONNECTOR_SVIDEO       ] = "svideo",
-    [ DRM_MODE_CONNECTOR_LVDS         ] = "lvds",
-    [ DRM_MODE_CONNECTOR_Component    ] = "component",
-    [ DRM_MODE_CONNECTOR_9PinDIN      ] = "9pin-din",
-    [ DRM_MODE_CONNECTOR_DisplayPort  ] = "dp",
-    [ DRM_MODE_CONNECTOR_HDMIA        ] = "hdmi-a",
-    [ DRM_MODE_CONNECTOR_HDMIB        ] = "hdmi-b",
-    [ DRM_MODE_CONNECTOR_TV           ] = "tv",
-    [ DRM_MODE_CONNECTOR_eDP          ] = "edp",
-    [ DRM_MODE_CONNECTOR_VIRTUAL      ] = "virtual",
-    [ DRM_MODE_CONNECTOR_DSI          ] = "dsi",
+    /*
+     * Names are taken from the xorg modesetting driver, so the output
+     * names are matching the ones ypu can see with xrandr.
+     */
+    [DRM_MODE_CONNECTOR_Unknown]     = "None",
+    [DRM_MODE_CONNECTOR_VGA]         = "VGA",
+    [DRM_MODE_CONNECTOR_DVII]        = "DVI-I",
+    [DRM_MODE_CONNECTOR_DVID]        = "DVI-D",
+    [DRM_MODE_CONNECTOR_DVIA]        = "DVI-A",
+    [DRM_MODE_CONNECTOR_Composite]   = "Composite",
+    [DRM_MODE_CONNECTOR_SVIDEO]      = "SVIDEO",
+    [DRM_MODE_CONNECTOR_LVDS]        = "LVDS",
+    [DRM_MODE_CONNECTOR_Component]   = "Component",
+    [DRM_MODE_CONNECTOR_9PinDIN]     = "DIN",
+    [DRM_MODE_CONNECTOR_DisplayPort] = "DP",
+    [DRM_MODE_CONNECTOR_HDMIA]       = "HDMI",
+    [DRM_MODE_CONNECTOR_HDMIB]       = "HDMI-B",
+    [DRM_MODE_CONNECTOR_TV]          = "TV",
+    [DRM_MODE_CONNECTOR_eDP]         = "eDP",
+    [DRM_MODE_CONNECTOR_VIRTUAL]     = "Virtual",
+    [DRM_MODE_CONNECTOR_DSI]         = "DSI",
+    [DRM_MODE_CONNECTOR_DPI]         = "DPI",
 };
 
 static void drm_conn_name(drmModeConnector *conn, char *dest, int dlen)
