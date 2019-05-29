@@ -28,7 +28,7 @@ input_dep    = dependency('libinput')
 xkb_dep      = dependency('xkbcommon')
 glib_dep     = dependency('glib-2.0')
 tsm_dep      = dependency('libtsm', required : false)
-systemd_dep  = dependency('libsystemd', required : false, version : '>=221')
+systemd_dep  = dependency('libsystemd', required : false, version : '>=237')
 
 # other library deps
 cc           = meson.get_compiler('c')
