@@ -1,0 +1,40 @@
+os: linux
+dist: xenial
+language: c
+compiler: gcc
+
+addons:
+  apt:
+    update: true
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - meson
+      - libdrm-dev
+      - libgbm-dev
+      - libepoxy-dev
+      - libcairo2-dev
+      - libpixman-1-dev
+      - libsystemd-dev
+      - libexif-dev
+      - libjpeg-turbo8-dev
+      - libpng-dev
+      - libtiff-dev
+      - libgif-dev
+      - libudev-dev
+      - libinput-dev
+      - libxkbcommon-dev
+      - libglib2.0-dev
+      - libpoppler-glib-dev
+      - libmotif-dev
+      - libxpm-dev
+      - libxt-dev
+      - libxext-dev
+      - libx11-dev
+      - lib-dev
+      - lib-dev
+
+script:
+  - mkdir build-travis
+  - meson build-travis
+  - ninja -C build-travis
