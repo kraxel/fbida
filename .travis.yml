@@ -19,6 +19,8 @@ addons:
       - libdrm-dev
       - libgbm-dev
       - libepoxy-dev
+      - libegl1-mesa-dev
+      - libgl1-mesa-dev
       - libcairo2-dev
       - libpixman-1-dev
       - libsystemd-dev
