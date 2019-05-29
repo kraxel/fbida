@@ -3,13 +3,19 @@ dist: xenial
 language: c
 compiler: gcc
 
+before_script:
+  - pip3 install meson
+
 addons:
   apt:
     update: true
     sources:
       - ubuntu-toolchain-r-test
     packages:
-      - meson
+      - python3
+      - python3-pip
+      - python3-setuptools
+      - ninja-build
       - libdrm-dev
       - libgbm-dev
       - libepoxy-dev
