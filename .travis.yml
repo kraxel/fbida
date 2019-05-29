@@ -31,8 +31,6 @@ addons:
       - libxt-dev
       - libxext-dev
       - libx11-dev
-      - lib-dev
-      - lib-dev
 
 script:
   - mkdir build-travis
