@@ -88,14 +88,14 @@ cp fbgs %{buildroot}%{_bindir}
 cp man/fbgs.1 %{buildroot}%{_mandir}/man1
 
 %files -n fbi
-%doc COPYING
+%doc COPYING README.md
 %{_bindir}/fbi
 %{_bindir}/fbgs
 %{_mandir}/man1/fbi.1*
 %{_mandir}/man1/fbgs.1*
 
 %files -n fbpdf
-%doc COPYING
+%doc COPYING README.md
 %{_bindir}/fbpdf
 
 %files -n fbcon
@@ -104,13 +104,13 @@ cp man/fbgs.1 %{buildroot}%{_mandir}/man1
 /usr/share/wayland-sessions/fbcon.desktop
 
 %files -n ida
-%doc COPYING
+%doc COPYING README.ida
 %{_bindir}/ida
 %{_mandir}/man1/ida.1*
 /usr/share/X11/app-defaults/Ida
 
 %files -n exiftran
-%doc COPYING
+%doc COPYING README.md
 %{_bindir}/exiftran
 %{_mandir}/man1/exiftran.1*
 
