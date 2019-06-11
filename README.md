@@ -9,7 +9,7 @@ name.
 
 ## ida
 
-Motif image viewer, see [README.ida]
+Motif image viewer, see [README.ida](README.ida)
 
 ## fbi
 
