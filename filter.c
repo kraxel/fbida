@@ -6,8 +6,6 @@
 #include "readers.h"
 #include "filter.h"
 
-int debug = 0;
-
 /* ----------------------------------------------------------------------- */
 
 static void

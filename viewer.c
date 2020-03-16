@@ -38,7 +38,6 @@
 
 #define PROCESS_LINES    16
 
-int debug;
 Cursor ptrs[POINTER_COUNT];
 
 /* ----------------------------------------------------------------------- */

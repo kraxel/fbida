@@ -17,7 +17,7 @@
 
 /* -------------------------------------------------------------------------- */
 
-char *ida_lists;
+extern char *ida_lists;
 
 void ida_init_config(void);
 void ida_read_config(void);

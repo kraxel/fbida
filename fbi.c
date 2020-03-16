@@ -86,7 +86,6 @@ static int img_mem, max_mem_mb;
 
 /* graphics interface */
 gfxstate                   *gfx;
-int                        debug;
 
 /* framebuffer */
 char                       *fbdev = NULL;

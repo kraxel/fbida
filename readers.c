@@ -7,6 +7,8 @@
 #include "readers.h"
 #include "byteorder.h"
 
+int debug=0;
+
 /* ----------------------------------------------------------------------- */
 
 void load_bits_lsb(unsigned char *dst, unsigned char *src, int width,
