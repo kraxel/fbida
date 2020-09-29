@@ -1,0 +1,7 @@
+stages:
+  - rpms
+  - repo
+
+include:
+  - project: 'kraxel/rpm-package-builder'
+    file: 'gitlab-ci-rpms-tito.yml'
