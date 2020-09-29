@@ -1,4 +1,4 @@
-[![Travis Status](https://travis-ci.com/kraxel/fbida.svg?branch=master)](https://travis-ci.com/kraxel/fbida)
+[![Travis Status](https://travis-ci.com/kraxel/fbida.svg?branch=master)](https://travis-ci.com/gitlab/kraxel/fbida)
 [![Copr Status](https://copr.fedorainfracloud.org/coprs/kraxel/mine.git/package/fbida/status_image/last_build.png)](https://copr.fedorainfracloud.org/coprs/kraxel/mine.git/package/fbida/)
 
 # fbida
