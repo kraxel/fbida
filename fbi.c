@@ -1220,7 +1220,7 @@ int main(int argc, char *argv[])
     int              i, arg, key;
     bool             framebuffer = false;
     bool             use_libinput;
-    char             *info, *desc, *device, *output, *mode;
+    char             *basename, *info, *desc, *device, *output, *mode;
     char             linebuffer[128];
     struct flist     *fprev = NULL;
     struct flist     *fnext = NULL;
@@ -1302,21 +1302,17 @@ int main(int argc, char *argv[])
     device = cfg_get_str(O_DEVICE);
     output = cfg_get_str(O_OUTPUT);
     mode = cfg_get_str(O_VIDEO_MODE);
-    if (device) {
-        /* device specified */
-        if (strncmp(device, "/dev/d", 6) == 0) {
-            gfx = drm_init(device, output, mode, false);
-        } else {
-            framebuffer = true;
-            gfx = fb_init(device, mode);
-        }
+    basename = strrchr(argv[0], '/');
+    if (basename)
+        basename++;
+    else
+        basename = argv[0];
+
+    if (strcmp(basename, "fbi") == 0) {
+        framebuffer = true;
+        gfx = fb_init(device, mode);
     } else {
-        /* try drm first, failing that fb */
-        gfx = drm_init(NULL, output, mode, false);
-        if (!gfx) {
-            framebuffer = true;
-            gfx = fb_init(NULL, mode);
-        }
+        gfx = drm_init(device, output, mode, false);
     }
     if (!gfx) {
         fprintf(stderr, "graphics init failed\n");
