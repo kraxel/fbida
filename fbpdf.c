@@ -29,8 +29,6 @@
 #include <poppler.h>
 #include <cairo.h>
 
-#include <epoxy/egl.h>
-
 #include "vt.h"
 #include "kbd.h"
 #include "fbtools.h"

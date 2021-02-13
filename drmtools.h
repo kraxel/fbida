@@ -13,6 +13,3 @@ int drm_init_dev(const char *dev, const char *output, const char *mode);
 gfxstate *drm_init(const char *device, const char *output,
                    const char *mode, bool pageflip);
 void drm_info(const char *device);
-
-/* drmtools-egl.c */
-gfxstate *drm_init_egl(const char *device, const char *output, const char *mode);

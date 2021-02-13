@@ -17,8 +17,6 @@ pixman_dep   = dependency('pixman-1')
 poppler_dep  = dependency('poppler-glib')
 cairo_dep    = dependency('cairo')
 drm_dep      = dependency('libdrm')
-gbm_dep      = dependency('gbm')
-epoxy_dep    = dependency('epoxy')
 exif_dep     = dependency('libexif')
 png_dep      = dependency('libpng')
 tiff_dep     = dependency('libtiff-4')
@@ -128,8 +126,7 @@ executable('thumbnail.cgi',
 fbpdf_srcs   = [ 'fbpdf.c', 'parseconfig.c', 'fbiconfig.c',
                  'vt.c', 'kbd.c', 'logind.c',
                  'fbtools.c', 'drmtools.c', 'gfx.c' ]
-fbpdf_deps   = [ drm_dep, gbm_dep, epoxy_dep,
-                 pixman_dep, poppler_dep, cairo_dep,
+fbpdf_deps   = [ drm_dep, pixman_dep, poppler_dep, cairo_dep,
                  udev_dep, input_dep, xkb_dep, systemd_dep ]
 
 executable('fbpdf',
