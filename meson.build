@@ -144,6 +144,9 @@ if get_option('pdf').enabled()
                sources             : fbpdf_srcs,
                dependencies        : fbpdf_deps,
                install             : true)
+    install_data('fbgs',
+                 install_dir        : get_option('bindir'),
+                 install_mode       : 'rwxr--r--')
 endif
 
 # build fbcon
