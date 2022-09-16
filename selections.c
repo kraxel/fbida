@@ -609,8 +609,12 @@ void ipc_init()
 #ifdef HAVE_LIBGIF
     targets[ntargets++] = MIME_IMAGE_GIF;
 #endif
+#ifdef HAVE_LIBPNG
     targets[ntargets++] = MIME_IMAGE_PNG;
+#endif
+#ifdef HAVE_LIBTIFF
     targets[ntargets++] = MIME_IMAGE_TIFF;
+#endif
     targets[ntargets++] = XA_PIXMAP;
     targets[ntargets++] = XA_STRING;
 

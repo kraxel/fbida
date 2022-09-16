@@ -18,9 +18,9 @@ poppler_dep  = dependency('poppler-glib')
 cairo_dep    = dependency('cairo')
 drm_dep      = dependency('libdrm')
 exif_dep     = dependency('libexif')
-png_dep      = dependency('libpng')
-tiff_dep     = dependency('libtiff-4')
-webp_dep     = dependency('libwebp', required : false)
+png_dep      = dependency('libpng', required : get_option('png'))
+tiff_dep     = dependency('libtiff-4', required : get_option('tiff'))
+webp_dep     = dependency('libwebp', required : get_option('webp'))
 udev_dep     = dependency('libudev')
 input_dep    = dependency('libinput')
 xkb_dep      = dependency('xkbcommon')
@@ -35,20 +35,20 @@ util_dep     = cc.find_library('util')
 iconv_dep    = cc.find_library('iconv', required : false)
 math_dep     = cc.find_library('m', required : false)
 pcd_dep      = cc.find_library('pcd', required : false)
-gif_dep      = cc.find_library('gif', required : false)
+gif_dep      = cc.find_library('gif', required : get_option('gif'))
 
 # motif + x11 libs
-motif_dep    = cc.find_library('Xm', required : false)
-xpm_dep      = cc.find_library('Xpm', required : false)
-xt_dep       = cc.find_library('Xt', required : false)
-xext_dep     = cc.find_library('Xext', required : false)
-x11_dep      = cc.find_library('X11', required : false)
+motif_dep    = cc.find_library('Xm', required : get_option('motif'))
+xpm_dep      = cc.find_library('Xpm', required : get_option('motif'))
+xt_dep       = cc.find_library('Xt', required : get_option('motif'))
+xext_dep     = cc.find_library('Xext', required : get_option('motif'))
+x11_dep      = cc.find_library('X11', required : get_option('motif'))
 
 # image formats
 read_srcs    = [ 'readers.c', 'rd/read-ppm.c', 'rd/read-bmp.c',
-                 'rd/read-jpeg.c', 'rd/read-png.c', 'rd/read-tiff.c' ]
+                 'rd/read-jpeg.c' ]
 write_srcs   = [ 'writers.c', 'wr/write-ppm.c', 'wr/write-ps.c',
-                 'wr/write-jpeg.c', 'wr/write-png.c', 'wr/write-tiff.c' ]
+                 'wr/write-jpeg.c' ]
 image_deps   = [ jpeg_dep, png_dep, tiff_dep,
                  pcd_dep, gif_dep, webp_dep ]
 
@@ -56,11 +56,21 @@ if pcd_dep.found()
     read_srcs += 'rd/read-pcd.c'
     config.set('HAVE_LIBPCD', true)
 endif
-if gif_dep.found()
+if get_option('png').enabled()
+    read_srcs += 'rd/read-png.c'
+    write_srcs += 'wr/write-png.c'
+    config.set('HAVE_LIBPNG', true)
+endif
+if get_option('tiff').enabled()
+    read_srcs += 'rd/read-tiff.c'
+    write_srcs += 'wr/write-tiff.c'
+    config.set('HAVE_LIBTIFF', true)
+endif
+if get_option('gif').enabled()
     read_srcs += 'rd/read-gif.c'
     config.set('HAVE_LIBGIF', true)
 endif
-if webp_dep.found()
+if get_option('webp').enabled()
     read_srcs += 'rd/read-webp.c'
     config.set('HAVE_LIBWEBP', true)
 endif
@@ -182,7 +192,7 @@ ida_srcs     = [ 'ida.c', 'man.c', 'hex.c', 'x11.c', 'viewer.c',
 ida_deps     = [ pixman_dep, exif_dep, image_deps, iconv_dep, math_dep,
                  motif_dep, xpm_dep, xt_dep, xext_dep, x11_dep ]
 
-if motif_dep.found()
+if get_option('motif').enabled()
     executable('ida',
                sources             : ida_srcs,
                dependencies        : ida_deps,
