@@ -1,0 +1,5 @@
+option('gif', type: 'feature', value : 'enabled')
+option('png', type: 'feature', value : 'enabled')
+option('tiff', type: 'feature', value : 'enabled')
+option('webp', type: 'feature', value : 'disabled')
+option('motif', type: 'feature', value : 'disabled')
