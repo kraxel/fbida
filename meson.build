@@ -14,7 +14,7 @@ x11resdir    = x11resrun.stdout().strip()
 
 # pkg-config deps
 pixman_dep   = dependency('pixman-1')
-poppler_dep  = dependency('poppler-glib')
+poppler_dep  = dependency('poppler-glib', required : get_option('pdf'))
 cairo_dep    = dependency('cairo')
 drm_dep      = dependency('libdrm')
 exif_dep     = dependency('libexif')
@@ -139,10 +139,12 @@ fbpdf_srcs   = [ 'fbpdf.c', 'parseconfig.c', 'fbiconfig.c',
 fbpdf_deps   = [ drm_dep, pixman_dep, poppler_dep, cairo_dep,
                  udev_dep, input_dep, xkb_dep, systemd_dep ]
 
-executable('fbpdf',
-           sources             : fbpdf_srcs,
-           dependencies        : fbpdf_deps,
-           install             : true)
+if get_option('pdf').enabled()
+    executable('fbpdf',
+               sources             : fbpdf_srcs,
+               dependencies        : fbpdf_deps,
+               install             : true)
+endif
 
 # build fbcon
 fbcon_srcs   = [ 'fbcon.c', 'drmtools.c', 'fbtools.c', 'gfx.c',
