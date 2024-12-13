@@ -36,8 +36,8 @@ BuildRequires: pkgconfig(libinput)
 BuildRequires: pkgconfig(xkbcommon)
 
 # fbcon
-BuildRequires: pkgconfig(libtsm)
-BuildRequires: pkgconfig(libsystemd)
+#BuildRequires: pkgconfig(libtsm)
+#BuildRequires: pkgconfig(libsystemd)
 
 %description
 fbida
