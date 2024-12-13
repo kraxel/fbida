@@ -12,7 +12,7 @@ BuildRequires: meson ninja-build
 
 # image format libs
 BuildRequires: libjpeg-devel
-BuildRequires: libpcd-devel
+#BuildRequires: libpcd-devel
 BuildRequires: pkgconfig(libexif)
 BuildRequires: pkgconfig(libpng)
 BuildRequires: pkgconfig(libtiff-4)
