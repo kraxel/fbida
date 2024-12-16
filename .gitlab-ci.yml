@@ -1,14 +1,14 @@
 stages:
   - boot
   - build
-#  - rpms
-#  - repo
+  - rpms
+  - repo
 
 include:
   - project: 'kraxel/rpm-package-builder'
     file: 'gitlab-ci-build-meson.yml'
-#  - project: 'kraxel/rpm-package-builder'
-#    file: 'gitlab-ci-rpms-tito.yml'
+  - project: 'kraxel/rpm-package-builder'
+    file: 'gitlab-ci-rpms-tito.yml'
 
 boot-aarch64:
   stage: boot
