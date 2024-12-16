@@ -85,11 +85,6 @@ cp man/fbgs.1 %{buildroot}%{_mandir}/man1
 %doc COPYING README.md
 %{_bindir}/fbpdf
 
-%files -n fbcon
-%doc COPYING
-%{_bindir}/fbcon
-/usr/share/wayland-sessions/fbcon.desktop
-
 %files -n ida
 %doc COPYING README.ida
 %{_bindir}/ida
