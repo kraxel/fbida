@@ -12,7 +12,6 @@ BuildRequires: meson ninja-build
 
 # image format libs
 BuildRequires: libjpeg-devel
-#BuildRequires: libpcd-devel
 BuildRequires: pkgconfig(libexif)
 BuildRequires: pkgconfig(libpng)
 BuildRequires: pkgconfig(libtiff-4)
@@ -35,10 +34,6 @@ BuildRequires: pkgconfig(libudev)
 BuildRequires: pkgconfig(libinput)
 BuildRequires: pkgconfig(xkbcommon)
 
-# fbcon
-#BuildRequires: pkgconfig(libtsm)
-#BuildRequires: pkgconfig(libsystemd)
-
 %description
 fbida
 
@@ -51,11 +46,6 @@ fbi displays images on the linux console using fbdev or drm.
 Summary: Framebuffer pdf viewer
 %description -n fbpdf
 fbpdf displays pdf files on the linux console using fbdev or drm.
-
-%package -n fbcon
-Summary: Framebuffer terminal console
-%description -n fbcon
-Framebuffer terminal console
 
 %package -n ida
 Summary: Motif image viewer
