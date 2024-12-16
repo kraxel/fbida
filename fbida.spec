@@ -64,7 +64,8 @@ jpegtran it also handles the exif metadata.
 
 %build
 export CFLAGS="%{optflags}"
-meson --prefix=%{_prefix} build-rpm
+meson setup --prefix=%{_prefix} build-rpm
+meson configure build-rpm -Dmotif=enabled
 ninja-build -C build-rpm
 
 %install
