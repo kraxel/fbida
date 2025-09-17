@@ -241,7 +241,7 @@ struct color fbcon_tsm_color(const struct tsm_screen_attr *attr,
     return c;
 }
 
-int fbcon_tsm_draw_cb(struct tsm_screen *con, uint32_t id,
+int fbcon_tsm_draw_cb(struct tsm_screen *con, uint64_t id,
                       const uint32_t *ch, size_t len,
                       unsigned int width, unsigned int posx, unsigned int posy,
                       const struct tsm_screen_attr *attr,
