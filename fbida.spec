@@ -7,7 +7,7 @@ URL:          http://www.kraxel.org/blog/linux/%{name}/
 Source:       http://www.kraxel.org/releases/%{name}/%{name}-%{version}.tar.gz
 
 # meson
-BuildRequires: gcc perl
+BuildRequires: gcc perl util-linux
 BuildRequires: meson ninja-build
 
 # image format libs
