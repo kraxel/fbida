@@ -8,4 +8,3 @@ build: $(BDIR)/build.ninja
 
 $(BDIR)/build.ninja:
 	$(MESON) $(BDIR)
-

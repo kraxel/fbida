@@ -5,7 +5,7 @@ build-fedora:
   stage: build
   image: registry.fedoraproject.org/fedora:latest
   before_script:
-    - dnf install -y hostname
     - dnf builddep -y *.spec
   script:
-    - make
+    - meson setup build-ci
+    - ninja-build -C build-ci
