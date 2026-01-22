@@ -10,3 +10,12 @@ build-fedora:
     - meson setup build-ci
     - meson configure build-ci -Dmotif=enabled
     - ninja-build -C build-ci
+
+build-tito-rpm:
+  stage: build
+  image: registry.fedoraproject.org/fedora:latest
+  before_script:
+    - dnf install -y tito
+    - dnf builddep -y *.spec
+  script:
+    - tito build --test --rpm
