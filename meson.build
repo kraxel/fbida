@@ -114,6 +114,12 @@ executable('fbi',
            install             : true)
 install_man('man/fbi.1')
 
+custom_target('kmsi',
+              build_by_default : true,
+              output  : ['kmsi'],
+              command : [ 'ln', '-sf', 'fbi', '@OUTPUT@'])
+meson.add_install_script('sh', '-c', 'ln -sf fbi $DESTDIR@0@/@1@/kmsi'.format(get_option('prefix'), get_option('bindir')))
+
 # build exiftran
 exiftr_srcs  = [ 'exiftran.c', 'genthumbnail.c', 'jpegtools.c',
                  'filter.c', 'op.c', 'readers.c', 'rd/read-jpeg.c',
@@ -148,6 +154,12 @@ if get_option('pdf').enabled()
                  install_dir        : get_option('bindir'),
                  install_mode       : 'rwxr--r--')
 endif
+
+custom_target('kmspdf',
+              build_by_default : true,
+              output  : ['kmspdf'],
+              command : [ 'ln', '-sf', 'fbpdf', '@OUTPUT@'])
+meson.add_install_script('sh', '-c', 'ln -sf fbpdf $DESTDIR@0@/@1@/kmspdf'.format(get_option('prefix'), get_option('bindir')))
 
 # build fbcon
 fbcon_srcs   = [ 'fbcon.c', 'drmtools.c', 'fbtools.c', 'gfx.c',
