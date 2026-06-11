@@ -46,6 +46,16 @@ gfxfmt fmt_list[] = {
         .depth    = 30,
         .bpp      = 32,
     },
+    {
+        /* fbdev with red at offset 0, e.g. simple-framebuffer
+         * format = "a8b8g8r8" / "x8b8g8r8" on some arm devices.
+         * cairo has no ABGR variant; the fbdev path only needs pixman. */
+        .fourcc   = DRM_FORMAT_XBGR8888,
+        .cairo    = CAIRO_FORMAT_INVALID,
+        .pixman   = PIXMAN_x8b8g8r8,
+        .depth    = 24,
+        .bpp      = 32,
+    },
 #endif
 };
 
