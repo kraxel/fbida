@@ -297,7 +297,10 @@ gfxstate* fb_init(const char *device, char *mode)
         fb_linear_palette(5,6,5);
 	break;
     case 32:
-        fmt = gfx_fmt_find_pixman(PIXMAN_x8r8g8b8);
+        if (fb_var.red.offset == 0)
+            fmt = gfx_fmt_find_pixman(PIXMAN_x8b8g8r8);
+        else
+            fmt = gfx_fmt_find_pixman(PIXMAN_x8r8g8b8);
         fb_linear_palette(8,8,8);
 	break;
     }
