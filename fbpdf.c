@@ -239,6 +239,7 @@ int main(int argc, char *argv[])
     bool framebuffer = false;
     bool use_libinput;
     bool quit, newpage, pageflip;
+    char *basename;
     char cwd[1024];
     char uri[1048];
     char key[32];
@@ -296,22 +297,17 @@ int main(int argc, char *argv[])
     fitwidth = GET_FIT_WIDTH();
     pageflip = GET_PAGEFLIP();
     use_libinput = GET_LIBINPUT();
+    basename = strrchr(argv[0], '/');
+    if (basename)
+        basename++;
+    else
+        basename = argv[0];
 
-    if (device) {
-        /* device specified */
-        if (strncmp(device, "/dev/d", 6) == 0) {
-            gfx = drm_init(device, output, mode, pageflip);
-        } else {
-            framebuffer = true;
-            gfx = fb_init(device, mode);
-        }
+    if (strcmp(basename, "fbpdf") == 0) {
+        framebuffer = true;
+        gfx = fb_init(device, mode);
     } else {
-        /* try drm first, failing that fb */
-        gfx = drm_init(NULL, output, mode, pageflip);
-        if (!gfx) {
-            framebuffer = true;
-            gfx = fb_init(NULL, mode);
-        }
+        gfx = drm_init(device, output, mode, pageflip);
     }
     if (!gfx) {
         fprintf(stderr, "graphics init failed\n");
