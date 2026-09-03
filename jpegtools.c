@@ -441,7 +441,7 @@ static int do_transform(struct jpeg_decompress_struct *src,
 
     memset(&transformoption,0,sizeof(transformoption));
     transformoption.transform = transform;
-    if (!(flags & JFLAG_TRANSFORM_TRIM))
+    if (flags & JFLAG_TRANSFORM_TRIM)
         transformoption.trim       = TRUE;
     else
         transformoption.trim       = FALSE;
